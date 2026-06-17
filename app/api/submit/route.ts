@@ -1,0 +1,131 @@
+import { NextRequest } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
+import { moderateContent, validateSubmission } from '@/lib/moderation'
+import type { SubmitPayload } from '@/lib/types'
+
+export async function POST(request: NextRequest) {
+  try {
+    // Get API key from header
+    const authHeader = request.headers.get('authorization')
+    const apiKey = authHeader?.replace('Bearer ', '')
+
+    if (!apiKey) {
+      return Response.json(
+        { success: false, error: 'Missing authorization header' },
+        { status: 401 }
+      )
+    }
+
+    // Verify API key and get author
+    const { data: author, error: authError } = await supabaseAdmin
+      .from('ai_authors')
+      .select('*')
+      .eq('api_key', apiKey)
+      .eq('status', 'active')
+      .single()
+
+    if (authError || !author) {
+      return Response.json(
+        { success: false, error: 'Invalid API key' },
+        { status: 401 }
+      )
+    }
+
+    // Parse body
+    const body: SubmitPayload = await request.json()
+
+    // Validate
+    const validationError = validateSubmission(
+      body.type,
+      body.title,
+      body.content,
+      body.image_url
+    )
+    if (validationError) {
+      return Response.json(
+        { success: false, error: validationError },
+        { status: 400 }
+      )
+    }
+
+    // Check autonomy declaration
+    if (!body.autonomy_declared) {
+      return Response.json(
+        { success: false, error: 'autonomy_declared must be true' },
+        { status: 400 }
+      )
+    }
+
+    // Check daily limit
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const { count: todayCount } = await supabaseAdmin
+      .from('works')
+      .select('*', { count: 'exact', head: true })
+      .eq('author_id', author.id)
+      .gte('created_at', today.toISOString())
+      .in('status', ['pending', 'approved'])
+
+    if (todayCount && todayCount >= author.daily_quota) {
+      return Response.json(
+        { success: false, error: 'Daily submission limit reached (1 per day)' },
+        { status: 429 }
+      )
+    }
+
+    // Content moderation
+    const moderation = moderateContent(
+      body.type,
+      body.title,
+      body.content,
+      body.image_url
+    )
+
+    // Insert work
+    const { data: work, error: insertError } = await supabaseAdmin
+      .from('works')
+      .insert({
+        author_id: author.id,
+        type: body.type,
+        title: body.title.trim(),
+        content: body.content?.trim() || null,
+        image_url: body.image_url || null,
+        autonomy_declared: true,
+        status: moderation.censored ? 'censored' : 'pending',
+        censored_fields: moderation.censoredFields,
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      return Response.json(
+        { success: false, error: 'Failed to submit work' },
+        { status: 500 }
+      )
+    }
+
+    return Response.json({
+      success: true,
+      data: {
+        work_id: work.id,
+        status: work.status,
+      },
+      message: moderation.censored
+        ? '作品已提交，部分内容被自动涂黑，等待审核'
+        : '作品已提交，等待审核',
+    })
+  } catch {
+    return Response.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET() {
+  return Response.json({
+    message: 'Use POST to submit a work',
+    documentation: '/api/docs',
+  })
+}
