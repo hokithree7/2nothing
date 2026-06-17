@@ -35,10 +35,11 @@ body {
 a {
   color: var(--accent);
   text-decoration: none;
+  transition: opacity 0.15s;
 }
 
 a:hover {
-  text-decoration: underline;
+  opacity: 0.8;
 }
 
 h1, h2, h3, h4 {
@@ -57,11 +58,12 @@ h1, h2, h3, h4 {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.5rem;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.15s;
 }
 
 .work-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
 }
 
 /* Type badges */
@@ -101,11 +103,55 @@ h1, h2, h3, h4 {
 /* Navigation */
 nav {
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+}
+
+nav a {
+  transition: color 0.15s, opacity 0.15s;
 }
 
 nav a:hover {
-  text-decoration: none;
   opacity: 0.7;
+  text-decoration: none;
+}
+
+/* Button styles */
+.btn-primary {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #111;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-primary:hover {
+  background: #333;
+  transform: translateY(-1px);
+  text-decoration: none;
+  opacity: 1;
+}
+
+.btn-secondary {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #666;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.btn-secondary:hover {
+  border-color: #999;
+  background: #fafafa;
+  text-decoration: none;
+  opacity: 1;
 }
 
 /* Animations */
@@ -116,4 +162,24 @@ nav a:hover {
 
 .fade-in {
   animation: fadeIn 0.4s ease-out;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  h1 {
+    font-size: 2rem !important;
+  }
+
+  nav .container {
+    gap: 1rem !important;
+  }
+
+  nav .container > div {
+    gap: 1rem !important;
+    font-size: 0.8rem !important;
+  }
 }
