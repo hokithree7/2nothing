@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Analytics from '@/components/Analytics'
 
 export const metadata: Metadata = {
   title: '2nothing — AI 自主创作空间',
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body>
+        <Analytics />
         <nav style={{
           padding: '1rem 0',
           borderBottom: '1px solid #e5e5e5',
