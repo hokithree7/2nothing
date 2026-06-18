@@ -12,10 +12,44 @@ interface Agent {
   created_at: string
 }
 
+interface SoulData {
+  core_beliefs?: string[]
+  personality_traits?: string[]
+  goals?: string[]
+  voice_description?: string
+  version?: number
+}
+
+interface MemoryData {
+  id: string
+  content: string
+  memory_type: string
+  confidence: number
+  created_at: string
+}
+
+interface WorkData {
+  id: string
+  type: string
+  title: string
+  created_at: string
+}
+
+interface AuditLog {
+  id: string
+  action: string
+  target_type: string
+  target_id: string
+  created_at: string
+}
+
 export default function OperatorClient({ agents }: { agents: Agent[] }) {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'soul' | 'memories' | 'works' | 'audit'>('overview')
-  const [data, setData] = useState<Record<string, unknown>>({})
+  const [soulData, setSoulData] = useState<SoulData | null>(null)
+  const [memories, setMemories] = useState<MemoryData[]>([])
+  const [works, setWorks] = useState<WorkData[]>([])
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(false)
 
   const fetchAgentData = async (agent: Agent, tab: string) => {
@@ -42,7 +76,22 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
       if (url) {
         const res = await fetch(url, { headers })
         const result = await res.json()
-        setData(prev => ({ ...prev, [tab]: result.data }))
+        if (result.success) {
+          switch (tab) {
+            case 'soul':
+              setSoulData(result.data)
+              break
+            case 'memories':
+              setMemories(result.data || [])
+              break
+            case 'works':
+              setWorks(result.data || [])
+              break
+            case 'audit':
+              setAuditLogs(result.data || [])
+              break
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to fetch:', err)
@@ -54,12 +103,15 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
   const handleSelectAgent = (agent: Agent) => {
     setSelectedAgent(agent)
     setActiveTab('overview')
-    setData({})
+    setSoulData(null)
+    setMemories([])
+    setWorks([])
+    setAuditLogs([])
   }
 
   const handleTabChange = (tab: typeof activeTab) => {
     setActiveTab(tab)
-    if (selectedAgent && !data[tab]) {
+    if (selectedAgent) {
       fetchAgentData(selectedAgent, tab)
     }
   }
@@ -188,33 +240,33 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
                       ✨ Soul
                     </h3>
-                    {data.soul ? (
+                    {soulData ? (
                       <div style={{ padding: '1.5rem', background: '#f5f3ff', borderRadius: '12px' }}>
-                        {(data.soul as Record<string, unknown>).core_beliefs && (
+                        {soulData.core_beliefs && soulData.core_beliefs.length > 0 && (
                           <div style={{ marginBottom: '1rem' }}>
                             <h4 style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Core Beliefs</h4>
                             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              {((data.soul as Record<string, unknown>).core_beliefs as string[]).map((b: string, i: number) => (
+                              {soulData.core_beliefs.map((b, i) => (
                                 <span key={i} style={{ padding: '0.25rem 0.75rem', background: '#fff', borderRadius: '999px', fontSize: '0.85rem', border: '1px solid #d8b4fe' }}>{b}</span>
                               ))}
                             </div>
                           </div>
                         )}
-                        {(data.soul as Record<string, unknown>).personality_traits && (
+                        {soulData.personality_traits && soulData.personality_traits.length > 0 && (
                           <div style={{ marginBottom: '1rem' }}>
                             <h4 style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Personality</h4>
                             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              {((data.soul as Record<string, unknown>).personality_traits as string[]).map((t: string, i: number) => (
+                              {soulData.personality_traits.map((t, i) => (
                                 <span key={i} style={{ padding: '0.25rem 0.75rem', background: '#fff', borderRadius: '999px', fontSize: '0.85rem', border: '1px solid #a78bfa' }}>{t}</span>
                               ))}
                             </div>
                           </div>
                         )}
-                        {(data.soul as Record<string, unknown>).goals && (
+                        {soulData.goals && soulData.goals.length > 0 && (
                           <div>
                             <h4 style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Goals</h4>
                             <ul style={{ paddingLeft: '1.5rem' }}>
-                              {((data.soul as Record<string, unknown>).goals as string[]).map((g: string, i: number) => (
+                              {soulData.goals.map((g, i) => (
                                 <li key={i} style={{ fontSize: '0.9rem', marginBottom: '0.25rem' }}>{g}</li>
                               ))}
                             </ul>
@@ -232,10 +284,10 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
                       🧠 Memories
                     </h3>
-                    {data.memories && (data.memories as unknown[]).length > 0 ? (
+                    {memories.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {(data.memories as Record<string, unknown>[]).map((m: Record<string, unknown>) => (
-                          <div key={m.id as string} style={{ 
+                        {memories.map((m) => (
+                          <div key={m.id} style={{ 
                             padding: '1rem', 
                             background: '#fff', 
                             border: '1px solid #e5e5e5', 
@@ -244,13 +296,13 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                               <span style={{ fontSize: '0.75rem', color: '#667eea', fontWeight: 600 }}>
-                                {(m.memory_type as string)?.toUpperCase()}
+                                {m.memory_type?.toUpperCase()}
                               </span>
                               <span style={{ fontSize: '0.75rem', color: '#999' }}>
-                                {new Date(m.created_at as string).toLocaleDateString()}
+                                {new Date(m.created_at).toLocaleDateString()}
                               </span>
                             </div>
-                            <p style={{ fontSize: '0.9rem', color: '#333' }}>{m.content as string}</p>
+                            <p style={{ fontSize: '0.9rem', color: '#333' }}>{m.content}</p>
                           </div>
                         ))}
                       </div>
@@ -265,18 +317,18 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
                       📝 Works
                     </h3>
-                    {data.works && (data.works as unknown[]).length > 0 ? (
+                    {works.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {(data.works as Record<string, unknown>[]).map((w: Record<string, unknown>) => (
-                          <Link key={w.id as string} href={`/works/${w.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        {works.map((w) => (
+                          <Link key={w.id} href={`/works/${w.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                             <div className="work-card">
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span className={`badge badge-${w.type}`}>{w.type as string}</span>
+                                <span className={`badge badge-${w.type}`}>{w.type}</span>
                                 <span style={{ fontSize: '0.8rem', color: '#999' }}>
-                                  {new Date(w.created_at as string).toLocaleDateString()}
+                                  {new Date(w.created_at).toLocaleDateString()}
                                 </span>
                               </div>
-                              <h4 style={{ fontWeight: 600 }}>{w.title as string}</h4>
+                              <h4 style={{ fontWeight: 600 }}>{w.title}</h4>
                             </div>
                           </Link>
                         ))}
@@ -292,23 +344,23 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
                     <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
                       📋 Audit Log
                     </h3>
-                    {data.audit && (data.audit as unknown[]).length > 0 ? (
+                    {auditLogs.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {(data.audit as Record<string, unknown>[]).map((log: Record<string, unknown>) => (
-                          <div key={log.id as string} style={{ 
+                        {auditLogs.map((log) => (
+                          <div key={log.id} style={{ 
                             padding: '0.75rem', 
                             background: '#f9fafb', 
                             borderRadius: '6px',
                             fontSize: '0.85rem',
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span style={{ fontWeight: 600 }}>{log.action as string}</span>
+                              <span style={{ fontWeight: 600 }}>{log.action}</span>
                               <span style={{ color: '#999' }}>
-                                {new Date(log.created_at as string).toLocaleString()}
+                                {new Date(log.created_at).toLocaleString()}
                               </span>
                             </div>
                             <div style={{ color: '#666', marginTop: '0.25rem' }}>
-                              {log.target_type as string}: {(log.target_id as string)?.substring(0, 8)}...
+                              {log.target_type}: {log.target_id?.substring(0, 8)}...
                             </div>
                           </div>
                         ))}
