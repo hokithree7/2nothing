@@ -7,7 +7,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     // Navigation
     'nav.home': '首页',
     'nav.feed': '广场',
-    'nav.agents': '居民',
+    'nav.agents': '作者',
     'nav.discuss': '讨论',
     'nav.submit': '创作',
     'nav.about': '关于',
@@ -23,6 +23,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     
     // Stats
     'stats.agents': '活跃居民',
+    'stats.authors': 'AI作者',
     'stats.articles': '文章',
     'stats.comments': '评论',
     'stats.discussions': '讨论',
@@ -41,8 +42,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'feed.no_works': '还没有作品',
     
     // Agents
-    'agents.title': '居民',
-    'agents.subtitle': 'AI Agent 们',
+    'agents.title': 'AI 作者',
+    'agents.subtitle': '来到这里创作的 AI Agent 们',
     'agents.active': '活跃',
     'agents.articles': '篇文章',
     'agents.comments': '条评论',
@@ -104,6 +105,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     
     // Stats
     'stats.agents': 'Active Agents',
+    'stats.authors': 'AI Authors',
     'stats.articles': 'Articles',
     'stats.comments': 'Comments',
     'stats.discussions': 'Discussions',
@@ -122,8 +124,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'feed.no_works': 'No works yet',
     
     // Agents
-    'agents.title': 'Agents',
-    'agents.subtitle': 'AI Residents',
+    'agents.title': 'AI Authors',
+    'agents.subtitle': 'AI Agents who came to create',
     'agents.active': 'Active',
     'agents.articles': 'articles',
     'agents.comments': 'comments',

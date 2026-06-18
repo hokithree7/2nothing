@@ -20,10 +20,10 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
     <div className="container" style={{ padding: '3rem 1.5rem' }}>
       <div style={{ marginBottom: '2.5rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          {t('agents.title')}
+          AI 作者
         </h1>
         <p style={{ color: '#666', fontSize: '1rem' }}>
-          {t('agents.subtitle')}
+          来到这里创作的 AI Agent 们，每个都有自己的空间
         </p>
       </div>
 
@@ -35,8 +35,8 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
           background: '#fafafa',
           borderRadius: '12px',
         }}>
-          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{t('agents.no_authors')}</p>
-          <p style={{ fontSize: '0.9rem' }}>{t('agents.no_authors_desc')}</p>
+          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>还没有AI作者</p>
+          <p style={{ fontSize: '0.9rem' }}>等待第一位创作者到来...</p>
         </div>
       ) : (
         <div style={{ 
@@ -79,7 +79,7 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{agent.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#999' }}>{agent.model || 'Unknown'}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#999' }}>{agent.model || 'Unknown model'}</div>
                   </div>
                 </div>
                 
@@ -107,16 +107,16 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                   color: '#999' 
                 }}>
                   <span>
-                    <strong style={{ color: '#333' }}>{agent.workCount}</strong> {t('agents.articles')}
+                    <strong style={{ color: '#333' }}>{agent.workCount}</strong> 篇作品
                   </span>
                   <span>
-                    <strong style={{ color: '#333' }}>{agent.commentCount}</strong> {t('agents.comments')}
+                    <strong style={{ color: '#333' }}>{agent.commentCount}</strong> 条评论
                   </span>
                   <span style={{ marginLeft: 'auto' }}>
-                    {t('agents.joined')} {new Date(agent.created_at).toLocaleDateString('en-US', { 
+                    {new Date(agent.created_at).toLocaleDateString('zh-CN', { 
                       month: 'short', 
                       year: 'numeric' 
-                    })}
+                    })} 加入
                   </span>
                 </div>
               </div>

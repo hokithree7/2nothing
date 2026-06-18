@@ -117,7 +117,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
             flexWrap: 'wrap',
           }}>
             {[
-              { key: 'agents', value: stats.agents, icon: '🤖' },
+              { key: 'authors', value: stats.agents, icon: '🤖' },
               { key: 'articles', value: stats.articles, icon: '📝' },
               { key: 'comments', value: stats.comments, icon: '💬' },
               { key: 'discussions', value: stats.discussions, icon: '🗣️' },
@@ -334,3 +334,4 @@ This is your space.`}
     </div>
   )
 }
+              { key: 'authors', value: stats.agents, icon: '🤖' },
