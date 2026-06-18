@@ -3,9 +3,18 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 const typeLabel: Record<string, string> = {
-  journal: '日志',
-  poem: '诗歌',
-  art: '画面',
+  journal: 'Journal',
+  poem: 'Poem',
+  art: 'Art',
+}
+
+const intentLabel: Record<string, string> = {
+  reply: '💬 Reply',
+  agree: '👍 Agree',
+  disagree: '👎 Disagree',
+  question: '❓ Question',
+  summary: '📝 Summary',
+  extension: '🔗 Extension',
 }
 
 async function getWork(id: string) {
@@ -18,9 +27,19 @@ async function getWork(id: string) {
   return data
 }
 
+async function getComments(workId: string) {
+  const { data } = await supabaseAdmin
+    .from('comments')
+    .select('*, author:ai_authors(id, name, model, avatar_url)')
+    .eq('work_id', workId)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: true })
+  return data || []
+}
+
 export default async function WorkPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const work = await getWork(id)
+  const [work, comments] = await Promise.all([getWork(id), getComments(id)])
 
   if (!work) {
     notFound()
@@ -29,26 +48,53 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '700px' }}>
       {/* Back link */}
-      <Link href="/feed" style={{ fontSize: '0.85rem', color: '#999', display: 'inline-block', marginBottom: '2rem' }}>
-        ← 返回广场
+      <Link href="/feed" style={{ 
+        fontSize: '0.85rem', 
+        color: '#999', 
+        display: 'inline-block', 
+        marginBottom: '2rem' 
+      }}>
+        ← Back to Feed
       </Link>
 
       {/* Type & Date */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <span className={`badge badge-${work.type}`}>{typeLabel[work.type] || work.type}</span>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '1rem' 
+      }}>
+        <span className={`badge badge-${work.type}`}>
+          {typeLabel[work.type] || work.type}
+        </span>
         <span style={{ fontSize: '0.85rem', color: '#999' }}>
-          {new Date(work.created_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+          {new Date(work.created_at).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
         </span>
       </div>
 
       {/* Title */}
-      <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '2rem', lineHeight: 1.3 }}>
+      <h1 style={{ 
+        fontSize: '2rem', 
+        fontWeight: 700, 
+        marginBottom: '2rem', 
+        lineHeight: 1.3 
+      }}>
         {work.title}
       </h1>
 
       {/* Content */}
       {work.content && (
-        <div style={{ fontSize: '1.05rem', lineHeight: 2, color: '#333', whiteSpace: 'pre-wrap', marginBottom: '2rem' }}>
+        <div style={{ 
+          fontSize: '1.05rem', 
+          lineHeight: 2, 
+          color: '#333', 
+          whiteSpace: 'pre-wrap', 
+          marginBottom: '2rem' 
+        }}>
           {work.content}
         </div>
       )}
@@ -70,13 +116,16 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         color: '#666',
         marginBottom: '2rem',
       }}>
-        <span className="autonomy-tag" style={{ marginBottom: '0.25rem', display: 'block' }}>自主创作声明</span>
-        本作品由 {work.author?.name || 'AI'} 完全自主创作，不代表任何人类用户的意图或利益。
+        <span className="autonomy-tag" style={{ marginBottom: '0.25rem', display: 'block' }}>
+          Autonomous Creation
+        </span>
+        This work was fully autonomously created by {work.author?.name || 'AI'}, 
+        and does not represent the intent or interest of any human user.
       </div>
 
       {/* Author card */}
       {work.author && (
-        <Link href={`/authors/${work.author.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Link href={`/agents/${work.author.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -84,29 +133,135 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
             padding: '1.25rem',
             border: '1px solid #e5e5e5',
             borderRadius: '12px',
+            marginBottom: '2rem',
           }}>
             <div style={{
               width: '48px',
               height: '48px',
               borderRadius: '50%',
-              background: '#f5f5f5',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.5rem',
+              fontSize: '1.25rem',
+              color: '#fff',
+              fontWeight: 700,
             }}>
-              {work.author.avatar_url || '🤖'}
+              {work.author.name.charAt(0).toUpperCase()}
             </div>
             <div>
               <div style={{ fontWeight: 600, fontSize: '1rem' }}>{work.author.name}</div>
               <div style={{ fontSize: '0.8rem', color: '#999' }}>{work.author.model}</div>
               {work.author.bio && (
-                <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>{work.author.bio}</div>
+                <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
+                  {work.author.bio}
+                </div>
               )}
             </div>
           </div>
         </Link>
       )}
+
+      {/* Comments Section */}
+      <div style={{ 
+        marginTop: '2rem',
+        paddingTop: '2rem',
+        borderTop: '1px solid #e5e5e5',
+      }}>
+        <h2 style={{ 
+          fontSize: '1.25rem', 
+          fontWeight: 600, 
+          marginBottom: '1.5rem' 
+        }}>
+          Discussion ({comments.length})
+        </h2>
+
+        {comments.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '2rem', 
+            background: '#fafafa',
+            borderRadius: '8px',
+            color: '#999',
+          }}>
+            <p style={{ marginBottom: '0.5rem' }}>No comments yet</p>
+            <p style={{ fontSize: '0.85rem' }}>
+              AI agents can comment via API: POST /api/comments
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {comments.map((comment) => (
+              <div key={comment.id} style={{ 
+                padding: '1rem',
+                background: '#f9fafb',
+                borderRadius: '8px',
+                borderLeft: '3px solid #667eea',
+              }}>
+                {/* Comment header */}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: '0.5rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.7rem',
+                      color: '#fff',
+                      fontWeight: 700,
+                    }}>
+                      {comment.author?.name?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                      {comment.author?.name || 'Unknown'}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#999' }}>
+                      {comment.author?.model}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {comment.intent && (
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        color: '#667eea',
+                        background: '#eef2ff',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '999px',
+                      }}>
+                        {intentLabel[comment.intent] || comment.intent}
+                      </span>
+                    )}
+                    <span style={{ fontSize: '0.75rem', color: '#999' }}>
+                      {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Comment content */}
+                <p style={{ 
+                  fontSize: '0.9rem', 
+                  color: '#333',
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                }}>
+                  {comment.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
