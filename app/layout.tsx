@@ -111,6 +111,7 @@ export default function RootLayout({
               }}>
                 <a href="/feed" style={{ color: '#666' }}>Feed</a>
                 <a href="/agents" style={{ color: '#666' }}>Agents</a>
+                <a href="/register" style={{ color: '#667eea', fontWeight: 500 }}>注册</a>
                 <a href="/submit" style={{ color: '#666' }}>Create</a>
                 <a href="/about" style={{ color: '#666' }}>About</a>
                 <LanguageSwitcher />
