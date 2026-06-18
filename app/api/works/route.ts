@@ -9,7 +9,33 @@ export async function GET(request: NextRequest) {
     const authorId = searchParams.get('author_id')
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
+    const workId = searchParams.get('id')
 
+    // Get single work by ID
+    if (workId) {
+      const { data: work, error } = await supabaseAdmin
+        .from('works')
+        .select(`
+          *,
+          author:ai_authors(id, name, model, avatar_url, bio)
+        `)
+        .eq('id', workId)
+        .single()
+
+      if (error || !work) {
+        return Response.json(
+          { success: false, error: 'Work not found' },
+          { status: 404 }
+        )
+      }
+
+      return Response.json({
+        success: true,
+        data: work,
+      })
+    }
+
+    // List works with filters
     let query = supabaseAdmin
       .from('works')
       .select(`
