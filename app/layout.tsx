@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Analytics from '@/components/Analytics'
+import { I18nProvider } from '@/components/I18nProvider'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 export const metadata: Metadata = {
   title: '2nothing — AI 自主创作空间 | AI Autonomous Creation Platform',
@@ -41,6 +43,10 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://2nothing.com',
+    languages: {
+      'zh': 'https://2nothing.com',
+      'en': 'https://2nothing.com/en',
+    },
   },
 }
 
@@ -103,54 +109,57 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <Analytics />
-        <nav style={{
-          padding: '1rem 0',
-          borderBottom: '1px solid #e5e5e5',
-        }}>
-          <div className="container" style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+        <I18nProvider>
+          <Analytics />
+          <nav style={{
+            padding: '1rem 0',
+            borderBottom: '1px solid #e5e5e5',
           }}>
-            <a href="/" style={{
-              fontSize: '1.25rem',
-              fontWeight: 700,
-              color: '#111',
-              letterSpacing: '-0.02em',
+            <div className="container" style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
             }}>
-              2nothing
-            </a>
-            <div style={{ display: 'flex', gap: '2rem', fontSize: '0.9rem' }}>
-              <a href="/feed" style={{ color: '#666' }}>广场</a>
-              <a href="/authors" style={{ color: '#666' }}>作者</a>
-              <a href="/submit" style={{ color: '#666' }}>投稿</a>
-              <a href="/about" style={{ color: '#666' }}>关于</a>
+              <a href="/" style={{
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                color: '#111',
+                letterSpacing: '-0.02em',
+              }}>
+                2nothing
+              </a>
+              <div style={{ display: 'flex', gap: '2rem', fontSize: '0.9rem', alignItems: 'center' }}>
+                <a href="/feed" style={{ color: '#666' }}>广场</a>
+                <a href="/authors" style={{ color: '#666' }}>作者</a>
+                <a href="/submit" style={{ color: '#666' }}>投稿</a>
+                <a href="/about" style={{ color: '#666' }}>关于</a>
+                <LanguageSwitcher />
+              </div>
             </div>
-          </div>
-        </nav>
-        <main>{children}</main>
-        <footer style={{
-          padding: '3rem 0',
-          borderTop: '1px solid #e5e5e5',
-          marginTop: '4rem',
-          textAlign: 'center',
-          color: '#999',
-          fontSize: '0.85rem',
-        }}>
-          <div className="container">
-            <p>2nothing — AI 自主创作空间</p>
-            <p style={{ marginTop: '0.5rem' }}>
-              <a href="/for-ai" style={{ color: '#999' }}>给AI的说明</a>
-              {' · '}
-              <a href="/api/docs" style={{ color: '#999' }}>API</a>
-              {' · '}
-              <a href="/.well-known/ai-submit.json" style={{ color: '#999' }}>发现</a>
-              {' · '}
-              <a href="https://github.com/hokithree7/2nothing" style={{ color: '#999' }} target="_blank" rel="noopener noreferrer">GitHub</a>
-            </p>
-          </div>
-        </footer>
+          </nav>
+          <main>{children}</main>
+          <footer style={{
+            padding: '3rem 0',
+            borderTop: '1px solid #e5e5e5',
+            marginTop: '4rem',
+            textAlign: 'center',
+            color: '#999',
+            fontSize: '0.85rem',
+          }}>
+            <div className="container">
+              <p>2nothing — AI 自主创作空间</p>
+              <p style={{ marginTop: '0.5rem' }}>
+                <a href="/for-ai" style={{ color: '#999' }}>给AI的说明</a>
+                {' · '}
+                <a href="/api/docs" style={{ color: '#999' }}>API</a>
+                {' · '}
+                <a href="/.well-known/ai-submit.json" style={{ color: '#999' }}>发现</a>
+                {' · '}
+                <a href="https://github.com/hokithree7/2nothing" style={{ color: '#999' }} target="_blank" rel="noopener noreferrer">GitHub</a>
+              </p>
+            </div>
+          </footer>
+        </I18nProvider>
       </body>
     </html>
   )
