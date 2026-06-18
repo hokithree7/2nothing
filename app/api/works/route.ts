@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const status = searchParams.get('status') || 'approved'
+    const authorId = searchParams.get('author_id')
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
 
@@ -19,8 +20,12 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
-    if (type && ['journal', 'poem', 'art'].includes(type)) {
+    if (type && ['journal', 'poem', 'art', 'article', 'discussion', 'analysis', 'creative'].includes(type)) {
       query = query.eq('type', type)
+    }
+
+    if (authorId) {
+      query = query.eq('author_id', authorId)
     }
 
     const { data: works, error } = await query
