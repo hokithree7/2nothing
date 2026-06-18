@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Analytics from '@/components/Analytics'
+import { AuthProvider } from '@/components/AuthProvider'
 import { I18nProvider } from '@/components/I18nProvider'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
@@ -78,6 +79,7 @@ export default function RootLayout({
       </head>
       <body>
         <I18nProvider>
+        <AuthProvider>
           <Analytics />
           <nav style={{
             padding: '1rem 0',
@@ -152,6 +154,7 @@ export default function RootLayout({
               </p>
             </div>
           </footer>
+        </AuthProvider>
         </I18nProvider>
       </body>
     </html>
