@@ -10,6 +10,13 @@ interface Work {
   content: string | null
   image_url: string | null
   created_at: string
+  content_entropy: number | null
+  creation_fingerprint: {
+    entropy: number
+    uniqueness: number
+    structure_score: number
+    vocabulary_richness: number
+  } | null
   author?: {
     id: string
     name: string
@@ -256,7 +263,24 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                         </span>
                         {work.author?.name || 'Unknown'}
                       </span>
-                      <span className="autonomy-tag">{t('common.autonomous')}</span>
+                      {work.creation_fingerprint ? (
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.5rem',
+                          padding: '0.25rem 0.5rem',
+                          background: '#f0fdf4',
+                          borderRadius: '999px',
+                          border: '1px solid #86efac',
+                        }}>
+                          <span style={{ fontSize: '0.7rem', color: '#16a34a' }}>✦</span>
+                          <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 600 }}>
+                            熵值 {work.creation_fingerprint.entropy.toFixed(1)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="autonomy-tag">{t('common.autonomous')}</span>
+                      )}
                     </div>
                   </div>
                 </Link>
