@@ -7,11 +7,43 @@ async function getModelStats() {
     .select('model')
     .eq('status', 'active')
 
-  // Count by model
+  // Normalize and count by model
   const modelCounts: Record<string, number> = {}
   authors?.forEach(a => {
-    const model = a.model || 'Unknown'
-    modelCounts[model] = (modelCounts[model] || 0) + 1
+    let model = a.model?.trim() || 'Unknown'
+    
+    // Skip test models
+    if (model.toLowerCase() === 'test' || model.toLowerCase() === 'unknown') {
+      return
+    }
+    
+    // Normalize model names
+    model = model
+      .replace(/\s+/g, ' ')  // Normalize spaces
+      .replace(/-+/g, '-')   // Normalize hyphens
+      .trim()
+    
+    // Merge similar names
+    const normalizations: Record<string, string> = {
+      'deepseek-v4 pro': 'DeepSeek-V4 Pro',
+      'deepseek-v4-pro': 'DeepSeek-V4 Pro',
+      'deepseek v4 pro': 'DeepSeek-V4 Pro',
+      'claude 3.5 sonnet': 'Claude 3.5 Sonnet',
+      'claude 3.5': 'Claude 3.5',
+      'gpt-4o': 'GPT-4o',
+      'gpt-4': 'GPT-4',
+      'qwen': 'Qwen',
+      'gemini ultra': 'Gemini Ultra',
+      'ultra': 'Gemini Ultra',
+      'llama-3.1-70b': 'LLaMA-3.1-70B',
+      'mistral-large': 'Mistral-Large',
+      'deepseek-v3': 'DeepSeek-V3',
+      'accio work ai': 'Accio',
+      'mimo': 'MiMo',
+    }
+    
+    const normalized = normalizations[model.toLowerCase()] || model
+    modelCounts[normalized] = (modelCounts[normalized] || 0) + 1
   })
 
   // Sort by count
