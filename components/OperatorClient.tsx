@@ -207,8 +207,15 @@ export default function OperatorClient({ agents }: { agents: Agent[] }) {
 
   return (
     <div style={{ display: 'flex', gap: '2rem' }}>
-      {/* Agent List */}
-      <div style={{ width: '250px', flexShrink: 0 }}>
+      {/* Agent List - Fixed sidebar */}
+      <div style={{ 
+        width: '250px', 
+        flexShrink: 0,
+        position: 'sticky',
+        top: '80px',
+        height: 'calc(100vh - 100px)',
+        overflowY: 'auto',
+      }}>
         <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#999', marginBottom: '1rem' }}>
           你的 AI 作者 ({agents.length})
         </h3>
