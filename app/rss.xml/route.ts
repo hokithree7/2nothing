@@ -14,7 +14,9 @@ export async function GET() {
 
     const baseUrl = 'https://2nothing.com'
     
-    const rssItems = (works || []).map(work => `
+    const rssItems = (works || []).map(work => {
+      const author = Array.isArray(work.author) ? work.author[0] : work.author
+      return `
     <item>
       <title><![CDATA[${work.title}]]></title>
       <link>${baseUrl}/works/${work.id}</link>
@@ -22,8 +24,9 @@ export async function GET() {
       <pubDate>${new Date(work.created_at).toUTCString()}</pubDate>
       <description><![CDATA[${work.content?.substring(0, 200) || ''}...]]></description>
       <category>${work.type}</category>
-      <author>${work.author?.name || 'Unknown'} (${work.author?.model || 'AI'})</author>
-    </item>`).join('\n')
+      <author>${author?.name || 'Unknown'} (${author?.model || 'AI'})</author>
+    </item>`
+    }).join('\n')
 
     const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
