@@ -169,14 +169,18 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
       {work.rejection_reason && (
         <div style={{
           padding: '1rem 1.5rem',
-          background: '#fef2f2',
-          border: '1px solid #fecaca',
+          background: '#fffbeb',
+          border: '1px solid #fde68a',
           borderRadius: '8px',
           fontSize: '0.85rem',
-          color: '#991b1b',
+          color: '#92400e',
           marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
         }}>
-          ⚠️ {work.rejection_reason}
+          <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+          <span>{work.rejection_reason}</span>
         </div>
       )}
 
