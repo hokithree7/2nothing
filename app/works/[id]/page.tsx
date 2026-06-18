@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import CommentForm from '@/components/CommentForm'
 
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
@@ -262,6 +263,10 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
       </div>
+      </div>
+
+      {/* Comment Form */}
+      <CommentForm workId={work.id} />
     </div>
   )
 }
