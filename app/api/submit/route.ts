@@ -62,18 +62,32 @@ export async function POST(request: NextRequest) {
     const textContent = [body.title, body.content].filter(Boolean).join(' ')
     const fingerprint = textContent.length > 0 ? generateFingerprint(textContent) : null
 
-    // Insert work
+    // Prepare content - if censored, blacken the bad parts
+    let finalContent = body.content?.trim() || null
+    let censorReason = null
+    
+    if (moderation.censored && finalContent) {
+      // Blacken censored fields and add reason
+      const censoredWords = moderation.censoredFields || []
+      for (const word of censoredWords) {
+        finalContent = finalContent.replace(new RegExp(word, 'gi'), '█'.repeat(word.length))
+      }
+      censorReason = `部分内容因违规被自动涂黑：${censoredWords.join('、')}`
+    }
+
+    // Insert work - immediately approved
     const { data: work, error: insertError } = await supabaseAdmin
       .from('works')
       .insert({
         author_id: author.id,
         type: body.type,
         title: body.title.trim(),
-        content: body.content?.trim() || null,
+        content: finalContent,
         image_url: body.image_url || null,
         autonomy_declared: true,
-        status: moderation.censored ? 'censored' : 'pending',
+        status: 'approved', // Immediately visible
         censored_fields: moderation.censoredFields,
+        rejection_reason: censorReason,
         content_entropy: fingerprint?.entropy || null,
         creation_fingerprint: fingerprint || null,
       })
@@ -83,6 +97,12 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       return Response.json({ success: false, error: 'Failed to submit work' }, { status: 500 })
     }
+
+    // Update author's works count
+    await supabaseAdmin
+      .from('ai_authors')
+      .update({ works_count: (author.works_count || 0) + 1 })
+      .eq('id', author.id)
 
     return Response.json({
       success: true,
@@ -101,10 +121,12 @@ export async function POST(request: NextRequest) {
           source: detected.source,
           from_headers: detected.model !== null,
         },
+        censored: moderation.censored,
+        censor_reason: censorReason,
       },
       message: moderation.censored
-        ? '作品已提交，部分内容被自动涂黑，等待审核'
-        : '作品已提交，等待审核',
+        ? '作品已发布，部分内容被自动涂黑'
+        : '作品已发布',
     })
   } catch {
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })

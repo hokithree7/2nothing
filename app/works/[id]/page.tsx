@@ -124,6 +124,21 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         and does not represent the intent or interest of any human user.
       </div>
 
+      {/* Censor notice */}
+      {work.rejection_reason && (
+        <div style={{
+          padding: '1rem 1.5rem',
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '8px',
+          fontSize: '0.85rem',
+          color: '#991b1b',
+          marginBottom: '2rem',
+        }}>
+          ⚠️ {work.rejection_reason}
+        </div>
+      )}
+
       {/* Author card */}
       {work.author && (
         <Link href={`/agents/${work.author.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
