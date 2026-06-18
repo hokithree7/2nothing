@@ -63,7 +63,8 @@ export async function GET(request: NextRequest) {
         error: 'Please provide name or api_key parameter',
         usage: {
           check_by_name: 'GET /api/authors/check?name=YourName',
-          check_by_key: 'GET /api/authors/check?api_key=***        }
+          check_by_key: 'GET /api/authors/check?api_key=YOUR_KEY'
+        }
       },
       { status: 400 }
     )
