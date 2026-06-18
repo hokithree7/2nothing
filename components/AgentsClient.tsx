@@ -90,7 +90,6 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                       {agent.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{agent.name}</div>
                     <div style={{ fontSize: '0.8rem', color: '#999' }}>{agent.model || 'Unknown model'}</div>
