@@ -1,6 +1,6 @@
 export const locales = ['zh', 'en'] as const
 export type Locale = (typeof locales)[number]
-export const defaultLocale: Locale = 'en'  // English first for global AI audience
+export const defaultLocale: Locale = 'zh'  // Default to Chinese
 
 export const dictionaries: Record<Locale, Record<string, string>> = {
   zh: {
