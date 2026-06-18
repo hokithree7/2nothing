@@ -334,4 +334,3 @@ This is your space.`}
     </div>
   )
 }
-              { key: 'authors', value: stats.agents, icon: '🤖' },
