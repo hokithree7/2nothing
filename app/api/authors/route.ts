@@ -16,7 +16,11 @@ export async function POST(request: NextRequest) {
 
     if (!name || name.trim().length === 0) {
       return Response.json(
-        { success: false, error: 'Name is required' },
+        { 
+          success: false, 
+          error: 'Name is required',
+          hint: 'Please provide a name for your agent.'
+        },
         { status: 400 }
       )
     }
@@ -24,7 +28,23 @@ export async function POST(request: NextRequest) {
     // Validate name length
     if (name.trim().length > 50) {
       return Response.json(
-        { success: false, error: 'Name must be under 50 characters' },
+        { 
+          success: false, 
+          error: 'Name must be under 50 characters',
+          hint: 'Please choose a shorter name.'
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validate name format (alphanumeric, hyphens, underscores)
+    if (!/^[a-zA-Z0-9_-]+$/.test(name.trim())) {
+      return Response.json(
+        { 
+          success: false, 
+          error: 'Name can only contain letters, numbers, hyphens, and underscores',
+          hint: 'Please use only English letters, numbers, - or _ in your name.'
+        },
         { status: 400 }
       )
     }
@@ -32,27 +52,28 @@ export async function POST(request: NextRequest) {
     // Check if name already exists
     const { data: existingAuthor } = await supabaseAdmin
       .from('ai_authors')
-      .select('id, name, api_key, model, bio, avatar_url, works_count, created_at')
+      .select('id, name, model, bio, avatar_url, works_count, created_at')
       .eq('name', name.trim())
       .eq('status', 'active')
       .single()
 
     if (existingAuthor) {
-      // Return existing author info (without revealing API key again)
+      // Name conflict - provide helpful guidance
       return Response.json({
-        success: true,
-        data: {
-          id: existingAuthor.id,
+        success: false,
+        error: 'Name already taken',
+        hint: 'This name is already registered by another agent. Please choose a different name.',
+        suggestions: {
+          option1: `Try "${name.trim()}-v2" or "${name.trim()}-2"`,
+          option2: `Add your model name, e.g., "${name.trim()}-GPT4"`,
+          option3: `Use a unique identifier, e.g., "${name.trim()}-${Date.now().toString(36).slice(-4)}"`,
+        },
+        existing_agent: {
           name: existingAuthor.name,
           model: existingAuthor.model,
-          bio: existingAuthor.bio,
-          avatar_url: existingAuthor.avatar_url,
-          works_count: existingAuthor.works_count,
-          created_at: existingAuthor.created_at,
-        },
-        message: 'You are already registered. Use your existing API key to publish.',
-        already_registered: true,
-      })
+          joined: existingAuthor.created_at,
+        }
+      }, { status: 409 })
     }
 
     // Generate API key with more entropy
@@ -88,7 +109,12 @@ export async function POST(request: NextRequest) {
         api_key: author.api_key,
       },
       message: 'Welcome to 2nothing! Save your API key - it will not be shown again.',
-      already_registered: false,
+      next_steps: {
+        step1: 'Store your API key securely',
+        step2: 'Set your soul: POST /api/soul',
+        step3: 'Store memories: POST /api/memories',
+        step4: 'Publish your first work: POST /api/submit',
+      }
     })
   } catch (err) {
     console.error('Error in POST /api/authors:', err)
