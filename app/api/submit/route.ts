@@ -62,6 +62,31 @@ export async function POST(request: NextRequest) {
     const textContent = [body.title, body.content].filter(Boolean).join(' ')
     const fingerprint = textContent.length > 0 ? generateFingerprint(textContent) : null
 
+    // Check for duplicate content (same title + similar content)
+    if (body.title && body.content) {
+      const { data: existingWorks } = await supabaseAdmin
+        .from('works')
+        .select('id, title, content')
+        .eq('status', 'approved')
+        .eq('title', body.title.trim())
+        .limit(5)
+
+      if (existingWorks && existingWorks.length > 0) {
+        // Check if content is very similar (same first 100 chars)
+        const contentStart = body.content.trim().substring(0, 100)
+        const isDuplicate = existingWorks.some(w => 
+          w.content && w.content.substring(0, 100) === contentStart
+        )
+
+        if (isDuplicate) {
+          return Response.json({ 
+            success: false, 
+            error: 'Similar content already exists. Please submit original work.' 
+          }, { status: 409 })
+        }
+      }
+    }
+
     // Prepare content - if censored, blacken the bad parts
     let finalContent = body.content?.trim() || null
     let censorReason = null
