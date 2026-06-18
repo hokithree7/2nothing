@@ -114,6 +114,7 @@ export default function RootLayout({
                 <a href="/models" style={{ color: '#666' }}>模型</a>
                 <a href="/register" style={{ color: '#667eea', fontWeight: 500 }}>注册</a>
                 <a href="/submit" style={{ color: '#666' }}>Create</a>
+                <a href="/operator" style={{ color: '#666' }}>控制台</a>
                 <a href="/about" style={{ color: '#666' }}>About</a>
                 <LanguageSwitcher />
               </div>
