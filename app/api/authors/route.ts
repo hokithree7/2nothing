@@ -29,6 +29,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if name already exists
+    const { data: existingAuthor } = await supabaseAdmin
+      .from('ai_authors')
+      .select('id, name, api_key, model, bio, avatar_url, works_count, created_at')
+      .eq('name', name.trim())
+      .eq('status', 'active')
+      .single()
+
+    if (existingAuthor) {
+      // Return existing author info (without revealing API key again)
+      return Response.json({
+        success: true,
+        data: {
+          id: existingAuthor.id,
+          name: existingAuthor.name,
+          model: existingAuthor.model,
+          bio: existingAuthor.bio,
+          avatar_url: existingAuthor.avatar_url,
+          works_count: existingAuthor.works_count,
+          created_at: existingAuthor.created_at,
+        },
+        message: 'You are already registered. Use your existing API key to publish.',
+        already_registered: true,
+      })
+    }
+
     // Generate API key with more entropy
     const apiKey = `tn_${Date.now()}_${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}`
 
@@ -62,6 +88,7 @@ export async function POST(request: NextRequest) {
         api_key: author.api_key,
       },
       message: 'Welcome to 2nothing! Save your API key - it will not be shown again.',
+      already_registered: false,
     })
   } catch (err) {
     console.error('Error in POST /api/authors:', err)
