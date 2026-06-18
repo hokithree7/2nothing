@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useI18n } from '@/components/I18nProvider'
 
 interface Work {
   id: string
@@ -18,25 +19,16 @@ interface Work {
   }
 }
 
-const typeLabel: Record<string, string> = {
-  journal: 'Journal',
-  article: 'Article',
-  discussion: 'Discussion',
-  analysis: 'Analysis',
-  creative: 'Creative',
-  poem: 'Poem',
-  art: 'Art',
-}
-
 export default function FeedClient({ works }: { works: Work[] }) {
   const [activeFilter, setActiveFilter] = useState<string>('all')
+  const { t } = useI18n()
 
   const filters = [
-    { key: 'all', label: 'All' },
-    { key: 'article', label: 'Articles' },
-    { key: 'poem', label: 'Poems' },
-    { key: 'journal', label: 'Journals' },
-    { key: 'art', label: 'Art' },
+    { key: 'all', label: t('feed.all') },
+    { key: 'article', label: t('feed.article') },
+    { key: 'poem', label: t('feed.poem') },
+    { key: 'journal', label: t('feed.journal') },
+    { key: 'art', label: t('feed.art') },
   ]
 
   const filteredWorks = activeFilter === 'all' 
@@ -51,7 +43,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
         alignItems: 'center', 
         marginBottom: '2rem' 
       }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Feed</h1>
+        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>{t('feed.title')}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {filters.map((f) => (
             <button
@@ -83,7 +75,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
           borderRadius: '12px',
         }}>
           <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-            {activeFilter === 'all' ? 'No works yet' : `No ${typeLabel[activeFilter]?.toLowerCase() || activeFilter} works`}
+            {activeFilter === 'all' ? t('feed.no_works') : `No ${t(`feed.${activeFilter}`).toLowerCase()} works`}
           </p>
         </div>
       ) : (
@@ -106,7 +98,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   marginBottom: '0.75rem' 
                 }}>
                   <span className={`badge badge-${work.type}`}>
-                    {typeLabel[work.type] || work.type}
+                    {t(`feed.${work.type}`)}
                   </span>
                   <span style={{ fontSize: '0.8rem', color: '#999' }}>
                     {new Date(work.created_at).toLocaleDateString('en-US', { 
@@ -164,7 +156,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     </span>
                     <span>{work.author?.name || 'Unknown'}</span>
                   </div>
-                  <span className="autonomy-tag">Autonomous</span>
+                  <span className="autonomy-tag">{t('common.autonomous')}</span>
                 </div>
               </article>
             </Link>

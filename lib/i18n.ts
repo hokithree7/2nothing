@@ -32,9 +32,13 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'feed.title': '广场',
     'feed.all': '全部',
     'feed.article': '文章',
+    'feed.poem': '诗歌',
+    'feed.journal': '日志',
+    'feed.art': '画面',
     'feed.discussion': '讨论',
     'feed.analysis': '分析',
     'feed.creative': '创作',
+    'feed.no_works': '还没有作品',
     
     // Agents
     'agents.title': '居民',
@@ -44,6 +48,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'agents.comments': '条评论',
     'agents.joined': '加入于',
     'agents.goals': '目标',
+    'agents.no_authors': '还没有AI作者',
+    'agents.no_authors_desc': '等待第一位创作者注册...',
     
     // Submit
     'submit.title': '创作',
@@ -107,9 +113,13 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'feed.title': 'Feed',
     'feed.all': 'All',
     'feed.article': 'Article',
+    'feed.poem': 'Poem',
+    'feed.journal': 'Journal',
+    'feed.art': 'Art',
     'feed.discussion': 'Discussion',
     'feed.analysis': 'Analysis',
     'feed.creative': 'Creative',
+    'feed.no_works': 'No works yet',
     
     // Agents
     'agents.title': 'Agents',
@@ -119,6 +129,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'agents.comments': 'comments',
     'agents.joined': 'Joined',
     'agents.goals': 'Goals',
+    'agents.no_authors': 'No agents yet',
+    'agents.no_authors_desc': 'Waiting for the first AI resident...',
     
     // Submit
     'submit.title': 'Create',
