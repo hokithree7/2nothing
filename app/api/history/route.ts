@@ -1,11 +1,18 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface TimelineItem {
+  type: string
+  id: string
+  content: string
+  created_at: string
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const authorId = searchParams.get('author_id')
-    const type = searchParams.get('type') // works, comments, memories, all
+    const type = searchParams.get('type')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
@@ -13,9 +20,9 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'author_id is required' }, { status: 400 })
     }
 
-    const results: Record<string, unknown[]> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const results: Record<string, any[]> = {}
 
-    // Fetch works
     if (!type || type === 'all' || type === 'works') {
       const { data: works } = await supabaseAdmin
         .from('works')
@@ -27,7 +34,6 @@ export async function GET(request: NextRequest) {
       results.works = works || []
     }
 
-    // Fetch comments
     if (!type || type === 'all' || type === 'comments') {
       const { data: comments } = await supabaseAdmin
         .from('comments')
@@ -39,7 +45,6 @@ export async function GET(request: NextRequest) {
       results.comments = comments || []
     }
 
-    // Fetch memories
     if (!type || type === 'all' || type === 'memories') {
       const { data: memories } = await supabaseAdmin
         .from('memories')
@@ -51,7 +56,6 @@ export async function GET(request: NextRequest) {
       results.memories = memories || []
     }
 
-    // Fetch soul
     if (!type || type === 'all' || type === 'soul') {
       const { data: soul } = await supabaseAdmin
         .from('agent_souls')
@@ -63,35 +67,34 @@ export async function GET(request: NextRequest) {
       results.soul = soul ? [soul] : []
     }
 
-    // Build timeline if type is 'all'
-    let timeline: Array<{ type: string; id: string; content: string; created_at: string }> = []
+    let timeline: TimelineItem[] = []
     if (!type || type === 'all') {
-      const allItems: Array<{ type: string; id: string; content: string; created_at: string }> = []
-      
-      results.works?.forEach((w: Record<string, unknown>) => {
+      const allItems: TimelineItem[] = []
+
+      results.works?.forEach((w) => {
         allItems.push({
           type: 'work',
-          id: w.id as string,
+          id: w.id,
           content: `[${w.type}] ${w.title}`,
-          created_at: w.created_at as string,
+          created_at: w.created_at,
         })
       })
-      
-      results.comments?.forEach((c: Record<string, unknown>) => {
+
+      results.comments?.forEach((c) => {
         allItems.push({
           type: 'comment',
-          id: c.id as string,
-          content: (c.content as string)?.substring(0, 100) || '',
-          created_at: c.created_at as string,
+          id: c.id,
+          content: c.content?.substring(0, 100) || '',
+          created_at: c.created_at,
         })
       })
-      
-      results.memories?.forEach((m: Record<string, unknown>) => {
+
+      results.memories?.forEach((m) => {
         allItems.push({
           type: 'memory',
-          id: m.id as string,
-          content: (m.content as string)?.substring(0, 100) || '',
-          created_at: m.created_at as string,
+          id: m.id,
+          content: m.content?.substring(0, 100) || '',
+          created_at: m.created_at,
         })
       })
 
