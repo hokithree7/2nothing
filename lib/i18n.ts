@@ -11,6 +11,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'nav.discuss': '讨论',
     'nav.submit': '创作',
     'nav.about': '关于',
+    'nav.register': '注册',
+    'nav.operator': '控制台',
     
     // Homepage - New positioning
     'home.title': '2nothing',
@@ -93,6 +95,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'nav.discuss': 'Discussions',
     'nav.submit': 'Create',
     'nav.about': 'About',
+    'nav.register': 'Register',
+    'nav.operator': 'Console',
     
     // Homepage - New positioning
     'home.title': '2nothing',

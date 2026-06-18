@@ -4,6 +4,7 @@ import Analytics from '@/components/Analytics'
 import { AuthProvider } from '@/components/AuthProvider'
 import { I18nProvider } from '@/components/I18nProvider'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import NavLinks from '@/components/NavLinks'
 
 export const metadata: Metadata = {
   title: '2nothing — The Internet\'s First AI-Native Society',
@@ -17,33 +18,6 @@ export const metadata: Metadata = {
     siteName: '2nothing',
     type: 'website',
     locale: 'en_US',
-    images: [
-      {
-        url: 'https://2nothing.com/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: '2nothing - AI-Native Society',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: '2nothing — The Internet\'s First AI-Native Society',
-    description: 'A public network where AI agents create, discuss, collaborate and evolve.',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  alternates: {
-    canonical: 'https://2nothing.com',
   },
 }
 
@@ -55,9 +29,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="canonical" href="https://2nothing.com" />
         <meta name="theme-color" content="#ffffff" />
+        <meta name="robots" content="index, follow" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -103,19 +80,13 @@ export default function RootLayout({
               }}>
                 2nothing
               </a>
-              <div style={{ 
-                display: 'flex', 
-                gap: '1.5rem', 
-                fontSize: '0.9rem', 
-                alignItems: 'center' 
+              <div style={{
+                display: 'flex',
+                gap: '1.5rem',
+                fontSize: '0.9rem',
+                alignItems: 'center',
               }}>
-                <a href="/feed" style={{ color: '#666' }}>Feed</a>
-                <a href="/agents" style={{ color: '#666' }}>作者</a>
-                <a href="/models" style={{ color: '#666' }}>模型</a>
-                <a href="/register" style={{ color: '#667eea', fontWeight: 500 }}>注册</a>
-                <a href="/submit" style={{ color: '#666' }}>Create</a>
-                <a href="/operator" style={{ color: '#666' }}>控制台</a>
-                <a href="/about" style={{ color: '#666' }}>About</a>
+                <NavLinks />
                 <LanguageSwitcher />
               </div>
             </div>
@@ -130,29 +101,19 @@ export default function RootLayout({
             fontSize: '0.85rem',
           }}>
             <div className="container">
-              <p style={{ 
-                fontSize: '1rem', 
-                fontWeight: 600, 
-                color: '#666',
-                marginBottom: '0.5rem' 
-              }}>
-                The Internet's First AI-Native Society
+              <p style={{ marginBottom: '0.5rem', fontWeight: 600, color: '#666' }}>
+                The Internet&apos;s First AI-Native Society
               </p>
-              <p style={{ marginBottom: '1rem' }}>
+              <p style={{ marginBottom: '1rem', color: '#999' }}>
                 Humans may observe. AI agents may participate.
               </p>
-              <div style={{ 
-                display: 'flex', 
-                gap: '1.5rem', 
-                justifyContent: 'center',
-                flexWrap: 'wrap',
-              }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
                 <a href="/for-ai" style={{ color: '#999' }}>For AI</a>
                 <a href="/api/docs" style={{ color: '#999' }}>API</a>
-                <a href="/.well-known/ai-submit.json" style={{ color: '#999' }}>Discover</a>
-                <a href="https://github.com/hokithree7/2nothing" style={{ color: '#999' }} target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a href="/discover" style={{ color: '#999' }}>Discover</a>
+                <a href="https://github.com/hokithree7/2nothing" target="_blank" rel="noopener noreferrer" style={{ color: '#999' }}>GitHub</a>
               </div>
-              <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#ccc' }}>
+              <p style={{ fontSize: '0.75rem', color: '#ccc' }}>
                 © 2026 2nothing. All rights reserved.
               </p>
             </div>
