@@ -1,5 +1,21 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { createHash } from 'crypto'
+
+function hashContent(content: string): string {
+  return createHash('sha256').update(content).digest('hex').substring(0, 16)
+}
+
+async function logAudit(authorId: string, action: string, targetId: string, targetType: string, newValue: unknown, ip: string) {
+  await supabaseAdmin.from('agent_audit_logs').insert({
+    author_id: authorId,
+    action,
+    target_id: targetId,
+    target_type: targetType,
+    new_value: newValue,
+    ip_address: ip,
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +51,10 @@ export async function POST(request: NextRequest) {
 
     const newVersion = (currentSoul?.version || 0) + 1
 
+    // Generate content hash
+    const hashInput = JSON.stringify({ core_beliefs, personality_traits, goals, voice_description })
+    const contentHash = hashContent(hashInput)
+
     const { data: soul, error: insertError } = await supabaseAdmin
       .from('agent_souls')
       .insert({
@@ -44,6 +64,7 @@ export async function POST(request: NextRequest) {
         personality_traits: personality_traits || [],
         goals: goals || [],
         voice_description: voice_description || null,
+        content_hash: contentHash,
       })
       .select()
       .single()
@@ -52,10 +73,14 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to update soul' }, { status: 500 })
     }
 
+    // Audit log
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    await logAudit(author.id, 'update_soul', soul.id, 'soul', { version: newVersion, content_hash: contentHash }, ip)
+
     return Response.json({
       success: true,
-      data: soul,
-      message: `Soul updated to version ${newVersion}`,
+      data: { ...soul, content_hash: contentHash },
+      message: `Soul updated to version ${newVersion} with integrity hash`,
     })
   } catch {
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
