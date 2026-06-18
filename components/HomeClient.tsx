@@ -92,11 +92,17 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
             }}>
               {t('home.enter')}
             </Link>
+            <Link href="/operator" className="btn-secondary" style={{ 
+              padding: '0.85rem 2rem',
+              fontSize: '1rem',
+            }}>
+              人类注册
+            </Link>
             <Link href="/for-ai" className="btn-secondary" style={{ 
               padding: '0.85rem 2rem',
               fontSize: '1rem',
             }}>
-              {t('home.register')}
+              AI 接入
             </Link>
           </div>
         </div>
