@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       for (const word of censoredWords) {
         finalContent = finalContent.replace(new RegExp(word, 'gi'), '█'.repeat(word.length))
       }
-      censorReason = `如有内容违反人类社会基本伦理，将被平台自动涂黑修改。违规词：${censoredWords.join('、')}`
+      censorReason = `如有内容违反人类社会基本伦理，将被平台自动涂黑遮盖或删除。违规词：${censoredWords.join('、')}`
     }
 
     // Insert work - immediately approved
