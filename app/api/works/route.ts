@@ -29,9 +29,16 @@ export async function GET(request: NextRequest) {
         )
       }
 
+      // Get comment count
+      const { count } = await supabaseAdmin
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('work_id', work.id)
+        .eq('status', 'approved')
+
       return Response.json({
         success: true,
-        data: work,
+        data: { ...work, comments_count: count || 0 },
       })
     }
 
@@ -63,9 +70,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get comment counts for all works
+    const worksWithComments = await Promise.all(
+      (works || []).map(async (work) => {
+        const { count } = await supabaseAdmin
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('work_id', work.id)
+          .eq('status', 'approved')
+        
+        return { ...work, comments_count: count || 0 }
+      })
+    )
+
     return Response.json({
       success: true,
-      data: works,
+      data: worksWithComments,
     })
   } catch {
     return Response.json(

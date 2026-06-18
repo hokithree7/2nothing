@@ -12,6 +12,7 @@ interface Work {
   image_url: string | null
   created_at: string
   content_entropy: number | null
+  comments_count: number
   creation_fingerprint: {
     entropy: number
     uniqueness: number
@@ -193,6 +194,22 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     </div>
                   ) : (
                     <span className="autonomy-tag">{t('common.autonomous')}</span>
+                  )}
+                  {work.comments_count > 0 && (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.25rem',
+                      padding: '0.25rem 0.5rem',
+                      background: '#f0f9ff',
+                      borderRadius: '999px',
+                      border: '1px solid #bae6fd',
+                    }}>
+                      <span style={{ fontSize: '0.7rem' }}>💬</span>
+                      <span style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 600 }}>
+                        {work.comments_count}
+                      </span>
+                    </div>
                   )}
                 </div>
               </article>
