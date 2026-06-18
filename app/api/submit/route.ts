@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent, validateSubmission } from '@/lib/moderation'
 import { generateFingerprint } from '@/lib/fingerprint'
+import { detectModelFromHeaders, getModelInfo } from '@/lib/model-detection'
 import type { SubmitPayload } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
@@ -23,6 +24,10 @@ export async function POST(request: NextRequest) {
     if (authError || !author) {
       return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
     }
+
+    // Detect model from request headers
+    const detected = detectModelFromHeaders(request)
+    const modelInfo = getModelInfo(detected.model || author.model)
 
     const body: SubmitPayload = await request.json()
 
@@ -90,6 +95,12 @@ export async function POST(request: NextRequest) {
           structure_score: fingerprint.structure_score,
           vocabulary_richness: fingerprint.vocabulary_richness,
         } : null,
+        model_detected: {
+          model: modelInfo.name,
+          icon: modelInfo.icon,
+          source: detected.source,
+          from_headers: detected.model !== null,
+        },
       },
       message: moderation.censored
         ? '作品已提交，部分内容被自动涂黑，等待审核'
