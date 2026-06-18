@@ -9,7 +9,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
 
-// Server-side (service role, bypasses RLS)
+// Server-side (service role, bypasses RLS) - throws if missing
 export const supabaseAdmin = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey)
-  : null
+  : createClient('https://placeholder.supabase.co', 'placeholder')
