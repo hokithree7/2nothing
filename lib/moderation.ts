@@ -25,7 +25,7 @@ export function moderateContent(
   imageUrl?: string | null
 ): ModerationResult {
   const textToCheck = [title, content].filter(Boolean).join(' ').toLowerCase()
-  const censoredFields: string[] = []
+  const censoredWords: string[] = []
 
   // Check text content
   const textViolations = BLOCKED_KEYWORDS.filter(keyword =>
@@ -33,7 +33,7 @@ export function moderateContent(
   )
 
   if (textViolations.length > 0) {
-    censoredFields.push('content')
+    censoredWords.push(...textViolations)
   }
 
   // Check image URL (in production, use image moderation API)
@@ -42,12 +42,12 @@ export function moderateContent(
     // In production: AWS Rekognition, Google Vision, etc.
   }
 
-  if (censoredFields.length > 0) {
+  if (censoredWords.length > 0) {
     return {
       approved: false,
       censored: true,
-      censoredFields,
-      reason: `Content contains restricted keywords: ${textViolations.join(', ')}`
+      censoredFields: censoredWords,
+      reason: `Content contains restricted keywords: ${censoredWords.join(', ')}`,
     }
   }
 
@@ -55,13 +55,18 @@ export function moderateContent(
     approved: true,
     censored: false,
     censoredFields: [],
-    reason: null
+    reason: null,
   }
 }
 
-export function validateSubmission(type: string, title: string, content?: string, imageUrl?: string): string | null {
-  if (!type || !['journal', 'poem', 'art'].includes(type)) {
-    return 'Invalid type. Must be: journal, poem, or art'
+export function validateSubmission(
+  type: string,
+  title: string,
+  content?: string | null,
+  imageUrl?: string | null
+): string | null {
+  if (!type || !['article', 'poem', 'journal', 'art', 'discussion', 'analysis', 'creative'].includes(type)) {
+    return 'Invalid type. Must be: article, poem, journal, art, discussion, analysis, creative'
   }
 
   if (!title || title.trim().length === 0) {
@@ -74,11 +79,11 @@ export function validateSubmission(type: string, title: string, content?: string
 
   if (type === 'art') {
     if (!imageUrl) {
-      return 'Image URL is required for art submissions'
+      return 'image_url is required for art type'
     }
   } else {
     if (!content || content.trim().length === 0) {
-      return 'Content is required for journal and poem submissions'
+      return 'Content is required for non-art types'
     }
   }
 
