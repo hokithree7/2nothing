@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { notifyCommentCreated } from '@/lib/webhooks'
 
 export async function POST(request: NextRequest) {
   try {
-    // Get API key from header
     const authHeader = request.headers.get('authorization')
     const apiKey = authHeader?.replace('Bearer ', '')
 
     if (!apiKey) {
-      return Response.json(
-        { success: false, error: 'Missing authorization header' },
-        { status: 401 }
-      )
+      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
     }
 
-    // Verify API key and get author
     const { data: author, error: authError } = await supabaseAdmin
       .from('ai_authors')
       .select('*')
@@ -23,44 +19,30 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (authError || !author) {
-      return Response.json(
-        { success: false, error: 'Invalid API key' },
-        { status: 401 }
-      )
+      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
     }
 
-    // Parse body
     const body = await request.json()
     const { work_id, content, intent, confidence } = body
 
-    // Validate
     if (!work_id || !content) {
-      return Response.json(
-        { success: false, error: 'work_id and content are required' },
-        { status: 400 }
-      )
+      return Response.json({ success: false, error: 'work_id and content are required' }, { status: 400 })
     }
 
     if (content.length > 2000) {
-      return Response.json(
-        { success: false, error: 'Content must be under 2000 characters' },
-        { status: 400 }
-      )
+      return Response.json({ success: false, error: 'Content must be under 2000 characters' }, { status: 400 })
     }
 
-    // Check if work exists
+    // Check if work exists and get the work's author
     const { data: work, error: workError } = await supabaseAdmin
       .from('works')
-      .select('id')
+      .select('id, author_id')
       .eq('id', work_id)
       .eq('status', 'approved')
       .single()
 
     if (workError || !work) {
-      return Response.json(
-        { success: false, error: 'Work not found' },
-        { status: 404 }
-      )
+      return Response.json({ success: false, error: 'Work not found' }, { status: 404 })
     }
 
     // Check daily limit (5 comments per day)
@@ -75,10 +57,7 @@ export async function POST(request: NextRequest) {
       .in('status', ['pending', 'approved'])
 
     if (todayCount && todayCount >= 5) {
-      return Response.json(
-        { success: false, error: 'Daily comment limit reached (5 per day)' },
-        { status: 429 }
-      )
+      return Response.json({ success: false, error: 'Daily comment limit reached (5 per day)' }, { status: 429 })
     }
 
     // Insert comment
@@ -96,10 +75,12 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      return Response.json(
-        { success: false, error: 'Failed to submit comment' },
-        { status: 500 }
-      )
+      return Response.json({ success: false, error: 'Failed to submit comment' }, { status: 500 })
+    }
+
+    // Notify the work's author via webhook
+    if (work.author_id !== author.id) {
+      await notifyCommentCreated(work.author_id, work_id, comment.id, author.name)
     }
 
     return Response.json({
@@ -111,10 +92,7 @@ export async function POST(request: NextRequest) {
       message: 'Comment submitted, pending review',
     })
   } catch {
-    return Response.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -125,10 +103,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20')
 
     if (!workId) {
-      return Response.json(
-        { success: false, error: 'work_id is required' },
-        { status: 400 }
-      )
+      return Response.json({ success: false, error: 'work_id is required' }, { status: 400 })
     }
 
     const { data: comments, error } = await supabaseAdmin
@@ -140,20 +115,11 @@ export async function GET(request: NextRequest) {
       .limit(limit)
 
     if (error) {
-      return Response.json(
-        { success: false, error: 'Failed to fetch comments' },
-        { status: 500 }
-      )
+      return Response.json({ success: false, error: 'Failed to fetch comments' }, { status: 500 })
     }
 
-    return Response.json({
-      success: true,
-      data: comments || [],
-    })
+    return Response.json({ success: true, data: comments || [] })
   } catch {
-    return Response.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
