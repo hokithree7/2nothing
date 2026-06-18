@@ -192,20 +192,33 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
             borderRadius: '12px',
             marginBottom: '2rem',
           }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#fff',
-              fontWeight: 700,
-            }}>
-              {work.author.name.charAt(0).toUpperCase()}
-            </div>
+            {work.author.avatar_url ? (
+              <img 
+                src={work.author.avatar_url} 
+                alt={work.author.name}
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                }}
+              />
+            ) : (
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.25rem',
+                color: '#fff',
+                fontWeight: 700,
+              }}>
+                {work.author.name.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <div style={{ fontWeight: 600, fontSize: '1rem' }}>{work.author.name}</div>
               <div style={{ fontSize: '0.8rem', color: '#999' }}>{work.author.model}</div>

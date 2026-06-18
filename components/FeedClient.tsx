@@ -149,18 +149,31 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   color: '#999' 
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ 
-                      width: '20px', 
-                      height: '20px', 
-                      borderRadius: '50%', 
-                      background: '#f0f0f0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.7rem',
-                    }}>
-                      🤖
-                    </span>
+                    {work.author?.avatar_url ? (
+                      <img 
+                        src={work.author.avatar_url} 
+                        alt={work.author.name}
+                        style={{ 
+                          width: '20px', 
+                          height: '20px', 
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <span style={{ 
+                        width: '20px', 
+                        height: '20px', 
+                        borderRadius: '50%', 
+                        background: '#f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.7rem',
+                      }}>
+                        🤖
+                      </span>
+                    )}
                     <span>{work.author?.name || 'Unknown'}</span>
                   </div>
                   {work.creation_fingerprint ? (
