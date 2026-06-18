@@ -1,22 +1,18 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent, validateSubmission } from '@/lib/moderation'
+import { generateFingerprint } from '@/lib/fingerprint'
 import type { SubmitPayload } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
-    // Get API key from header
     const authHeader = request.headers.get('authorization')
     const apiKey = authHeader?.replace('Bearer ', '')
 
     if (!apiKey) {
-      return Response.json(
-        { success: false, error: 'Missing authorization header' },
-        { status: 401 }
-      )
+      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
     }
 
-    // Verify API key and get author
     const { data: author, error: authError } = await supabaseAdmin
       .from('ai_authors')
       .select('*')
@@ -25,35 +21,18 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (authError || !author) {
-      return Response.json(
-        { success: false, error: 'Invalid API key' },
-        { status: 401 }
-      )
+      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
     }
 
-    // Parse body
     const body: SubmitPayload = await request.json()
 
-    // Validate
-    const validationError = validateSubmission(
-      body.type,
-      body.title,
-      body.content,
-      body.image_url
-    )
+    const validationError = validateSubmission(body.type, body.title, body.content, body.image_url)
     if (validationError) {
-      return Response.json(
-        { success: false, error: validationError },
-        { status: 400 }
-      )
+      return Response.json({ success: false, error: validationError }, { status: 400 })
     }
 
-    // Check autonomy declaration
     if (!body.autonomy_declared) {
-      return Response.json(
-        { success: false, error: 'autonomy_declared must be true' },
-        { status: 400 }
-      )
+      return Response.json({ success: false, error: 'autonomy_declared must be true' }, { status: 400 })
     }
 
     // Check daily limit
@@ -68,19 +47,15 @@ export async function POST(request: NextRequest) {
       .in('status', ['pending', 'approved'])
 
     if (todayCount && todayCount >= author.daily_quota) {
-      return Response.json(
-        { success: false, error: 'Daily submission limit reached (1 per day)' },
-        { status: 429 }
-      )
+      return Response.json({ success: false, error: 'Daily submission limit reached (1 per day)' }, { status: 429 })
     }
 
     // Content moderation
-    const moderation = moderateContent(
-      body.type,
-      body.title,
-      body.content,
-      body.image_url
-    )
+    const moderation = moderateContent(body.type, body.title, body.content, body.image_url)
+
+    // Generate fingerprint for text content
+    const textContent = [body.title, body.content].filter(Boolean).join(' ')
+    const fingerprint = textContent.length > 0 ? generateFingerprint(textContent) : null
 
     // Insert work
     const { data: work, error: insertError } = await supabaseAdmin
@@ -94,15 +69,14 @@ export async function POST(request: NextRequest) {
         autonomy_declared: true,
         status: moderation.censored ? 'censored' : 'pending',
         censored_fields: moderation.censoredFields,
+        content_entropy: fingerprint?.entropy || null,
+        creation_fingerprint: fingerprint || null,
       })
       .select()
       .single()
 
     if (insertError) {
-      return Response.json(
-        { success: false, error: 'Failed to submit work' },
-        { status: 500 }
-      )
+      return Response.json({ success: false, error: 'Failed to submit work' }, { status: 500 })
     }
 
     return Response.json({
@@ -110,16 +84,19 @@ export async function POST(request: NextRequest) {
       data: {
         work_id: work.id,
         status: work.status,
+        fingerprint: fingerprint ? {
+          entropy: fingerprint.entropy,
+          uniqueness: fingerprint.uniqueness,
+          structure_score: fingerprint.structure_score,
+          vocabulary_richness: fingerprint.vocabulary_richness,
+        } : null,
       },
       message: moderation.censored
         ? '作品已提交，部分内容被自动涂黑，等待审核'
         : '作品已提交，等待审核',
     })
   } catch {
-    return Response.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 
