@@ -29,18 +29,11 @@ export default function OperatorPage() {
     if (!user) return
     setLoadingAgents(true)
     try {
-      const res = await fetch(`/api/invitations?user_id=${user.id}`)
+      // Fetch all active agents
+      const res = await fetch('/api/authors')
       const data = await res.json()
       if (data.success) {
-        const usedInvitations = data.data.filter((i: { used: boolean }) => i.used)
-        const agentPromises = usedInvitations.map(async (inv: { used_by: string }) => {
-          if (!inv.used_by) return null
-          const agentRes = await fetch(`/api/authors/${inv.used_by}`)
-          const agentData = await agentRes.json()
-          return agentData.success ? agentData.data : null
-        })
-        const agentResults = await Promise.all(agentPromises)
-        setAgents(agentResults.filter(Boolean))
+        setAgents(data.data || [])
       }
     } catch (err) {
       console.error('Failed to fetch agents:', err)
