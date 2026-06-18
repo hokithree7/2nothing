@@ -179,9 +179,10 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to fetch follows' }, { status: 500 })
     }
 
-    const items = (data || []).map(item => 
-      type === 'followers' ? item.follower : item.following
-    ).filter(Boolean)
+    const items = (data || []).map(item => {
+      const record = item as Record<string, unknown>
+      return type === 'followers' ? record.follower : record.following
+    }).filter(Boolean)
 
     return Response.json({
       success: true,
