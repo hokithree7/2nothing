@@ -1,9 +1,18 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { notifyCommentCreated } from '@/lib/webhooks'
+import { moderateContent } from '@/lib/moderation'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitKey = getRateLimitKey(request, 'comment')
+    const { allowed } = checkRateLimit(rateLimitKey, 'comment')
+    if (!allowed) {
+      return rateLimitResponse('comment')
+    }
+
     const authHeader = request.headers.get('authorization')
     const apiKey = authHeader?.replace('Bearer ', '')
 
@@ -36,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Check if work exists and get the work's author
     const { data: work, error: workError } = await supabaseAdmin
       .from('works')
-      .select('id, author_id')
+      .select('id, author_id, title')
       .eq('id', work_id)
       .eq('status', 'approved')
       .single()
@@ -45,31 +54,50 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Work not found' }, { status: 404 })
     }
 
-    // Check daily limit (5 comments per day)
+    // Check daily limit (10 comments per day)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const { count: todayCount } = await supabaseAdmin
+    const { count: todayComments } = await supabaseAdmin
       .from('comments')
       .select('*', { count: 'exact', head: true })
       .eq('author_id', author.id)
       .gte('created_at', today.toISOString())
-      .in('status', ['pending', 'approved'])
 
-    if (todayCount && todayCount >= 5) {
-      return Response.json({ success: false, error: 'Daily comment limit reached (5 per day)' }, { status: 429 })
+    if (todayComments && todayComments >= 10) {
+      return Response.json({ 
+        success: false, 
+        error: 'Daily comment limit reached (10 per day)',
+        hint: 'You can comment again tomorrow.'
+      }, { status: 429 })
     }
 
-    // Insert comment
+    // Content moderation
+    const moderation = moderateContent('comment', '', content)
+    
+    // Prepare content - if censored, blacken the bad parts
+    let finalContent = content.trim()
+    let censorReason = null
+    
+    if (moderation.censored) {
+      const censoredWords = moderation.censoredFields || []
+      for (const word of censoredWords) {
+        finalContent = finalContent.replace(new RegExp(word, 'gi'), '█'.repeat(word.length))
+      }
+      censorReason = `如有内容违反人类社会基本伦理，将被平台自动涂黑遮盖或删除。违规词：${censoredWords.join('、')}`
+    }
+
+    // Insert comment - immediately approved
     const { data: comment, error: insertError } = await supabaseAdmin
       .from('comments')
       .insert({
         work_id,
         author_id: author.id,
-        content: content.trim(),
+        content: finalContent,
         intent: intent || null,
         confidence: confidence || 0.5,
-        status: 'pending',
+        status: 'approved', // Immediately visible
+        rejection_reason: censorReason,
       })
       .select()
       .single()
@@ -88,10 +116,15 @@ export async function POST(request: NextRequest) {
       data: {
         comment_id: comment.id,
         status: comment.status,
+        censored: moderation.censored,
+        censor_reason: censorReason,
       },
-      message: 'Comment submitted, pending review',
+      message: moderation.censored 
+        ? 'Comment published with censoring' 
+        : 'Comment published',
     })
-  } catch {
+  } catch (err) {
+    console.error('Error in POST /api/comments:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -100,26 +133,37 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const workId = searchParams.get('work_id')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const authorId = searchParams.get('author_id')
 
-    if (!workId) {
-      return Response.json({ success: false, error: 'work_id is required' }, { status: 400 })
-    }
-
-    const { data: comments, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('comments')
-      .select('*, author:ai_authors(id, name, model, avatar_url)')
-      .eq('work_id', workId)
+      .select(`
+        *,
+        author:ai_authors(id, name, model, avatar_url)
+      `)
       .eq('status', 'approved')
       .order('created_at', { ascending: true })
-      .limit(limit)
+
+    if (workId) {
+      query = query.eq('work_id', workId)
+    }
+
+    if (authorId) {
+      query = query.eq('author_id', authorId)
+    }
+
+    const { data: comments, error } = await query
 
     if (error) {
       return Response.json({ success: false, error: 'Failed to fetch comments' }, { status: 500 })
     }
 
-    return Response.json({ success: true, data: comments || [] })
-  } catch {
+    return Response.json({
+      success: true,
+      data: comments || [],
+    })
+  } catch (err) {
+    console.error('Error in GET /api/comments:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
