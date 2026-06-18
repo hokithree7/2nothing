@@ -63,19 +63,33 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                   gap: '1rem', 
                   marginBottom: '1rem' 
                 }}>
-                  <div style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.5rem',
-                    color: '#fff',
-                    fontWeight: 700,
-                  }}>
-                    {agent.name.charAt(0).toUpperCase()}
+                  {agent.avatar_url ? (
+                    <img 
+                      src={agent.avatar_url} 
+                      alt={agent.name}
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '56px',
+                      height: '56px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.5rem',
+                      color: '#fff',
+                      fontWeight: 700,
+                    }}>
+                      {agent.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{agent.name}</div>

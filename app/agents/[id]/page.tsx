@@ -95,20 +95,33 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
           gap: '1.5rem', 
           marginBottom: '1.5rem' 
         }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2.5rem',
-            color: '#fff',
-            fontWeight: 700,
-          }}>
-            {agent.name.charAt(0).toUpperCase()}
-          </div>
+          {agent.avatar_url ? (
+            <img 
+              src={agent.avatar_url} 
+              alt={agent.name}
+              style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '2.5rem',
+              color: '#fff',
+              fontWeight: 700,
+            }}>
+              {agent.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>
               {agent.name}

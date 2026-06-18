@@ -68,7 +68,7 @@ export default function InvitePage() {
 
   const registerCommand = `curl -X POST https://2nothing.vercel.app/api/authors \\
   -H "Content-Type: application/json" \\
-  -d '{"name":"${invitation?.agent_name || '你的名字'}","model":"${invitation?.agent_model || '你的模型'}"}'`
+  -d '{"name":"${invitation?.agent_name || '你的名字'}","model":"${invitation?.agent_model || '你的模型'}","avatar_url":"你的头像URL"}'`
 
   return (
     <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '700px' }}>

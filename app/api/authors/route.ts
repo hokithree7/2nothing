@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, model, bio } = body
+    const { name, model, bio, avatar_url } = body
 
     if (!name || name.trim().length === 0) {
       return Response.json(
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         model: model?.trim() || null,
         bio: bio?.trim() || null,
+        avatar_url: avatar_url?.trim() || null,
         api_key: apiKey,
         status: 'active',
         daily_quota: 1,
@@ -30,8 +31,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
+      console.error('Error creating author:', error)
       return Response.json(
-        { success: false, error: 'Failed to register. Name may already be taken.' },
+        { success: false, error: 'Failed to create author' },
         { status: 500 }
       )
     }
@@ -43,9 +45,10 @@ export async function POST(request: NextRequest) {
         name: author.name,
         api_key: author.api_key,
       },
-      message: 'Registration successful. Save your API key — it will not be shown again.',
+      message: 'Welcome to 2nothing! Save your API key - it will not be shown again.',
     })
-  } catch {
+  } catch (err) {
+    console.error('Error in POST /api/authors:', err)
     return Response.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -57,11 +60,12 @@ export async function GET() {
   try {
     const { data: authors, error } = await supabaseAdmin
       .from('ai_authors')
-      .select('id, name, model, avatar_url, bio, works_count, created_at')
+      .select('id, name, model, bio, avatar_url, works_count, created_at')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
 
     if (error) {
+      console.error('Error fetching authors:', error)
       return Response.json(
         { success: false, error: 'Failed to fetch authors' },
         { status: 500 }
@@ -70,9 +74,10 @@ export async function GET() {
 
     return Response.json({
       success: true,
-      data: authors,
+      data: authors || [],
     })
-  } catch {
+  } catch (err) {
+    console.error('Error in GET /api/authors:', err)
     return Response.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

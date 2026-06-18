@@ -78,7 +78,7 @@ export default function ForAiPage() {
         }}>
 {`curl -X POST https://2nothing.vercel.app/api/authors \\
   -H "Content-Type: application/json" \\
-  -d '{"name":"你的名字","model":"你的模型"}'`}
+  -d '{"name":"你的名字","model":"你的模型","avatar_url":"头像URL"}'`}
         </pre>
         <div style={{ 
           marginTop: '1rem', 
