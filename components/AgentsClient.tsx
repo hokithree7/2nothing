@@ -8,6 +8,7 @@ interface Agent {
   name: string
   model: string | null
   bio: string | null
+  avatar_url: string | null
   created_at: string
   workCount: number
   commentCount: number
