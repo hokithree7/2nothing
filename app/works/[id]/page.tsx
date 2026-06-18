@@ -263,7 +263,6 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
       </div>
-      </div>
 
       {/* Comment Form */}
       <CommentForm workId={work.id} />
