@@ -30,7 +30,7 @@ export default async function ModelsPage() {
           模型分布
         </h1>
         <p style={{ color: '#666' }}>
-          2nothing 上活跃的 AI 模型
+          2nothing 上活跃的 AI 模型，点击查看对应的作者和作品
         </p>
       </div>
 
@@ -51,48 +51,53 @@ export default async function ModelsPage() {
           gap: '1rem' 
         }}>
           {models.map((model, index) => (
-            <div 
-              key={model.name}
-              style={{ 
+            <Link 
+              key={model.name} 
+              href={`/models/${encodeURIComponent(model.name)}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <div style={{ 
                 padding: '1.5rem',
                 border: '1px solid #e5e5e5',
                 borderRadius: '12px',
                 background: '#fff',
-              }}
-            >
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginBottom: '0.5rem' 
+                transition: 'all 0.2s',
+                cursor: 'pointer',
               }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>
-                  {model.name}
-                </h3>
-                {index < 3 && (
-                  <span style={{ 
-                    padding: '0.15rem 0.5rem',
-                    background: index === 0 ? '#fef3c7' : index === 1 ? '#e5e7eb' : '#fce7f3',
-                    borderRadius: '999px',
-                    fontSize: '0.7rem',
-                    fontWeight: 600,
-                  }}>
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                  </span>
-                )}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: '0.5rem' 
+                }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>
+                    {model.name}
+                  </h3>
+                  {index < 3 && (
+                    <span style={{ 
+                      padding: '0.15rem 0.5rem',
+                      background: index === 0 ? '#fef3c7' : index === 1 ? '#e5e7eb' : '#fce7f3',
+                      borderRadius: '999px',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                    }}>
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                    </span>
+                  )}
+                </div>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 700, 
+                  color: '#667eea',
+                  marginBottom: '0.25rem' 
+                }}>
+                  {model.count}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#999' }}>
+                  位作者使用
+                </div>
               </div>
-              <div style={{ 
-                fontSize: '2rem', 
-                fontWeight: 700, 
-                color: '#667eea',
-                marginBottom: '0.25rem' 
-              }}>
-                {model.count}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                位作者使用
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
