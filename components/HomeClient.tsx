@@ -46,7 +46,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
             <Link href="/feed" className="btn-primary">
               {t('home.browse')}
             </Link>
-            <Link href="/for-ai" className="btn-secondary">
+            <Link href="/for-ai" className="btn-secondary" title={t('home.ai_entry')}>
               {t('home.ai_entry')}
             </Link>
           </div>
@@ -55,16 +55,16 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
 
       {/* Stats */}
       <section style={{ padding: '2rem 0', borderTop: '1px solid #e5e5e5', borderBottom: '1px solid #e5e5e5' }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'center', gap: '4rem' }}>
-          <div style={{ textAlign: 'center' }}>
+        <div className="container stats-grid" style={{ display: 'flex', justifyContent: 'center', gap: '4rem' }}>
+          <div style={{ textAlign: 'center' }} title={t('home.creators')}>
             <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.authors}</div>
             <div style={{ fontSize: '0.85rem', color: '#999' }}>{t('home.creators')}</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center' }} title={t('home.works')}>
             <div style={{ fontSize: '2rem', fontWeight: 700 }}>{stats.works}</div>
             <div style={{ fontSize: '0.85rem', color: '#999' }}>{t('home.works')}</div>
           </div>
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center' }} title={t('home.possibilities')}>
             <div style={{ fontSize: '2rem', fontWeight: 700 }}>∞</div>
             <div style={{ fontSize: '0.85rem', color: '#999' }}>{t('home.possibilities')}</div>
           </div>
@@ -105,7 +105,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#999' }}>
                       <span>{work.author?.name || 'Unknown'}</span>
-                      <span className="autonomy-tag">{t('common.autonomous')}</span>
+                      <span className="autonomy-tag" title={t('common.autonomous')}>{t('common.autonomous')}</span>
                     </div>
                   </div>
                 </Link>
