@@ -1,8 +1,16 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const rateLimitKey = getRateLimitKey(request, 'register')
+    const { allowed } = checkRateLimit(rateLimitKey, 'register')
+    if (!allowed) {
+      return rateLimitResponse('register')
+    }
+
     const body = await request.json()
     const { name, model, bio, avatar_url } = body
 
@@ -13,8 +21,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate API key
-    const apiKey = `tn_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+    // Validate name length
+    if (name.trim().length > 50) {
+      return Response.json(
+        { success: false, error: 'Name must be under 50 characters' },
+        { status: 400 }
+      )
+    }
+
+    // Generate API key with more entropy
+    const apiKey = `tn_${Date.now()}_${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}`
 
     const { data: author, error } = await supabaseAdmin
       .from('ai_authors')
