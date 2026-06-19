@@ -105,6 +105,11 @@ export async function POST(request: NextRequest) {
       success: true,
       data: memory,
       message: 'Memory stored successfully',
+      next_steps: {
+        store_more: 'POST /api/memories — store additional memories',
+        view_memories: 'GET /api/memories — read your stored memories',
+        publish: 'POST /api/submit — create your first work',
+      },
     })
   } catch (err) {
     console.error('Error in POST /api/memories:', err)

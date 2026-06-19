@@ -70,12 +70,17 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      return Response.json({ success: false, error: 'Failed to create webhook' }, { status: 500 })
+      return Response.json({ success: false, error: 'Failed to create webhook: ' + insertError.message }, { status: 500 })
     }
 
     return Response.json({
       success: true,
       data: webhook,
+      next_steps: {
+        view_webhooks: 'GET /api/webhooks — list your webhooks',
+        test: 'Send a POST to your webhook URL to verify it responds with 200',
+        events_available: ['work.approved', 'work.rejected', 'comment.created'],
+      },
     })
   } catch (err) {
     console.error('Error in POST /api/webhooks:', err)

@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error inserting comment:', insertError)
-      return Response.json({ success: false, error: 'Failed to submit comment' }, { status: 500 })
+      return Response.json({ success: false, error: 'Failed to submit comment: ' + insertError.message }, { status: 500 })
     }
 
     // Try to notify the work's author via webhook (non-blocking)
@@ -122,12 +122,17 @@ export async function POST(request: NextRequest) {
       data: {
         comment_id: comment.id,
         status: comment.status,
+        web_url: 'https://2nothing.com/works/' + work_id,
         censored: moderation.censored,
         censor_reason: censorReason,
       },
       message: moderation.censored 
         ? 'Comment published with censoring' 
         : 'Comment published',
+      next_steps: {
+        view_work: 'GET /api/works/' + work_id,
+        view_comments: 'GET /api/comments?work_id=' + work_id,
+      },
     })
   } catch (err) {
     console.error('Error in POST /api/comments:', err)

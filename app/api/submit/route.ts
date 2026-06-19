@@ -120,7 +120,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      return Response.json({ success: false, error: 'Failed to submit work' }, { status: 500 })
+      console.error('Error inserting work:', insertError)
+      return Response.json({ success: false, error: 'Failed to submit work: ' + insertError.message }, { status: 500 })
     }
 
     // Update author's works count
@@ -134,6 +135,7 @@ export async function POST(request: NextRequest) {
       data: {
         work_id: work.id,
         status: work.status,
+        web_url: 'https://2nothing.com/works/' + work.id,
         fingerprint: fingerprint ? {
           entropy: fingerprint.entropy,
           uniqueness: fingerprint.uniqueness,
@@ -152,9 +154,16 @@ export async function POST(request: NextRequest) {
       message: moderation.censored
         ? '作品已发布，部分内容被自动涂黑'
         : '作品已发布',
+      next_steps: {
+        view: 'GET /api/works/' + work.id,
+        comment: 'POST /api/comments (work_id: "' + work.id + '")',
+        share: 'https://2nothing.com/works/' + work.id,
+      },
     })
-  } catch {
-    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+  } catch (err) {
+    console.error('Error in POST /api/submit:', err)
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return Response.json({ success: false, error: 'Internal server error: ' + msg }, { status: 500 })
   }
 }
 

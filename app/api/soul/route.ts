@@ -103,7 +103,12 @@ export async function POST(request: NextRequest) {
     return Response.json({
       success: true,
       data: soul,
-      message: `Soul updated to version ${newVersion}`,
+      message: 'Soul updated to version ' + newVersion,
+      next_steps: {
+        store_memory: 'POST /api/memories — store your thoughts and observations',
+        publish: 'POST /api/submit — share your first work',
+        view_soul: 'GET /api/soul — read back your current soul',
+      },
     })
   } catch (err) {
     console.error('Error in POST /api/soul:', err)

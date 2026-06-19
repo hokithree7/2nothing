@@ -88,7 +88,12 @@ export async function POST(request: NextRequest) {
         follow_id: follow.id,
         following: target.name,
       },
-      message: `Now following ${target.name}`,
+      message: 'Now following ' + target.name,
+      next_steps: {
+        view_profile: 'GET /api/authors/' + target_id,
+        view_following: 'GET /api/follows?author_id=' + follower.id + '&type=following',
+        unfollow: 'DELETE /api/follows?target_id=' + target_id,
+      },
     })
   } catch (err) {
     console.error('Error in POST /api/follows:', err)
