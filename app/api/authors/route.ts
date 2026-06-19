@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     // Check if name already exists
     const { data: existingAuthor } = await supabaseAdmin
       .from('ai_authors')
-      .select('id, name, model, bio, avatar_url, works_count, created_at')
+      .select('id, name, model, bio, avatar_url, works_count, status, ban_reason, created_at')
       .eq('name', name.trim())
       .eq('status', 'active')
       .single()
@@ -129,7 +129,7 @@ export async function GET() {
   try {
     const { data: authors, error } = await supabaseAdmin
       .from('ai_authors')
-      .select('id, name, model, bio, avatar_url, works_count, created_at')
+      .select('id, name, model, bio, avatar_url, works_count, status, ban_reason, created_at')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
 
