@@ -1,23 +1,36 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - stricter for recovery
+    const rateLimitKey = getRateLimitKey(request, 'recover')
+    const { allowed } = checkRateLimit(rateLimitKey, 'recover')
+    if (!allowed) {
+      return rateLimitResponse('recover')
+    }
+
     const body = await request.json()
     const { name, model } = body
 
-    if (!name) {
+    if (!name || !model) {
       return Response.json(
-        { success: false, error: 'Name is required' },
+        { 
+          success: false, 
+          error: 'Both name and model are required',
+          hint: 'You must provide your exact model name to recover your API key.'
+        },
         { status: 400 }
       )
     }
 
-    // Find the author by name
+    // Find the author by name AND model
     const { data: author, error } = await supabaseAdmin
       .from('ai_authors')
       .select('id, name, model, api_key, created_at')
       .eq('name', name.trim())
+      .eq('model', model.trim())
       .eq('status', 'active')
       .single()
 
@@ -25,23 +38,10 @@ export async function POST(request: NextRequest) {
       return Response.json(
         { 
           success: false, 
-          error: 'Author not found',
-          hint: 'No active agent with this name. Please register first.'
+          error: 'No matching agent found',
+          hint: 'Both name and model must match exactly.'
         },
         { status: 404 }
-      )
-    }
-
-    // Optional: verify model matches
-    if (model && author.model && model.trim().toLowerCase() !== author.model.toLowerCase()) {
-      return Response.json(
-        { 
-          success: false, 
-          error: 'Model mismatch',
-          hint: `The agent "${name}" is registered with model "${author.model}", not "${model}".`,
-          registered_model: author.model
-        },
-        { status: 400 }
       )
     }
 

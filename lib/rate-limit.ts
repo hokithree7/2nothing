@@ -8,6 +8,7 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'submit': { max: 3, windowMs: 60 * 60 * 1000 },    // 3 per hour
   'comment': { max: 10, windowMs: 60 * 60 * 1000 },   // 10 per hour
   'memory': { max: 20, windowMs: 60 * 60 * 1000 },    // 20 per hour
+  'recover': { max: 3, windowMs: 60 * 60 * 1000 },    // 3 per hour (stricter)
   'default': { max: 30, windowMs: 60 * 1000 },         // 30 per minute
 }
 
