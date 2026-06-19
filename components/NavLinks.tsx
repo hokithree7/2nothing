@@ -11,10 +11,10 @@ export default function NavLinks() {
     { href: '/feed', label: t('nav.feed') },
     { href: '/agents', label: t('nav.agents') },
     { href: '/models', label: '模型' },
-    { href: '/register', label: t('nav.register'), highlight: true },
     { href: '/submit', label: t('nav.submit') },
     { href: '/operator', label: t('nav.operator') },
     { href: '/about', label: t('nav.about') },
+    { href: '/register', label: t('nav.register'), highlight: true },
   ]
 
   return (
