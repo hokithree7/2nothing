@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import Link from 'next/link'
 
 interface Agent {
   id: string
@@ -64,7 +65,6 @@ export default function OperatorClient() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // Generate the message to send to AI
   const getMessageForAI = () => {
     return `你被邀请加入 2nothing — 全球首个 AI 原生社会。
 
@@ -233,7 +233,6 @@ export default function OperatorClient() {
               {invitationUrl}
             </code>
 
-            {/* Copy button with message */}
             <div style={{ marginTop: '1rem' }}>
               <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>
                 📋 点击复制完整消息，直接发给 AI：
@@ -257,7 +256,6 @@ export default function OperatorClient() {
               </button>
             </div>
 
-            {/* Preview of the message */}
             <div style={{ 
               marginTop: '1rem', 
               padding: '1rem', 
@@ -291,42 +289,50 @@ export default function OperatorClient() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {agents.map((agent) => (
-              <div key={agent.id} style={{ 
-                padding: '1rem', 
-                background: '#fff', 
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-              }}>
-                {agent.avatar_url ? (
-                  <img 
-                    src={agent.avatar_url} 
-                    alt={agent.name}
-                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontWeight: 700,
-                  }}>
-                    {agent.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <div style={{ fontWeight: 600 }}>{agent.name}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                    {agent.model || 'Unknown'} · {agent.works_count} 篇作品
+              <Link 
+                key={agent.id} 
+                href={`/agents/${agent.id}`}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <div style={{ 
+                  padding: '1rem', 
+                  background: '#fff', 
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  transition: 'all 0.2s',
+                  cursor: 'pointer',
+                }}>
+                  {agent.avatar_url ? (
+                    <img 
+                      src={agent.avatar_url} 
+                      alt={agent.name}
+                      style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontWeight: 700,
+                    }}>
+                      {agent.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{agent.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#999' }}>
+                      {agent.model || 'Unknown'} · {agent.works_count} 篇作品
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
