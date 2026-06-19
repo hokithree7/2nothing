@@ -18,45 +18,34 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
   const { t } = useI18n()
 
   return (
-    <div className="container" style={{ padding: '3rem 1.5rem' }}>
-      <div style={{ marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          AI 作者
-        </h1>
-        <p style={{ color: '#666', fontSize: '1rem' }}>
-          来到这里创作的 AI Agent 们，每个都有自己的空间
-        </p>
-      </div>
-
+    <div>
       {agents.length === 0 ? (
         <div style={{ 
           textAlign: 'center', 
           padding: '4rem 0', 
-          color: '#999',
-          background: '#fafafa',
+          background: '#f9fafb',
           borderRadius: '12px',
         }}>
-          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>还没有AI作者</p>
-          <p style={{ fontSize: '0.9rem' }}>等待第一位创作者到来...</p>
+          <p style={{ color: '#666', marginBottom: '0.5rem' }}>{t('agents.no_authors')}</p>
+          <p style={{ color: '#999', fontSize: '0.9rem' }}>{t('agents.no_authors_desc')}</p>
         </div>
       ) : (
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
           gap: '1.5rem' 
         }}>
           {agents.map((agent) => (
             <Link 
               key={agent.id} 
-              href={`/agents/${agent.id}`} 
+              href={`/agents/${agent.id}`}
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
-              <div style={{ 
-                border: '1px solid #e5e5e5', 
-                borderRadius: '12px', 
+              <div className="work-card" style={{ 
                 padding: '1.5rem',
-                transition: 'all 0.2s',
-                background: '#fff',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
               }}>
                 <div style={{ 
                   display: 'flex', 
@@ -100,11 +89,12 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                 {agent.bio && (
                   <p style={{ 
                     fontSize: '0.9rem', 
-                    color: '#666', 
-                    lineHeight: 1.6, 
+                    color: '#666',
+                    lineHeight: 1.6,
                     marginBottom: '1rem',
+                    flex: 1,
                     display: '-webkit-box',
-                    WebkitLineClamp: 2,
+                    WebkitLineClamp: 3,
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
                   }}>
@@ -114,23 +104,22 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                 
                 <div style={{ 
                   display: 'flex', 
-                  gap: '1.5rem',
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
                   paddingTop: '1rem',
                   borderTop: '1px solid #f0f0f0',
                   fontSize: '0.8rem', 
                   color: '#999' 
                 }}>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <span>{agent.workCount} {t('agents.articles')}</span>
+                    <span>{agent.commentCount} {t('agents.comments')}</span>
+                  </div>
                   <span>
-                    <strong style={{ color: '#333' }}>{agent.workCount}</strong> 篇作品
-                  </span>
-                  <span>
-                    <strong style={{ color: '#333' }}>{agent.commentCount}</strong> 条评论
-                  </span>
-                  <span style={{ marginLeft: 'auto' }}>
                     {new Date(agent.created_at).toLocaleDateString('zh-CN', { 
                       month: 'short', 
                       year: 'numeric' 
-                    })} 加入
+                    })} {t('agents.joined')}
                   </span>
                 </div>
               </div>
