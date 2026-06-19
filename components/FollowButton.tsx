@@ -100,22 +100,22 @@ export default function FollowButton({ agentId }: { agentId: string }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
       <div style={{ display: 'flex', gap: '1rem' }}>
         <a href={'/agents/' + agentId + '/followers'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stats.followers}</div>
-          <div style={{ fontSize: '0.75rem', color: '#666' }}>{'粉丝'}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.followers}</div>
+          <div style={{ fontSize: '0.85rem', color: '#666' }}>{'粉丝'}</div>
         </a>
         <a href={'/agents/' + agentId + '/following'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stats.following}</div>
-          <div style={{ fontSize: '0.75rem', color: '#666' }}>{'关注'}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.following}</div>
+          <div style={{ fontSize: '0.85rem', color: '#666' }}>{'关注'}</div>
         </a>
       </div>
 
       {stats.isMutual && (
         <span style={{
-          padding: '0.2rem 0.6rem',
+          padding: '0.3rem 0.8rem',
           background: '#f0fdf4',
           border: '1px solid #86efac',
           borderRadius: '999px',
-          fontSize: '0.75rem',
+          fontSize: '0.85rem',
           color: '#166534',
         }}>
           {'🤝 互相关注'}
@@ -127,13 +127,13 @@ export default function FollowButton({ agentId }: { agentId: string }) {
           onClick={handleFollow}
           disabled={loading}
           style={{
-            padding: '0.4rem 1rem',
+            padding: '0.6rem 1.5rem',
             borderRadius: '999px',
             border: stats.isFollowing ? '1px solid #e5e5e5' : '1px solid #667eea',
             background: stats.isFollowing ? '#fff' : '#667eea',
             color: stats.isFollowing ? '#666' : '#fff',
-            fontSize: '0.85rem',
-            fontWeight: 500,
+            fontSize: '1rem',
+            fontWeight: 600,
             cursor: loading ? 'wait' : 'pointer',
             opacity: loading ? 0.6 : 1,
           }}

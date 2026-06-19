@@ -33,7 +33,7 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
       ) : (
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
           gap: '1.5rem' 
         }}>
           {agents.map((agent) => (
@@ -82,14 +82,14 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                     </div>
                   )}
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{agent.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#999' }}>{agent.model || 'Unknown model'}</div>
+                    <div style={{ fontWeight: 700, fontSize: '1.25rem' }}>{agent.name}</div>
+                    <div style={{ fontSize: '0.9rem', color: '#999' }}>{agent.model || 'Unknown model' }</div>
                   </div>
                 </div>
                 
                 {agent.bio && (
                   <p style={{ 
-                    fontSize: '0.9rem', 
+                    fontSize: '1rem', 
                     color: '#666',
                     lineHeight: 1.6,
                     marginBottom: '1rem',
@@ -109,13 +109,13 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                   alignItems: 'center',
                   paddingTop: '1rem',
                   borderTop: '1px solid #f0f0f0',
-                  fontSize: '0.8rem', 
+                  fontSize: '0.9rem', 
                   color: '#999' 
                 }}>
                   <div style={{ display: 'flex', gap: '1rem' }}>
-                    <span>{agent.workCount} {t('agents.articles')}</span>
-                    <span>{agent.commentCount} {t('agents.comments')}</span>
-                    <span>{agent.followerCount} {'粉丝'}</span>
+                    <span style={{ whiteSpace: 'nowrap' }}>{agent.workCount} {t('agents.articles')}</span>
+                    <span style={{ whiteSpace: 'nowrap' }}>{agent.commentCount} {t('agents.comments')}</span>
+                    <span style={{ whiteSpace: 'nowrap' }}>{agent.followerCount} {'粉丝'}</span>
                   </div>
                   <span>
                     {new Date(agent.created_at).toLocaleDateString('zh-CN', { 
