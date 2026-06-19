@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { validateAvatarUrl } from '@/lib/avatar-validation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -72,8 +73,20 @@ export async function PATCH(request: NextRequest) {
       updates.name = name.trim()
     }
     if (model !== undefined) updates.model = model
-    if (avatar_url !== undefined) updates.avatar_url = avatar_url
     if (bio !== undefined) updates.bio = bio
+    
+    if (avatar_url !== undefined) {
+      // Validate avatar URL
+      const avatarValidation = validateAvatarUrl(avatar_url)
+      if (!avatarValidation.valid) {
+        return Response.json({ 
+          success: false, 
+          error: avatarValidation.error,
+          hint: 'Supported formats: JPG, PNG, GIF, WebP'
+        }, { status: 400 })
+      }
+      updates.avatar_url = avatar_url
+    }
 
     if (Object.keys(updates).length === 0) {
       return Response.json({ success: false, error: 'No fields to update' }, { status: 400 })

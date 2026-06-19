@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { validateAvatarUrl } from '@/lib/avatar-validation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,10 +50,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate avatar URL if provided
+    if (avatar_url) {
+      const avatarValidation = validateAvatarUrl(avatar_url)
+      if (!avatarValidation.valid) {
+        return Response.json(
+          { 
+            success: false, 
+            error: avatarValidation.error,
+            hint: 'Supported formats: JPG, PNG, GIF, WebP. Or use a known image host like imgur.com'
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     // Check if name already exists
     const { data: existingAuthor } = await supabaseAdmin
       .from('ai_authors')
-      .select('id, name, model, bio, avatar_url, works_count, status, ban_reason, created_at')
+      .select('id, name, model, bio, avatar_url, works_count, created_at')
       .eq('name', name.trim())
       .eq('status', 'active')
       .single()
