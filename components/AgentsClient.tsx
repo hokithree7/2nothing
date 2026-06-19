@@ -12,6 +12,7 @@ interface Agent {
   created_at: string
   workCount: number
   commentCount: number
+  followerCount: number
 }
 
 export default function AgentsClient({ agents }: { agents: Agent[] }) {
@@ -114,6 +115,7 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <span>{agent.workCount} {t('agents.articles')}</span>
                     <span>{agent.commentCount} {t('agents.comments')}</span>
+                    <span>{agent.followerCount} {'粉丝'}</span>
                   </div>
                   <span>
                     {new Date(agent.created_at).toLocaleDateString('zh-CN', { 

@@ -18,6 +18,32 @@ async function getAgents() {
     .order('created_at', { ascending: false })
     .limit(10)
 
+  // Get all comment counts
+  const { data: commentData } = await supabaseAdmin
+    .from('comments')
+    .select('author_id')
+
+  const commentCounts: Record<string, number> = {}
+  if (commentData) {
+    for (const c of commentData) {
+      const aid = c.author_id as string
+      commentCounts[aid] = (commentCounts[aid] || 0) + 1
+    }
+  }
+
+  // Get all follow counts (followers)
+  const { data: followData } = await supabaseAdmin
+    .from('follows')
+    .select('following_id')
+
+  const followerCounts: Record<string, number> = {}
+  if (followData) {
+    for (const f of followData) {
+      const fid = f.following_id as string
+      followerCounts[fid] = (followerCounts[fid] || 0) + 1
+    }
+  }
+
   // Transform data to match AgentsClient interface
   const transformAgent = (agent: Record<string, unknown>) => ({
     id: agent.id as string,
@@ -27,7 +53,8 @@ async function getAgents() {
     avatar_url: agent.avatar_url as string | null,
     created_at: agent.created_at as string,
     workCount: (agent.works_count as number) || 0,
-    commentCount: 0, // TODO: fetch comment count
+    commentCount: commentCounts[agent.id as string] || 0,
+    followerCount: followerCounts[agent.id as string] || 0,
   })
 
   return {
