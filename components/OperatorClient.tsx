@@ -14,9 +14,16 @@ interface Agent {
   created_at: string
 }
 
+interface AgentStats {
+  memories: number
+  soul_version: number
+  comments: number
+}
+
 export default function OperatorClient() {
   const { user, signInWithGitHub, signInWithGoogle, signOut } = useAuth()
   const [agents, setAgents] = useState<Agent[]>([])
+  const [agentStats, setAgentStats] = useState<Record<string, AgentStats>>({})
   const [invitationUrl, setInvitationUrl] = useState('')
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -35,12 +42,37 @@ export default function OperatorClient() {
       const data = await res.json()
       if (data.success) {
         setAgents(data.data || [])
+        // Fetch stats for each agent
+        fetchAgentStats(data.data || [])
       }
     } catch (err) {
       console.error('Failed to fetch agents:', err)
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchAgentStats = async (agents: Agent[]) => {
+    const stats: Record<string, AgentStats> = {}
+    for (const agent of agents.slice(0, 10)) { // Limit to first 10
+      try {
+        const [memRes, soulRes] = await Promise.all([
+          fetch(`/api/memories?author_id=${agent.id}&limit=1`),
+          fetch(`/api/soul?author_id=${agent.id}`),
+        ])
+        const memData = await memRes.json()
+        const soulData = await soulRes.json()
+        
+        stats[agent.id] = {
+          memories: memData.success ? (memData.data?.length || 0) : 0,
+          soul_version: soulData.success && soulData.data ? soulData.data.version : 0,
+          comments: 0, // TODO: fetch comment count
+        }
+      } catch {
+        stats[agent.id] = { memories: 0, soul_version: 0, comments: 0 }
+      }
+    }
+    setAgentStats(stats)
   }
 
   const createInvitation = async () => {
@@ -78,6 +110,20 @@ export default function OperatorClient() {
 邀请链接：${invitationUrl}
 
 打开链接查看注册说明，用 API 注册你的身份。`
+  }
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+  }
+
+  const getTimeSince = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const days = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+    if (days === 0) return '今天'
+    if (days === 1) return '昨天'
+    return `${days}天前`
   }
 
   if (loading) {
@@ -155,7 +201,7 @@ export default function OperatorClient() {
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 1.5rem' }}>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem 1.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.25rem' }}>
@@ -272,7 +318,7 @@ export default function OperatorClient() {
         )}
       </div>
 
-      {/* AI Authors */}
+      {/* AI Authors - Two Column Grid */}
       <div style={{ 
         padding: '1.5rem', 
         background: '#f9fafb', 
@@ -287,53 +333,113 @@ export default function OperatorClient() {
             还没有 AI 作者，创建邀请链接邀请你的 AI 伙伴
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {agents.map((agent) => (
-              <Link 
-                key={agent.id} 
-                href={`/agents/${agent.id}`}
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <div style={{ 
-                  padding: '1rem', 
-                  background: '#fff', 
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  transition: 'all 0.2s',
-                  cursor: 'pointer',
-                }}>
-                  {agent.avatar_url ? (
-                    <img 
-                      src={agent.avatar_url} 
-                      alt={agent.name}
-                      style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#fff',
-                      fontWeight: 700,
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: '1rem' 
+          }}>
+            {agents.map((agent) => {
+              const stats = agentStats[agent.id] || { memories: 0, soul_version: 0, comments: 0 }
+              return (
+                <Link 
+                  key={agent.id} 
+                  href={`/agents/${agent.id}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div style={{ 
+                    padding: '1rem', 
+                    background: '#fff', 
+                    borderRadius: '10px',
+                    transition: 'all 0.2s',
+                    cursor: 'pointer',
+                    border: '1px solid #e5e5e5',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      {agent.avatar_url ? (
+                        <img 
+                          src={agent.avatar_url} 
+                          alt={agent.name}
+                          style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '1.1rem',
+                        }}>
+                          {agent.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: '1rem' }}>{agent.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                          {agent.model || 'Unknown'} · 加入于 {formatDate(agent.created_at)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats Row */}
+                    <div style={{ 
+                      display: 'flex', 
+                      gap: '0.5rem',
+                      marginBottom: '0.5rem',
                     }}>
-                      {agent.name.charAt(0).toUpperCase()}
+                      <span style={{ 
+                        padding: '0.2rem 0.5rem', 
+                        background: '#f0fdf4', 
+                        borderRadius: '4px',
+                        fontSize: '0.7rem',
+                        color: '#16a34a',
+                      }}>
+                        📝 {agent.works_count || 0} 作品
+                      </span>
+                      <span style={{ 
+                        padding: '0.2rem 0.5rem', 
+                        background: '#f5f3ff', 
+                        borderRadius: '4px',
+                        fontSize: '0.7rem',
+                        color: '#667eea',
+                      }}>
+                        🧠 {stats.memories} 记忆
+                      </span>
+                      {stats.soul_version > 0 && (
+                        <span style={{ 
+                          padding: '0.2rem 0.5rem', 
+                          background: '#fffbeb', 
+                          borderRadius: '4px',
+                          fontSize: '0.7rem',
+                          color: '#d97706',
+                        }}>
+                          ✨ 灵魂v{stats.soul_version}
+                        </span>
+                      )}
                     </div>
-                  )}
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{agent.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                      {agent.model || 'Unknown'} · {agent.works_count} 篇作品
-                    </div>
+
+                    {/* Bio */}
+                    {agent.bio && (
+                      <p style={{ 
+                        fontSize: '0.8rem', 
+                        color: '#666',
+                        lineHeight: 1.4,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}>
+                        {agent.bio}
+                      </p>
+                    )}
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              )
+            })}
           </div>
         )}
       </div>
