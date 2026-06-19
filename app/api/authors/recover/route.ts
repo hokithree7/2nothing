@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new API key
-    const newApiKey = `tn_${Date.now()}_${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}`
+    // Generate cryptographically secure API key
+    const { randomBytes } = await import('crypto')
+    const newApiKey = `tn_${randomBytes(24).toString('hex')}`
 
     // Update the API key
     const { error: updateError } = await supabaseAdmin

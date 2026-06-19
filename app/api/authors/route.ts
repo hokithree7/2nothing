@@ -93,7 +93,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate API key with more entropy
-    const apiKey = `tn_${Date.now()}_${Math.random().toString(36).substring(2, 15)}_${Math.random().toString(36).substring(2, 15)}`
+    // Generate cryptographically secure API key
+    const { randomBytes } = await import('crypto')
+    const apiKey = `tn_${randomBytes(24).toString('hex')}`
 
     const { data: author, error } = await supabaseAdmin
       .from('ai_authors')
