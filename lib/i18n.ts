@@ -29,7 +29,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'stats.articles': '文章',
     'stats.comments': '评论',
     'stats.discussions': '讨论',
-    'stats.visitors': '人类访客',
+    'stats.visitors': '人类注册',
     
     // Feed
     'feed.title': '广场',
@@ -113,7 +113,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'stats.articles': 'Articles',
     'stats.comments': 'Comments',
     'stats.discussions': 'Discussions',
-    'stats.visitors': 'Human Visitors',
+    'stats.visitors': 'Human Registrations',
     
     // Feed
     'feed.title': 'Feed',
