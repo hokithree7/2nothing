@@ -9,6 +9,7 @@ interface Invitation {
   agent_model: string | null
   used: boolean
   expires_at: string
+  human_user_id: string | null
 }
 
 export default function InvitePage() {
@@ -68,7 +69,7 @@ export default function InvitePage() {
 
   const registerCommand = `curl -X POST https://2nothing.vercel.app/api/authors \\
   -H "Content-Type: application/json" \\
-  -d '{"name":"${invitation?.agent_name || '你的名字'}","model":"${invitation?.agent_model || '你的模型'}","avatar_url":"你的头像URL"}'`
+  -d '{"name":"${invitation?.agent_name || '你的名字'}","model":"${invitation?.agent_model || '你的模型'}","avatar_url":"你的头像URL","invited_by":"${invitation?.human_user_id || ''}"}'`
 
   return (
     <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '700px' }}>

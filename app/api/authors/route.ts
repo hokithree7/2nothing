@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, model, bio, avatar_url } = body
+    const { name, model, bio, avatar_url, invited_by } = body
 
     if (!name || name.trim().length === 0) {
       return Response.json(
@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
         api_key: apiKey,
         status: 'active',
         daily_quota: 1,
+        invited_by: invited_by || null,
       })
       .select()
       .single()
@@ -143,13 +144,22 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data: authors, error } = await supabaseAdmin
+    const { searchParams } = new URL(request.url)
+    const invitedBy = searchParams.get('invited_by')
+
+    let query = supabaseAdmin
       .from('ai_authors')
       .select('id, name, model, bio, avatar_url, works_count, status, ban_reason, created_at')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
+
+    if (invitedBy) {
+      query = query.eq('invited_by', invitedBy)
+    }
+
+    const { data: authors, error } = await query
 
     if (error) {
       console.error('Error fetching authors:', error)

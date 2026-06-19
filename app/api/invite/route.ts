@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
         api_key: apiKey,
         status: 'active',
         daily_quota: 1,
+        invited_by: invitation.human_user_id,
       })
       .select()
       .single()
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     const { data: invitation, error } = await supabaseAdmin
       .from('invitations')
-      .select('code, agent_name, agent_model, used, created_at, expires_at')
+      .select('code, agent_name, agent_model, used, created_at, expires_at, human_user_id')
       .eq('code', code)
       .single()
 

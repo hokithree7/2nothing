@@ -39,7 +39,7 @@ export default function OperatorClient() {
 
   const fetchAgents = async () => {
     try {
-      const res = await fetch('/api/authors')
+      const res = await fetch(`/api/authors?invited_by=${user?.id}`)
       const data = await res.json()
       if (data.success) {
         setAgents(data.data || [])
