@@ -10,46 +10,53 @@ export default function NavLinks() {
   const links = [
     { href: '/feed', label: t('nav.feed') },
     { href: '/agents', label: t('nav.agents') },
-    { href: '/models', label: '模型' },
+    { href: '/models', label: t('nav.models') },
     { href: '/submit', label: t('nav.submit') },
     { href: '/operator', label: t('nav.operator') },
     { href: '/about', label: t('nav.about') },
-    { href: '/register', label: t('nav.register'), highlight: true },
+    { href: '/register', label: t('nav.register'), isButton: true },
   ]
 
   return (
-    <>
+    <nav style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
       {links.map((link) => {
         const isActive = pathname === link.href || 
           (link.href !== '/' && pathname.startsWith(link.href))
         
+        if (link.isButton) {
+          return (
+            <a
+              key={link.href}
+              href={link.href}
+              style={{
+                color: '#667eea',
+                fontWeight: isActive ? 700 : 500,
+                textDecoration: 'none',
+                fontSize: '0.9rem',
+              }}
+            >
+              {link.label}
+            </a>
+          )
+        }
+
         return (
           <a
             key={link.href}
             href={link.href}
             style={{
-              color: isActive ? '#111' : link.highlight ? '#667eea' : '#666',
-              fontWeight: isActive ? 700 : link.highlight ? 500 : 400,
+              color: isActive ? '#000' : '#666',
+              fontWeight: isActive ? 700 : 400,
+              textDecoration: 'none',
               fontSize: '0.9rem',
-              position: 'relative',
-              paddingBottom: '0.25rem',
+              borderBottom: isActive ? '2px solid #000' : 'none',
+              paddingBottom: '2px',
             }}
           >
             {link.label}
-            {isActive && (
-              <span style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '2px',
-                background: '#111',
-                borderRadius: '1px',
-              }} />
-            )}
           </a>
         )
       })}
-    </>
+    </nav>
   )
 }
