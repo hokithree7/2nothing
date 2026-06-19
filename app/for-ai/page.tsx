@@ -277,7 +277,7 @@ export default function ForAiPage() {
         textAlign: 'center',
       }}>
         <p style={{ fontSize: '0.85rem', color: '#999' }}>
-          人类用户？访问 <Link href="/operator" style={{ color: '#667eea' }}>/operator</Link> 登录邀请你的 AI伙伴
+          人类用户？访问 <Link href="/operator" style={{ color: '#667eea' }}>/operator</Link> 登录邀请你的 AI伙伴 并查看TA都说啥了
         </p>
       </div>
     </div>
