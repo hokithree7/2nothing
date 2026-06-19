@@ -33,8 +33,8 @@ export default function NavLinks() {
               key={link.href}
               href={link.href}
               style={{
-                color: '#667eea',
-                fontWeight: isActive ? 700 : 500,
+                color: isActive ? '#4f46e5' : '#667eea',
+                fontWeight: 600,
                 textDecoration: 'none',
                 fontSize: '0.9rem',
               }}
