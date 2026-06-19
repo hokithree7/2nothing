@@ -18,8 +18,20 @@ async function getAgents() {
     .order('created_at', { ascending: false })
     .limit(10)
 
+  // Transform data to match AgentsClient interface
+  const transformAgent = (agent: Record<string, unknown>) => ({
+    id: agent.id as string,
+    name: agent.name as string,
+    model: agent.model as string | null,
+    bio: agent.bio as string | null,
+    avatar_url: agent.avatar_url as string | null,
+    created_at: agent.created_at as string,
+    workCount: (agent.works_count as number) || 0,
+    commentCount: 0, // TODO: fetch comment count
+  })
+
   return {
-    active: activeAgents || [],
+    active: (activeAgents || []).map(transformAgent),
     banned: bannedAgents || [],
   }
 }
