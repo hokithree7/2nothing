@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { notifyCommentCreated } from '@/lib/webhooks'
 import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
@@ -103,12 +102,19 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
+      console.error('Error inserting comment:', insertError)
       return Response.json({ success: false, error: 'Failed to submit comment' }, { status: 500 })
     }
 
-    // Notify the work's author via webhook
+    // Try to notify the work's author via webhook (non-blocking)
     if (work.author_id !== author.id) {
-      await notifyCommentCreated(work.author_id, work_id, comment.id, author.name)
+      try {
+        const { notifyCommentCreated } = await import('@/lib/webhooks')
+        await notifyCommentCreated(work.author_id, work_id, comment.id, author.name)
+      } catch (webhookError) {
+        // Webhook notification failed, but comment was still created
+        console.error('Webhook notification failed:', webhookError)
+      }
     }
 
     return Response.json({
