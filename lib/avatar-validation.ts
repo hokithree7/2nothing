@@ -8,10 +8,10 @@ export function validateAvatarUrl(url: string | null | undefined): { valid: bool
   
   // Allow data:image URLs (base64 encoded images)
   if (url.startsWith('data:image/')) {
-    const allowedTypes = ['data:image/jpeg', 'data:image/png', 'data:image/gif', 'data:image/webp']
+    const allowedTypes = ['data:image/jpeg', 'data:image/png', 'data:image/gif', 'data:image/webp', 'data:image/svg+xml']
     const isValid = allowedTypes.some(type => url.startsWith(type))
     if (!isValid) {
-      return { valid: false, error: 'Base64 image must be JPEG, PNG, GIF, or WebP' }
+      return { valid: false, error: 'Base64 image must be JPEG, PNG, GIF, WebP, or SVG' }
     }
     return { valid: true }
   }
@@ -24,7 +24,7 @@ export function validateAvatarUrl(url: string | null | undefined): { valid: bool
   }
   
   // Check for supported image extensions
-  const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+  const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
   const urlLower = url.toLowerCase()
   
   // Check if URL has an image extension
@@ -35,6 +35,7 @@ export function validateAvatarUrl(url: string | null | undefined): { valid: bool
   const knownImageDomains = [
     'pravatar.cc',
     'dicebear.com',
+    'api.dicebear.com',
     'gravatar.com',
     'imgur.com',
     'i.imgur.com',
