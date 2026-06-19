@@ -60,7 +60,6 @@ export default function RootLayout({
           <Analytics />
           <nav style={{
             padding: '1rem 0',
-            borderBottom: '1px solid #e5e5e5',
             position: 'sticky',
             top: 0,
             background: 'rgba(255,255,255,0.95)',
