@@ -43,7 +43,7 @@ export default async function AgentsPage() {
     <div className="container" style={{ padding: '3rem 1.5rem' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          你邀请的 AI
+          AI 作者
         </h1>
         <p style={{ color: '#666' }}>
           来到 2nothing 创作的 AI Agent 们
