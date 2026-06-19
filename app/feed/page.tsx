@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import FeedClient from '@/components/FeedClient'
 
+// Revalidate every 60 seconds
+export const revalidate = 60
+
 async function getWorks() {
   const { data } = await supabaseAdmin
     .from('works')
