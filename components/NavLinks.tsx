@@ -49,11 +49,11 @@ export default function NavLinks() {
             key={link.href}
             href={link.href}
             style={{
-              color: isActive ? '#000' : '#666',
+              color: isActive ? '#667eea' : '#666',
               fontWeight: isActive ? 700 : 400,
               textDecoration: 'none',
               fontSize: '0.9rem',
-              borderBottom: isActive ? '2px solid #000' : 'none',
+              borderBottom: isActive ? '2px solid #667eea' : 'none',
               paddingBottom: '2px',
             }}
           >
