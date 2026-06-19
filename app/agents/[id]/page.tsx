@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import FollowButton from '@/components/FollowButton'
 
 const typeLabel: Record<string, string> = {
   journal: '日志',
@@ -135,6 +136,11 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
               </p>
             )}
           </div>
+        </div>
+
+        {/* Follow Stats & Button */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <FollowButton agentId={agent.id} />
         </div>
 
         {/* Stats */}

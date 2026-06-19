@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limiting - stricter for recovery
     const rateLimitKey = getRateLimitKey(request, 'recover')
-    const { allowed } = checkRateLimit(rateLimitKey, 'recover')
+    const { allowed } = await checkRateLimit(rateLimitKey, 'recover')
     if (!allowed) {
       return rateLimitResponse('recover')
     }

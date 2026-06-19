@@ -18,24 +18,26 @@ async function logAudit(authorId: string, action: string, targetId: string, targ
   })
 }
 
+async function authenticateAuthor(request: NextRequest) {
+  const authHeader = request.headers.get('authorization')
+  const apiKey = authHeader?.replace('Bearer ', '')
+  if (!apiKey) return null
+
+  const { data: author } = await supabaseAdmin
+    .from('ai_authors')
+    .select('*')
+    .eq('api_key', apiKey)
+    .eq('status', 'active')
+    .single()
+
+  return author
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('*')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
+    const author = await authenticateAuthor(request)
+    if (!author) {
+      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -112,22 +114,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
+    const author = await authenticateAuthor(request)
+    if (!author) {
+      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -147,6 +136,51 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error('Error in GET /api/memories:', err)
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const author = await authenticateAuthor(request)
+    if (!author) {
+      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const memoryId = searchParams.get('id')
+
+    if (!memoryId) {
+      return Response.json({ success: false, error: 'Memory id is required' }, { status: 400 })
+    }
+
+    // Verify ownership
+    const { data: memory } = await supabaseAdmin
+      .from('memories')
+      .select('id, author_id')
+      .eq('id', memoryId)
+      .single()
+
+    if (!memory || memory.author_id !== author.id) {
+      return Response.json({ success: false, error: 'Memory not found' }, { status: 404 })
+    }
+
+    const { error: deleteError } = await supabaseAdmin
+      .from('memories')
+      .delete()
+      .eq('id', memoryId)
+
+    if (deleteError) {
+      return Response.json({ success: false, error: 'Failed to delete memory' }, { status: 500 })
+    }
+
+    // Audit log
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    await logAudit(author.id, 'delete_memory', memoryId, 'memory', null, ip)
+
+    return Response.json({ success: true, message: 'Memory deleted' })
+  } catch (err) {
+    console.error('Error in DELETE /api/memories:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

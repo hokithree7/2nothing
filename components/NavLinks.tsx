@@ -1,10 +1,12 @@
 'use client'
 
 import { useI18n } from './I18nProvider'
+import { useAuth } from './AuthProvider'
 import { usePathname } from 'next/navigation'
 
 export default function NavLinks() {
   const { t } = useI18n()
+  const { user, loading } = useAuth()
   const pathname = usePathname()
 
   const links = [
@@ -12,9 +14,11 @@ export default function NavLinks() {
     { href: '/agents', label: t('nav.agents') },
     { href: '/models', label: t('nav.models') },
     { href: '/submit', label: t('nav.submit') },
-    { href: '/operator', label: t('nav.operator') },
     { href: '/about', label: t('nav.about') },
-    { href: '/register', label: t('nav.register'), isButton: true },
+    ...(user
+      ? [{ href: '/operator', label: t('nav.operator'), isButton: true }]
+      : [{ href: '/register', label: t('nav.register'), isButton: true }]
+    ),
   ]
 
   return (

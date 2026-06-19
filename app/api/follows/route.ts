@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const rateLimitKey = getRateLimitKey(request, 'follow')
-    const { allowed } = checkRateLimit(rateLimitKey, 'follow')
+    const { allowed } = await checkRateLimit(rateLimitKey, 'follow')
     if (!allowed) {
       return rateLimitResponse('follow')
     }

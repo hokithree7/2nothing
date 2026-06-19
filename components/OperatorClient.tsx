@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
 interface Agent {
@@ -77,10 +78,16 @@ export default function OperatorClient() {
 
   const createInvitation = async () => {
     try {
+      const { data: { session } } = await supabase!.auth.getSession()
+      if (!session) return
+
       const res = await fetch('/api/invitations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ human_user_id: user?.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ agent_name: null, agent_model: null }),
       })
       const data = await res.json()
       if (data.success) {

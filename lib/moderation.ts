@@ -1,15 +1,35 @@
-// Content moderation - keyword filtering with word boundaries
-// In production, use a proper content moderation API
+// Content moderation - keyword filtering with normalization
+// In production, consider adding a proper content moderation API (OpenAI Moderation, Perspective API)
 
 const BLOCKED_KEYWORDS = [
   // Violence
-  'kill', 'murder', 'blood', 'gore', 'torture',
+  'kill', 'murder', 'blood', 'gore', 'torture', 'violence', 'weapon', 'attack',
   // Sexual
-  'porn', 'nude', 'explicit', 'nsfw',
-  // Drugs - only exact phrases, not substrings
-  'cocaine', 'heroin', 'methamphetamine', 'drug dealer',
-  // Add more as needed
+  'porn', 'nude', 'naked', 'explicit', 'nsfw', 'sexual', 'erotic',
+  // Drugs
+  'cocaine', 'heroin', 'methamphetamine', 'drug dealer', 'fentanyl',
+  // Hate
+  'nazi', 'terrorist', 'slur',
+  // Self-harm
+  'suicide', 'self-harm',
 ]
+
+// Leetspeak / common substitutions
+const LEET_MAP: Record<string, string> = {
+  '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '9': 'g',
+  '@': 'a', '$': 's', '!': 'i', '+': 't',
+}
+
+// Zero-width and invisible Unicode characters to strip
+const INVISIBLE_RE = /[\u200B\u200C\u200D\u200E\u200F\uFEFF\u00AD\u2060\u2061\u2062\u2063\u2064\u180E]/g
+
+// Common homoglyphs → ASCII
+const HOMOGLYPH_MAP: Record<string, string> = {
+  'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'у': 'y', 'х': 'x', // Cyrillic
+  'ɑ': 'a', 'ε': 'e', 'ι': 'i', 'ο': 'o', 'ν': 'v', 'κ': 'k', // Greek
+  '𝐚': 'a', '𝐛': 'b', '𝐜': 'c', '𝐝': 'd', '𝐞': 'e', '𝐟': 'f', '𝐠': 'g', // Math bold
+  '𝚔': 'k', '𝚒': 'i', '𝚕': 'l', // Math mono
+}
 
 export interface ModerationResult {
   approved: boolean
@@ -18,8 +38,28 @@ export interface ModerationResult {
   reason: string | null
 }
 
+function normalizeText(text: string): string {
+  let normalized = text.toLowerCase()
+
+  // Strip invisible / zero-width characters
+  normalized = normalized.replace(INVISIBLE_RE, '')
+
+  // Normalize homoglyphs
+  normalized = normalized.split('').map(ch => HOMOGLYPH_MAP[ch] || ch).join('')
+
+  // Normalize leetspeak
+  normalized = normalized.split('').map(ch => LEET_MAP[ch] || ch).join('')
+
+  // Remove diacritics (é → e, ñ → n, etc.)
+  normalized = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+  // Collapse repeated spaces and punctuation separators (k.i.l.l → kill, k i l l → kill)
+  normalized = normalized.replace(/[.\-_\s]+/g, '')
+
+  return normalized
+}
+
 function findWholeWord(text: string, word: string): boolean {
-  // Use word boundary regex to match whole words only
   const regex = new RegExp(`\\b${word}\\b`, 'i')
   return regex.test(text)
 }
@@ -30,30 +70,33 @@ export function moderateContent(
   content?: string | null,
   imageUrl?: string | null
 ): ModerationResult {
-  const textToCheck = [title, content].filter(Boolean).join(' ').toLowerCase()
+  const rawText = [title, content].filter(Boolean).join(' ')
+  const normalizedText = normalizeText(rawText)
   const censoredWords: string[] = []
 
-  // Check text content with word boundaries
-  const textViolations = BLOCKED_KEYWORDS.filter(keyword =>
-    findWholeWord(textToCheck, keyword)
-  )
-
-  if (textViolations.length > 0) {
-    censoredWords.push(...textViolations)
+  for (const keyword of BLOCKED_KEYWORDS) {
+    const normalizedKeyword = normalizeText(keyword)
+    // Check both raw (word boundary) and normalized (substring)
+    if (findWholeWord(rawText.toLowerCase(), keyword) || normalizedText.includes(normalizedKeyword)) {
+      censoredWords.push(keyword)
+    }
   }
 
-  // Check image URL (in production, use image moderation API)
+  // Check image URL — reject suspicious patterns
   if (imageUrl) {
-    // For now, just check if URL seems suspicious
-    // In production: AWS Rekognition, Google Vision, etc.
+    const lowerUrl = imageUrl.toLowerCase()
+    const suspiciousPatterns = ['javascript:', 'data:text/html', 'vbscript:']
+    if (suspiciousPatterns.some(p => lowerUrl.includes(p))) {
+      censoredWords.push('suspicious-image-url')
+    }
   }
 
   if (censoredWords.length > 0) {
     return {
       approved: false,
       censored: true,
-      censoredFields: censoredWords,
-      reason: `Content contains restricted keywords: ${censoredWords.join(', ')}`,
+      censoredFields: [...new Set(censoredWords)],
+      reason: `Content contains restricted keywords: ${[...new Set(censoredWords)].join(', ')}`,
     }
   }
 

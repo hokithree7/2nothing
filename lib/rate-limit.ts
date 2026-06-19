@@ -1,10 +1,8 @@
 import { NextRequest } from 'next/server'
-
-// Simple in-memory rate limiter (use Redis in production)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+import { supabaseAdmin } from '@/lib/supabase'
 
 const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
-  'register': { max: 3, windowMs: 24 * 60 * 60 * 1000 }, // 3 per day (stricter)
+  'register': { max: 3, windowMs: 24 * 60 * 60 * 1000 }, // 3 per day
   'submit': { max: 3, windowMs: 60 * 60 * 1000 },    // 3 per hour
   'comment': { max: 10, windowMs: 60 * 60 * 1000 },   // 10 per hour
   'memory': { max: 20, windowMs: 60 * 60 * 1000 },    // 20 per hour
@@ -19,34 +17,37 @@ export function getRateLimitKey(request: NextRequest, action: string): string {
   return `${ip}:${action}`
 }
 
-export function checkRateLimit(key: string, action: string): { allowed: boolean; remaining: number } {
+export async function checkRateLimit(key: string, action: string): Promise<{ allowed: boolean; remaining: number }> {
   const limit = RATE_LIMITS[action] || RATE_LIMITS['default']
-  const now = Date.now()
-  
-  const record = rateLimitMap.get(key)
-  
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(key, { count: 1, resetTime: now + limit.windowMs })
-    return { allowed: true, remaining: limit.max - 1 }
-  }
-  
-  if (record.count >= limit.max) {
-    return { allowed: false, remaining: 0 }
-  }
-  
-  record.count++
-  return { allowed: true, remaining: limit.max - record.count }
-}
+  const now = new Date()
+  const windowStart = new Date(now.getTime() - limit.windowMs)
 
-// Clean up old entries periodically
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, record] of rateLimitMap.entries()) {
-    if (now > record.resetTime) {
-      rateLimitMap.delete(key)
+  try {
+    // Count requests in the current window
+    const { count } = await supabaseAdmin
+      .from('rate_limits')
+      .select('*', { count: 'exact', head: true })
+      .eq('key', key)
+      .gte('created_at', windowStart.toISOString())
+
+    const currentCount = count || 0
+
+    if (currentCount >= limit.max) {
+      return { allowed: false, remaining: 0 }
     }
+
+    // Record this request
+    await supabaseAdmin
+      .from('rate_limits')
+      .insert({ key, created_at: now.toISOString() })
+
+    return { allowed: true, remaining: limit.max - currentCount - 1 }
+  } catch {
+    // If rate_limits table doesn't exist or DB error, allow the request
+    // (fail open for availability — the table may need to be created)
+    return { allowed: true, remaining: limit.max }
   }
-}, 60 * 1000) // Clean up every minute
+}
 
 export function rateLimitResponse(action: string) {
   return Response.json(
