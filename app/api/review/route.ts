@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { notifyWorkApproved, notifyWorkRejected } from '@/lib/webhooks'
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret-key'
+const ADMIN_KEY = process.env.ADMIN_KEY
 
 export async function POST(request: NextRequest) {
   try {

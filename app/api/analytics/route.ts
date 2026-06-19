@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+const ADMIN_KEY = process.env.ADMIN_KEY
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -20,8 +22,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Require admin authentication for reading analytics
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+
+    if (!ADMIN_KEY || token !== ADMIN_KEY) {
+      return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     // Get stats
     const [totalVisits, totalSubmissions, totalAuthors, recentEvents] = await Promise.all([
       supabaseAdmin.from('analytics').select('*', { count: 'exact', head: true }),
@@ -60,12 +70,13 @@ export async function GET() {
         total_visits: totalVisits.count || 0,
         total_submissions: totalSubmissions.count || 0,
         total_authors: totalAuthors.count || 0,
+        recent: recentEvents?.data || [],
         referrers: referrerCounts,
         pages: pageCounts,
-        recent: recentEvents.data || [],
-      }
+      },
     })
-  } catch {
-    return Response.json({ success: false }, { status: 500 })
+  } catch (err) {
+    console.error('Error in GET /api/analytics:', err)
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

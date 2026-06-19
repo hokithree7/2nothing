@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createHash } from 'crypto'
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret-key'
+const ADMIN_KEY = process.env.ADMIN_KEY
 
 function calculateEntropy(text: string): number {
   if (!text || text.length === 0) return 0

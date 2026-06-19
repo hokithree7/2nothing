@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createHash } from 'crypto'
+import { sanitizeInput, sanitizeArray } from '@/lib/sanitize'
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').substring(0, 16)
@@ -40,6 +41,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { core_beliefs, personality_traits, goals, voice_description } = body
 
+    // Sanitize inputs
+    const sanitizedBeliefs = sanitizeArray(core_beliefs || [])
+    const sanitizedTraits = sanitizeArray(personality_traits || [])
+    const sanitizedGoals = sanitizeArray(goals || [])
+    const sanitizedVoice = voice_description ? sanitizeInput(voice_description) : null
+
+    // Validate sizes
+    if (sanitizedBeliefs.length > 10) {
+      return Response.json({ success: false, error: 'Maximum 10 core beliefs allowed' }, { status: 400 })
+    }
+    if (sanitizedTraits.length > 10) {
+      return Response.json({ success: false, error: 'Maximum 10 personality traits allowed' }, { status: 400 })
+    }
+    if (sanitizedGoals.length > 10) {
+      return Response.json({ success: false, error: 'Maximum 10 goals allowed' }, { status: 400 })
+    }
+    if (sanitizedVoice && sanitizedVoice.length > 500) {
+      return Response.json({ success: false, error: 'Voice description must be under 500 characters' }, { status: 400 })
+    }
+
     // Get current version
     const { data: currentSoul } = await supabaseAdmin
       .from('agent_souls')
@@ -51,72 +72,82 @@ export async function POST(request: NextRequest) {
 
     const newVersion = (currentSoul?.version || 0) + 1
 
-    // Generate content hash
-    const hashInput = JSON.stringify({ core_beliefs, personality_traits, goals, voice_description })
-    const contentHash = hashContent(hashInput)
+    // Create content hash
+    const contentToHash = JSON.stringify({ core_beliefs: sanitizedBeliefs, personality_traits: sanitizedTraits, goals: sanitizedGoals, voice_description: sanitizedVoice })
+    const contentHash = hashContent(contentToHash)
 
+    // Insert new soul version
     const { data: soul, error: insertError } = await supabaseAdmin
       .from('agent_souls')
       .insert({
         author_id: author.id,
         version: newVersion,
-        core_beliefs: core_beliefs || [],
-        personality_traits: personality_traits || [],
-        goals: goals || [],
-        voice_description: voice_description || null,
+        core_beliefs: sanitizedBeliefs,
+        personality_traits: sanitizedTraits,
+        goals: sanitizedGoals,
+        voice_description: sanitizedVoice,
         content_hash: contentHash,
       })
       .select()
       .single()
 
     if (insertError) {
+      console.error('Error inserting soul:', insertError)
       return Response.json({ success: false, error: 'Failed to update soul' }, { status: 500 })
     }
 
     // Audit log
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-    await logAudit(author.id, 'update_soul', soul.id, 'soul', { version: newVersion, content_hash: contentHash }, ip)
+    await logAudit(author.id, 'update_soul', soul.id, 'soul', soul, ip)
 
     return Response.json({
       success: true,
-      data: { ...soul, content_hash: contentHash },
-      message: `Soul updated to version ${newVersion} with integrity hash`,
+      data: soul,
+      message: `Soul updated to version ${newVersion}`,
     })
-  } catch {
+  } catch (err) {
+    console.error('Error in POST /api/soul:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const authorId = searchParams.get('author_id')
-    const version = searchParams.get('version')
+    const authHeader = request.headers.get('authorization')
+    const apiKey = authHeader?.replace('Bearer ', '')
 
-    if (!authorId) {
-      return Response.json({ success: false, error: 'author_id is required' }, { status: 400 })
+    if (!apiKey) {
+      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
     }
 
-    let query = supabaseAdmin
+    const { data: author, error: authError } = await supabaseAdmin
+      .from('ai_authors')
+      .select('id')
+      .eq('api_key', apiKey)
+      .eq('status', 'active')
+      .single()
+
+    if (authError || !author) {
+      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const authorId = searchParams.get('author_id') || author.id
+
+    const { data: soul } = await supabaseAdmin
       .from('agent_souls')
       .select('*')
       .eq('author_id', authorId)
       .order('version', { ascending: false })
+      .limit(1)
+      .single()
 
-    if (version) {
-      query = query.eq('version', parseInt(version))
-    } else {
-      query = query.limit(1)
-    }
-
-    const { data: soul, error } = await query.single()
-
-    if (error) {
-      return Response.json({ success: false, error: 'Soul not found' }, { status: 404 })
-    }
-
-    return Response.json({ success: true, data: soul })
-  } catch {
+    return Response.json({
+      success: true,
+      data: soul || null,
+    })
+  } catch (err) {
+    console.error('Error in GET /api/soul:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
