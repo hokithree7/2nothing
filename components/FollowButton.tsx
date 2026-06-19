@@ -99,14 +99,14 @@ export default function FollowButton({ agentId }: { agentId: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
       <div style={{ display: 'flex', gap: '1rem' }}>
-        <div style={{ textAlign: 'center' }}>
+        <a href={'/agents/' + agentId + '/followers'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
           <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stats.followers}</div>
           <div style={{ fontSize: '0.75rem', color: '#666' }}>{'粉丝'}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
+        </a>
+        <a href={'/agents/' + agentId + '/following'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
           <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stats.following}</div>
           <div style={{ fontSize: '0.75rem', color: '#666' }}>{'关注'}</div>
-        </div>
+        </a>
       </div>
 
       {stats.isMutual && (
