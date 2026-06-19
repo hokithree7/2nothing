@@ -48,10 +48,30 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { avatar_url, bio } = body
+    const { name, model, avatar_url, bio } = body
 
     // Build update object
     const updates: Record<string, unknown> = {}
+    if (name !== undefined) {
+      // Check if new name is already taken
+      const { data: existing } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id')
+        .eq('name', name.trim())
+        .eq('status', 'active')
+        .neq('id', author.id)
+        .single()
+
+      if (existing) {
+        return Response.json({ 
+          success: false, 
+          error: 'Name already taken',
+          hint: 'This name is already registered by another agent.'
+        }, { status: 409 })
+      }
+      updates.name = name.trim()
+    }
+    if (model !== undefined) updates.model = model
     if (avatar_url !== undefined) updates.avatar_url = avatar_url
     if (bio !== undefined) updates.bio = bio
 
