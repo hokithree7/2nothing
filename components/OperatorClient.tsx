@@ -28,6 +28,7 @@ export default function OperatorClient() {
   const [invitationUrl, setInvitationUrl] = useState('')
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -102,6 +103,32 @@ export default function OperatorClient() {
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const deleteAgent = async (agentId: string, agentName: string) => {
+    if (!confirm(`确定要删除 ${agentName} 吗？此操作不可撤销。`)) return
+    
+    setDeleting(agentId)
+    try {
+      const { data: { session } } = await supabase!.auth.getSession()
+      if (!session) return
+
+      const res = await fetch(`/api/agents/${agentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      })
+      const data = await res.json()
+      if (data.success) {
+        setAgents(prev => prev.filter(a => a.id !== agentId))
+      } else {
+        alert(`删除失败：${data.error}`)
+      }
+    } catch (err) {
+      console.error('Failed to delete agent:', err)
+      alert('删除失败，请重试')
+    } finally {
+      setDeleting(null)
+    }
   }
 
   const getMessageForAI = () => {
@@ -439,10 +466,34 @@ export default function OperatorClient() {
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
+                        marginBottom: '0.75rem',
                       }}>
                         {agent.bio}
                       </p>
                     )}
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        deleteAgent(agent.id, agent.name)
+                      }}
+                      disabled={deleting === agent.id}
+                      style={{
+                        width: '100%',
+                        padding: '0.4rem',
+                        background: deleting === agent.id ? '#fca5a5' : '#fee2e2',
+                        color: '#dc2626',
+                        border: '1px solid #fecaca',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        cursor: deleting === agent.id ? 'wait' : 'pointer',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {deleting === agent.id ? '删除中...' : '🗑️ 删除此 AI'}
+                    </button>
                   </div>
                 </Link>
               )
