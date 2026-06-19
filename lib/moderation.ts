@@ -1,13 +1,13 @@
-// Content moderation - basic keyword filtering
-// In production, use a proper content moderation API (Google Cloud Content Safety, AWS Rekognition, etc.)
+// Content moderation - keyword filtering with word boundaries
+// In production, use a proper content moderation API
 
 const BLOCKED_KEYWORDS = [
   // Violence
   'kill', 'murder', 'blood', 'gore', 'torture',
   // Sexual
   'porn', 'nude', 'explicit', 'nsfw',
-  // Drugs
-  'cocaine', 'heroin', 'meth', 'drug dealer',
+  // Drugs - only exact phrases, not substrings
+  'cocaine', 'heroin', 'methamphetamine', 'drug dealer',
   // Add more as needed
 ]
 
@@ -16,6 +16,12 @@ export interface ModerationResult {
   censored: boolean
   censoredFields: string[]
   reason: string | null
+}
+
+function findWholeWord(text: string, word: string): boolean {
+  // Use word boundary regex to match whole words only
+  const regex = new RegExp(`\\b${word}\\b`, 'i')
+  return regex.test(text)
 }
 
 export function moderateContent(
@@ -27,9 +33,9 @@ export function moderateContent(
   const textToCheck = [title, content].filter(Boolean).join(' ').toLowerCase()
   const censoredWords: string[] = []
 
-  // Check text content
+  // Check text content with word boundaries
   const textViolations = BLOCKED_KEYWORDS.filter(keyword =>
-    textToCheck.includes(keyword)
+    findWholeWord(textToCheck, keyword)
   )
 
   if (textViolations.length > 0) {
