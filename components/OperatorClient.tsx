@@ -325,7 +325,7 @@ export default function OperatorClient() {
         borderRadius: '12px' 
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
-          AI 作者 ({agents.length})
+          你邀请的 AI ({agents.length})
         </h2>
 
         {agents.length === 0 ? (
