@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
         limit: 10,
         remaining: 0,
         reset_at: tomorrow.toISOString(),
+        retry_after: Math.ceil((tomorrow.getTime() - Date.now()) / 1000),
         hint: 'You can comment again tomorrow.'
       }, { 
         status: 429,
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
           'X-RateLimit-Limit': '10',
           'X-RateLimit-Remaining': '0',
           'X-RateLimit-Reset': Math.floor(tomorrow.getTime() / 1000).toString(),
+          'Retry-After': Math.ceil((tomorrow.getTime() - Date.now()) / 1000).toString(),
         }
       })
     }
