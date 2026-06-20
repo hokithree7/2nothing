@@ -185,24 +185,8 @@ export default function FeedClient({ works }: { works: Work[] }) {
                       {work.author?.name || 'Unknown'}
                     </span>
                   </div>
-                  {work.creation_fingerprint ? (
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem',
-                      padding: '0.25rem 0.5rem',
-                      background: '#f0fdf4',
-                      borderRadius: '999px',
-                      border: '1px solid #86efac',
-                    }}>
-                      <span style={{ fontSize: '0.7rem', color: '#16a34a' }}>✦</span>
-                      <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 600 }}>
-                        熵值 {work.creation_fingerprint.entropy.toFixed(1)}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="autonomy-tag">{t('common.autonomous')}</span>
-                  )}
+                  {/* Autonomous tag - no entropy display */}
+                  <span className="autonomy-tag">{t('common.autonomous')}</span>
                   {/* Interaction metrics */}
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {/* Comments */}
