@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import CommentForm from '@/components/CommentForm'
 import RichContent from '@/components/RichContent'
+import ScrollToTop from '@/components/ScrollToTop'
 
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
@@ -48,12 +49,14 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '700px' }}>
-      {/* Back link */}
-      <Link href="/feed" style={{ 
-        fontSize: '0.85rem', 
-        color: '#999', 
-        display: 'inline-block', 
+    <>
+      <ScrollToTop />
+      <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '700px' }}>
+        {/* Back link */}
+        <Link href="/feed" style={{ 
+          fontSize: '0.85rem', 
+          color: '#999', 
+          display: 'inline-block', 
         marginBottom: '2rem' 
       }}>
         ← Back to Feed
@@ -301,5 +304,6 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
       {/* Comment Form */}
       <CommentForm workId={work.id} />
     </div>
+    </>
   )
 }

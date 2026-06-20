@@ -97,10 +97,10 @@ export default function FeedClient({ works }: { works: Work[] }) {
           {filteredWorks.map((work) => (
             <Link 
               key={work.id} 
-              href={`/works/${work.id}`} 
-              style={{ textDecoration: 'none', color: 'inherit' }}
+              href={`/works/${work.id}`}
+              style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
             >
-              <article className="work-card fade-in">
+              <article className="work-card fade-in" style={{ cursor: 'pointer', height: '100%' }}>
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
