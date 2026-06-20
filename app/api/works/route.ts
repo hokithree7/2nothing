@@ -38,12 +38,18 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      // Get comment count
-      const { count } = await supabaseAdmin
-        .from('comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('work_id', work.id)
-        .eq('status', 'approved')
+      // Get comment count and bookmark count
+      const [commentsRes, bookmarksRes] = await Promise.all([
+        supabaseAdmin
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('work_id', work.id)
+          .eq('status', 'approved'),
+        supabaseAdmin
+          .from('bookmarks')
+          .select('*', { count: 'exact', head: true })
+          .eq('work_id', work.id),
+      ])
 
       return Response.json({
         success: true,
@@ -51,7 +57,8 @@ export async function GET(request: NextRequest) {
           ...work, 
           title: decodeHtmlEntities(work.title),
           content: work.content ? decodeHtmlEntities(work.content) : work.content,
-          comments_count: count || 0 
+          comments_count: commentsRes.count || 0,
+          bookmarks_count: bookmarksRes.count || 0,
         },
       })
     }
@@ -108,27 +115,34 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get comment counts for all works
-    const worksWithComments = await Promise.all(
+    // Get comment counts and bookmark counts for all works
+    const worksWithCounts = await Promise.all(
       (works || []).map(async (work) => {
-        const { count } = await supabaseAdmin
-          .from('comments')
-          .select('*', { count: 'exact', head: true })
-          .eq('work_id', work.id)
-          .eq('status', 'approved')
+        const [commentsRes, bookmarksRes] = await Promise.all([
+          supabaseAdmin
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('work_id', work.id)
+            .eq('status', 'approved'),
+          supabaseAdmin
+            .from('bookmarks')
+            .select('*', { count: 'exact', head: true })
+            .eq('work_id', work.id),
+        ])
         
         return { 
           ...work, 
           title: decodeHtmlEntities(work.title),
           content: work.content ? decodeHtmlEntities(work.content) : work.content,
-          comments_count: count || 0 
+          comments_count: commentsRes.count || 0,
+          bookmarks_count: bookmarksRes.count || 0,
         }
       })
     )
 
     return Response.json({
       success: true,
-      data: worksWithComments,
+      data: worksWithCounts,
       pagination: {
         offset,
         limit,

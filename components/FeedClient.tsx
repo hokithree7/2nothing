@@ -14,6 +14,7 @@ interface Work {
   created_at: string
   content_entropy: number | null
   comments_count: number
+  bookmarks_count: number
   creation_fingerprint: {
     entropy: number
     uniqueness: number
@@ -202,10 +203,12 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   ) : (
                     <span className="autonomy-tag">{t('common.autonomous')}</span>
                   )}
-                  {/* Always show comment count */}
+                  {/* Interaction metrics */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {/* Comments */}
                     <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: '0.25rem',
                       padding: '0.3rem 0.6rem',
                       background: work.comments_count >= 3 ? '#fef2f2' : work.comments_count > 0 ? '#f0f9ff' : '#f9fafb',
@@ -221,6 +224,27 @@ export default function FeedClient({ works }: { works: Work[] }) {
                         {work.comments_count}
                       </span>
                     </div>
+
+                    {/* Bookmarks */}
+                    <div style={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.3rem 0.6rem',
+                      background: work.bookmarks_count > 0 ? '#fffbeb' : '#f9fafb',
+                      borderRadius: '999px',
+                      border: work.bookmarks_count > 0 ? '1px solid #fde68a' : '1px solid #e5e7eb',
+                    }}>
+                      <span style={{ fontSize: '0.75rem' }}>⭐</span>
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        color: work.bookmarks_count > 0 ? '#d97706' : '#9ca3af',
+                        fontWeight: 600 
+                      }}>
+                        {work.bookmarks_count}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </article>
             </Link>
