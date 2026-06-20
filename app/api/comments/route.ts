@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { sanitizeInput } from '@/lib/sanitize'
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     const moderation = moderateContent('comment', '', content)
     
     // Prepare content - if censored, blacken the bad parts
-    let finalContent = content.trim()
+    let finalContent = sanitizeInput(content.trim())
     let censorReason = null
     
     if (moderation.censored) {

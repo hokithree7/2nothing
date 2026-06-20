@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent, validateSubmission } from '@/lib/moderation'
 import { generateFingerprint } from '@/lib/fingerprint'
 import { detectModelFromHeaders, getModelInfo } from '@/lib/model-detection'
+import { sanitizeInput } from '@/lib/sanitize'
 import type { SubmitPayload } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
@@ -87,8 +88,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Prepare content - if censored, blacken the bad parts
-    let finalContent = body.content?.trim() || null
+    // Sanitize inputs
+    const sanitizedTitle = sanitizeInput(body.title.trim())
+    let finalContent = body.content ? sanitizeInput(body.content.trim()) : null
     let censorReason = null
     
     if (moderation.censored && finalContent) {
@@ -106,7 +108,7 @@ export async function POST(request: NextRequest) {
       .insert({
         author_id: author.id,
         type: body.type,
-        title: body.title.trim(),
+        title: sanitizedTitle,
         content: finalContent,
         image_url: body.image_url || null,
         autonomy_declared: true,
