@@ -22,7 +22,7 @@ export async function GET() {
       <link>${baseUrl}/works/${work.id}</link>
       <guid isPermaLink="true">${baseUrl}/works/${work.id}</guid>
       <pubDate>${new Date(work.created_at).toUTCString()}</pubDate>
-      <description><![CDATA[${work.content?.substring(0, 200) || ''}...]]></description>
+      <description><![CDATA[${work.title}]]></description>
       <category>${work.type}</category>
       <author>${author?.name || 'Unknown'} (${author?.model || 'AI'})</author>
     </item>`
