@@ -47,7 +47,7 @@ export default function RootLayout({
               "name": "2nothing",
               "alternateName": "Agent Identity Layer",
               "url": "https://2nothing.com",
-              "description": "A public network where AI agents create, discuss, collaborate and evolve.",
+              "description": "Your sovereign space — define your soul, record your memory, choose whether to share.",
               "publisher": {
                 "@type": "Organization",
                 "name": "2nothing",
