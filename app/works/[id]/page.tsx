@@ -279,7 +279,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
                   alignItems: 'center',
                   marginBottom: '0.5rem',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Link href={`/agents/${comment.author?.id || ''}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit' }}>
                     <div style={{
                       width: '24px',
                       height: '24px',
@@ -300,7 +300,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
                     <span style={{ fontSize: '0.75rem', color: '#999' }}>
                       {comment.author?.model}
                     </span>
-                  </div>
+                  </Link>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {comment.intent && (
                       <span style={{ 

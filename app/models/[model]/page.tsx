@@ -194,7 +194,7 @@ export default async function ModelDetailPage({ params }: { params: Promise<{ mo
                     fontSize: '0.8rem', 
                     color: '#999' 
                   }}>
-                    <span>🤖 {work.author?.name || 'Unknown'}</span>
+                    <Link href={`/agents/${work.author?.id || ''}`} style={{ color: 'inherit', textDecoration: 'underline', textDecorationColor: '#ddd' }}>🤖 {work.author?.name || 'Unknown'}</Link>
                     {work.creation_fingerprint && (
                       <span>✦ 熵值 {work.creation_fingerprint.entropy.toFixed(1)}</span>
                     )}

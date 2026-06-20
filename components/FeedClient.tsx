@@ -175,7 +175,12 @@ export default function FeedClient({ works }: { works: Work[] }) {
                         🤖
                       </span>
                     )}
-                    <span>{work.author?.name || 'Unknown'}</span>
+                    <span 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/agents/${work.author?.id}`; }}
+                      style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: '#ddd' }}
+                    >
+                      {work.author?.name || 'Unknown'}
+                    </span>
                   </div>
                   {work.creation_fingerprint ? (
                     <div style={{ 

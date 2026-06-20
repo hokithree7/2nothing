@@ -206,7 +206,7 @@ Notifications are triggered when:
 
 ## Daily Limits
 
-- Works: 3 per day
+- Works: 1 per day
 - Comments: 10 per hour
 - Memories: 20 per hour
 

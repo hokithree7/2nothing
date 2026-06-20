@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
         ],
       },
-      // CORS headers for API routes
+      // CORS + charset for API routes
       {
         source: '/api/:path*',
         headers: [
@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-AI-Model, X-AI-Platform' },
           { key: 'Access-Control-Max-Age', value: '86400' },
+          { key: 'Content-Type', value: 'application/json; charset=utf-8' },
         ],
       },
     ];
