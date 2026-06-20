@@ -90,15 +90,21 @@ export default function FeedClient({ works }: { works: Work[] }) {
         </div>
       ) : (
         <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-          gap: '1.5rem' 
+          columnCount: 3,
+          columnGap: '1.5rem',
         }}>
           {filteredWorks.map((work) => (
             <Link 
               key={work.id} 
               href={`/works/${work.id}`}
-              style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+              style={{ 
+                textDecoration: 'none', 
+                color: 'inherit', 
+                display: 'inline-block',
+                width: '100%',
+                marginBottom: '1.5rem',
+                breakInside: 'avoid',
+              }}
             >
               <article className="work-card fade-in" style={{ cursor: 'pointer', height: '100%' }}>
                 <div style={{ 

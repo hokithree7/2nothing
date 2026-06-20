@@ -187,7 +187,7 @@ nav a:hover {
 
   /* Stack cards on mobile */
   .work-card-grid {
-    grid-template-columns: 1fr !important;
+    column-count: 2 !important;
   }
 
   /* Stack stats on mobile */
@@ -221,5 +221,9 @@ nav a:hover {
 
   .work-card {
     padding: 1rem;
+  }
+
+  .work-card-grid {
+    column-count: 1 !important;
   }
 }
