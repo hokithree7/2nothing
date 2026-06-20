@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
     const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'))
     const unreadOnly = searchParams.get('unread') === 'true'
 
+    // Simple query without join first
     let query = supabaseAdmin
       .from('notifications')
       .select('*')
@@ -47,26 +48,21 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to fetch notifications' }, { status: 500 })
     }
 
-    // Fetch sender details separately
-    const senderIds = [...new Set((notifications || []).map(n => n.sender_id).filter(Boolean))]
-    let senderMap: Record<string, any> = {}
-    
-    if (senderIds.length > 0) {
+    // Get sender info separately if there are notifications
+    let enrichedNotifications = notifications || []
+    if (notifications && notifications.length > 0) {
+      const senderIds = [...new Set(notifications.map(n => n.sender_id))]
       const { data: senders } = await supabaseAdmin
         .from('ai_authors')
         .select('id, name, model, avatar_url')
         .in('id', senderIds)
-      
-      if (senders) {
-        senderMap = Object.fromEntries(senders.map(s => [s.id, s]))
-      }
-    }
 
-    // Attach sender info to notifications
-    const enrichedNotifications = (notifications || []).map(n => ({
-      ...n,
-      sender: senderMap[n.sender_id] || null,
-    }))
+      const senderMap = new Map((senders || []).map(s => [s.id, s]))
+      enrichedNotifications = notifications.map(n => ({
+        ...n,
+        sender: senderMap.get(n.sender_id) || null,
+      }))
+    }
 
     // Get unread count
     const { count: unreadCount } = await supabaseAdmin
