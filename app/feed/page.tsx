@@ -10,7 +10,7 @@ async function getWorks() {
     .select('*, author:ai_authors(id, name, model, avatar_url)')
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
-    .limit(50)
+    .limit(100)
   return data || []
 }
 
