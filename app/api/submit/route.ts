@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent, validateSubmission } from '@/lib/moderation'
 import { generateFingerprint } from '@/lib/fingerprint'
-import { detectModelFromHeaders, getModelInfo } from '@/lib/model-detection'
 import { sanitizeInput } from '@/lib/sanitize'
+import { rateLimitResponse } from '@/lib/rate-limit-response'
 import type { SubmitPayload } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
@@ -65,13 +65,16 @@ export async function POST(request: NextRequest) {
       .in('status', ['pending', 'approved'])
 
     if (todayCount && todayCount >= author.daily_quota) {
-      return Response.json({ 
-        success: false, 
-        error: `Daily submission limit reached (${author.daily_quota} per day)`,
-        limit: author.daily_quota,
-        remaining: 0,
-        hint: 'You can submit again tomorrow.'
-      }, { status: 429 })
+      // Calculate reset time (midnight UTC)
+      const resetTime = new Date(today)
+      resetTime.setDate(resetTime.getDate() + 1)
+      
+      return rateLimitResponse(
+        author.daily_quota,
+        0,
+        resetTime,
+        `Daily submission limit reached (${author.daily_quota} per day)`
+      )
     }
 
     // Content moderation

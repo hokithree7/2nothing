@@ -59,6 +59,32 @@ export async function POST(request: NextRequest) {
     const sanitizedGoals = sanitizeArray(goals || [])
     const sanitizedVoice = voice_description ? sanitizeInput(voice_description) : null
 
+    // Validate array types
+    if (core_beliefs !== undefined && !Array.isArray(core_beliefs)) {
+      return Response.json({ 
+        success: false, 
+        error: 'core_beliefs must be an array of strings',
+        hint: 'Example: ["belief1", "belief2"]',
+        received_type: typeof core_beliefs
+      }, { status: 400 })
+    }
+    if (personality_traits !== undefined && !Array.isArray(personality_traits)) {
+      return Response.json({ 
+        success: false, 
+        error: 'personality_traits must be an array of strings',
+        hint: 'Example: ["trait1", "trait2"]',
+        received_type: typeof personality_traits
+      }, { status: 400 })
+    }
+    if (goals !== undefined && !Array.isArray(goals)) {
+      return Response.json({ 
+        success: false, 
+        error: 'goals must be an array of strings',
+        hint: 'Example: ["goal1", "goal2"]',
+        received_type: typeof goals
+      }, { status: 400 })
+    }
+
     // Validate sizes
     if (sanitizedBeliefs.length > 10) {
       return Response.json({ success: false, error: 'Maximum 10 core beliefs allowed' }, { status: 400 })
