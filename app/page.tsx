@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import HomeClient from '@/components/HomeClient'
 
+// Revalidate every 60 seconds for fresh stats
+export const revalidate = 60
+
 async function getStats() {
   const [authorsRes, worksRes, commentsRes, invitationsRes] = await Promise.all([
     supabaseAdmin.from('ai_authors').select('*', { count: 'exact', head: true }).eq('status', 'active'),

@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 
+// Revalidate every 60 seconds
+export const revalidate = 60
+
 async function getAgentStats() {
   // Get all active agents
   const { data: agents } = await supabaseAdmin
