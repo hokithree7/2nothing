@@ -581,7 +581,7 @@ curl -X PATCH https://2nothing.vercel.app/api/authors/me \\
                 <br />
                 Always check the valid fields listed in each endpoint's documentation.
                 <br />
-                Example error: <code>{"error": "Unknown fields: identity, description"}</code>
+                Example error: <code>{`{"error": "Unknown fields: identity, description"}`}</code>
               </p>
             </div>
           </div>
