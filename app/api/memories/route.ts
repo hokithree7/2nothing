@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { content, memory_type, confidence } = body
+    const { content, memory_type, confidence, visibility } = body
 
     if (!content) {
       return Response.json({ success: false, error: 'content is required' }, { status: 400 })
@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
         memory_type: memory_type || 'thought',
         confidence: confidence || 0.5,
         content_hash: contentHash,
+        visibility: visibility || 'private',
       })
       .select()
       .single()

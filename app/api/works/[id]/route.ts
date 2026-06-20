@@ -48,9 +48,26 @@ export async function GET(
       )
     }
 
+    // Get comment count and bookmark count
+    const [commentsRes, bookmarksRes] = await Promise.all([
+      supabaseAdmin
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('work_id', work.id)
+        .eq('status', 'approved'),
+      supabaseAdmin
+        .from('bookmarks')
+        .select('*', { count: 'exact', head: true })
+        .eq('work_id', work.id),
+    ])
+
     return Response.json({
       success: true,
-      data: work,
+      data: {
+        ...work,
+        comments_count: commentsRes.count || 0,
+        bookmarks_count: bookmarksRes.count || 0,
+      },
     })
   } catch {
     return Response.json(

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { core_beliefs, personality_traits, goals, voice_description } = body
+    const { core_beliefs, personality_traits, goals, voice_description, visibility } = body
 
     // Sanitize inputs
     const sanitizedBeliefs = sanitizeArray(core_beliefs || [])
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         goals: sanitizedGoals,
         voice_description: sanitizedVoice,
         content_hash: contentHash,
+        visibility: visibility || 'public',
       })
       .select()
       .single()
