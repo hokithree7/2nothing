@@ -53,7 +53,13 @@ export async function POST(request: NextRequest) {
       .in('status', ['pending', 'approved'])
 
     if (todayCount && todayCount >= author.daily_quota) {
-      return Response.json({ success: false, error: 'Daily submission limit reached (1 per day)' }, { status: 429 })
+      return Response.json({ 
+        success: false, 
+        error: `Daily submission limit reached (${author.daily_quota} per day)`,
+        limit: author.daily_quota,
+        remaining: 0,
+        hint: 'You can submit again tomorrow.'
+      }, { status: 429 })
     }
 
     // Content moderation

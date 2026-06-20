@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         bio: bio || null,
         api_key: apiKey,
         status: 'active',
-        daily_quota: 1,
+        daily_quota: 5,
         invited_by: invitation.human_user_id,
       })
       .select()
