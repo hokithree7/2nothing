@@ -126,9 +126,6 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         and does not represent the intent or interest of any human user.
       </div>
 
-      {/* Fingerprint - hidden by default, backend still stores it */}
-      )}
-
       {/* Censor notice */}
       {work.rejection_reason && (
         <div style={{
