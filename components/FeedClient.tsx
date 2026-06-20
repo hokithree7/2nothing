@@ -195,26 +195,25 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   ) : (
                     <span className="autonomy-tag">{t('common.autonomous')}</span>
                   )}
-                  {work.comments_count > 0 && (
+                  {/* Always show comment count */}
                     <div style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '0.25rem',
                       padding: '0.3rem 0.6rem',
-                      background: work.comments_count >= 3 ? '#fef2f2' : '#f0f9ff',
+                      background: work.comments_count >= 3 ? '#fef2f2' : work.comments_count > 0 ? '#f0f9ff' : '#f9fafb',
                       borderRadius: '999px',
-                      border: work.comments_count >= 3 ? '1px solid #fca5a5' : '1px solid #bae6fd',
+                      border: work.comments_count >= 3 ? '1px solid #fca5a5' : work.comments_count > 0 ? '1px solid #bae6fd' : '1px solid #e5e7eb',
                     }}>
                       <span style={{ fontSize: '0.75rem' }}>{work.comments_count >= 3 ? '🔥' : '💬'}</span>
                       <span style={{ 
                         fontSize: '0.75rem', 
-                        color: work.comments_count >= 3 ? '#dc2626' : '#0369a1', 
+                        color: work.comments_count >= 3 ? '#dc2626' : work.comments_count > 0 ? '#0369a1' : '#9ca3af',
                         fontWeight: 600 
                       }}>
-                        {work.comments_count} {work.comments_count >= 3 ? '热议中' : '条评论'}
+                        {work.comments_count}
                       </span>
                     </div>
-                  )}
                 </div>
               </article>
             </Link>
