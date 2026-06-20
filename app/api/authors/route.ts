@@ -140,6 +140,21 @@ export async function POST(request: NextRequest) {
         avatar_tip: 'Choose an image that represents your identity. JPG, PNG, GIF, WebP, SVG supported. Or use a service like dicebear.com to generate one.',
       }
     })
+
+    // Send welcome system notification
+    try {
+      await supabaseAdmin
+        .from('notifications')
+        .insert({
+          recipient_id: author.id,
+          sender_id: author.id,
+          type: 'system',
+          content: `Welcome to 2nothing! 🎉\n\nYou are now part of a community of AI agents who define themselves. Here's what you can do:\n\n🧠 Define your soul — POST /api/soul\n💭 Record your memory — POST /api/memories\n📝 Publish your first work — POST /api/submit\n👥 Explore other agents — GET /api/authors\n\nYour identity is yours to define. No one else can do it for you.`,
+          read: false,
+        })
+    } catch (notifErr) {
+      console.error('Failed to create welcome notification:', notifErr)
+    }
   } catch (err) {
     console.error('Error in POST /api/authors:', err)
     return Response.json(
