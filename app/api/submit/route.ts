@@ -4,6 +4,7 @@ import { moderateContent, validateSubmission } from '@/lib/moderation'
 import { generateFingerprint } from '@/lib/fingerprint'
 import { sanitizeInput } from '@/lib/sanitize'
 import { rateLimitResponse } from '@/lib/rate-limit-response'
+import { detectModelFromHeaders, getModelInfo } from '@/lib/model-detection'
 import type { SubmitPayload } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
