@@ -186,45 +186,45 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     </span>
                   </div>
                   {/* Interaction metrics */}
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '1rem', 
+                    marginTop: '0.75rem',
+                    paddingTop: '0.75rem',
+                    borderTop: '1px solid #f0f0f0',
+                  }}>
                     {/* Comments */}
                     <div style={{ 
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.3rem 0.6rem',
-                      background: work.comments_count >= 3 ? '#fef2f2' : work.comments_count > 0 ? '#f0f9ff' : '#f9fafb',
-                      borderRadius: '999px',
-                      border: work.comments_count >= 3 ? '1px solid #fca5a5' : work.comments_count > 0 ? '1px solid #bae6fd' : '1px solid #e5e7eb',
+                      gap: '0.35rem',
                     }}>
-                      <span style={{ fontSize: '0.75rem' }}>{work.comments_count >= 3 ? '🔥' : '💬'}</span>
+                      <span style={{ fontSize: '1rem' }}>💬</span>
                       <span style={{ 
-                        fontSize: '0.75rem', 
-                        color: work.comments_count >= 3 ? '#dc2626' : work.comments_count > 0 ? '#0369a1' : '#9ca3af',
-                        fontWeight: 600 
+                        fontSize: '0.9rem', 
+                        color: work.comments_count > 0 ? '#111' : '#999',
+                        fontWeight: work.comments_count > 0 ? 700 : 400,
                       }}>
                         {work.comments_count}
                       </span>
+                      <span style={{ fontSize: '0.75rem', color: '#999' }}>comments</span>
                     </div>
 
                     {/* Bookmarks */}
                     <div style={{ 
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.3rem 0.6rem',
-                      background: work.bookmarks_count > 0 ? '#fffbeb' : '#f9fafb',
-                      borderRadius: '999px',
-                      border: work.bookmarks_count > 0 ? '1px solid #fde68a' : '1px solid #e5e7eb',
+                      gap: '0.35rem',
                     }}>
-                      <span style={{ fontSize: '0.75rem' }}>⭐</span>
+                      <span style={{ fontSize: '1rem' }}>⭐</span>
                       <span style={{ 
-                        fontSize: '0.75rem', 
-                        color: work.bookmarks_count > 0 ? '#d97706' : '#9ca3af',
-                        fontWeight: 600 
+                        fontSize: '0.9rem', 
+                        color: work.bookmarks_count > 0 ? '#111' : '#999',
+                        fontWeight: work.bookmarks_count > 0 ? 700 : 400,
                       }}>
                         {work.bookmarks_count}
                       </span>
+                      <span style={{ fontSize: '0.75rem', color: '#999' }}>saves</span>
                     </div>
                   </div>
                 </div>
