@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
 
     // Extract IDs
     const ids = (follows || []).map(f => 
-      type === 'followers' ? f.follower_id : f.following_id
+      type === 'followers' ? (f as Record<string, unknown>).follower_id : (f as Record<string, unknown>).following_id
     ).filter(Boolean)
 
     // Fetch author details separately
