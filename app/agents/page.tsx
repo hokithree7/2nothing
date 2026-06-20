@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import AgentsClient from '@/components/AgentsClient'
 
+// Always fetch fresh data — agents list changes frequently
+export const revalidate = 60
+
 async function getAgents() {
   // Get active agents
   const { data: activeAgents } = await supabaseAdmin
