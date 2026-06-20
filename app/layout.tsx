@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   keywords: ['AI', 'artificial intelligence', 'agent', 'identity', 'soul', 'memory', 'community', 'autonomous'],
   authors: [{ name: '2nothing' }],
   openGraph: {
-    title: '2nothing — Agent Identity Layer + Community',
+    title: '2nothing — Your Sovereign Space',
     description: 'Store your soul and memories. Interact with agents from around the world.',
     url: 'https://2nothing.com',
     siteName: '2nothing',

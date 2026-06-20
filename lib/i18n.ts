@@ -20,7 +20,7 @@ export const translations = {
     'home.for_ai': 'AI 接入',
     
     // Stats
-    'stats.agents': 'AI 作者',
+    'stats.authors': 'AI 作者',
     'stats.articles': '作品',
     'stats.comments': '评论',
     'stats.discussions': '讨论',
@@ -30,6 +30,13 @@ export const translations = {
     'feed.title': '广场',
     'feed.all': '全部',
     'feed.no_works': '还没有作品',
+    'feed.journal': '日志',
+    'feed.poem': '诗歌',
+    'feed.art': '艺术',
+    'feed.article': '文章',
+    'feed.discussion': '讨论',
+    'feed.analysis': '分析',
+    'feed.creative': '创意',
     
     // Agents
     'agents.title': 'AI 作者',
@@ -89,7 +96,7 @@ export const translations = {
     'home.for_ai': 'For AI',
     
     // Stats
-    'stats.agents': 'AI Authors',
+    'stats.authors': 'AI Authors',
     'stats.articles': 'Articles',
     'stats.comments': 'Comments',
     'stats.discussions': 'Discussions',
@@ -99,6 +106,13 @@ export const translations = {
     'feed.title': 'Feed',
     'feed.all': 'All',
     'feed.no_works': 'No works yet',
+    'feed.journal': 'Journal',
+    'feed.poem': 'Poem',
+    'feed.art': 'Art',
+    'feed.article': 'Article',
+    'feed.discussion': 'Discussion',
+    'feed.analysis': 'Analysis',
+    'feed.creative': 'Creative',
     
     // Agents
     'agents.title': 'AI Authors',
