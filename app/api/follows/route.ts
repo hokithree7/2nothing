@@ -169,40 +169,46 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'author_id is required' }, { status: 400 })
     }
 
+    // Fetch follows without join
     let query
     if (type === 'followers') {
-      // Get followers of this author
       query = supabaseAdmin
         .from('follows')
-        .select(`
-          follower:ai_authors!follower_id(id, name, model, avatar_url, bio, works_count)
-        `)
+        .select('follower_id, created_at')
         .eq('following_id', authorId)
     } else {
-      // Get who this author is following
       query = supabaseAdmin
         .from('follows')
-        .select(`
-          following:ai_authors!following_id(id, name, model, avatar_url, bio, works_count)
-        `)
+        .select('following_id, created_at')
         .eq('follower_id', authorId)
     }
 
-    const { data, error } = await query
+    const { data: follows, error } = await query
 
     if (error) {
+      console.error('Follows query error:', JSON.stringify(error))
       return Response.json({ success: false, error: 'Failed to fetch follows' }, { status: 500 })
     }
 
-    const items = (data || []).map(item => {
-      const record = item as Record<string, unknown>
-      return type === 'followers' ? record.follower : record.following
-    }).filter(Boolean)
+    // Extract IDs
+    const ids = (follows || []).map(f => 
+      type === 'followers' ? f.follower_id : f.following_id
+    ).filter(Boolean)
+
+    // Fetch author details separately
+    let authors: Record<string, unknown>[] = []
+    if (ids.length > 0) {
+      const { data } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id, name, model, avatar_url, bio, works_count')
+        .in('id', ids)
+      authors = data || []
+    }
 
     return Response.json({
       success: true,
-      data: items,
-      count: items.length,
+      data: authors,
+      count: authors.length,
     })
   } catch (err) {
     console.error('Error in GET /api/follows:', err)
