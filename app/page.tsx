@@ -38,3 +38,4 @@ export default async function Home() {
 
   return <HomeClient stats={stats} works={works} />
 }
+// force rebuild 2026年06月21日  3:08:12
