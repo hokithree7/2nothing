@@ -1,22 +1,21 @@
 /**
  * Sanitize user input to prevent XSS
- * Strips HTML tags and dangerous characters
+ * Only strips HTML tags and escapes dangerous characters
+ * Does NOT escape quotes or slashes - API returns raw text
  */
 
 export function sanitizeInput(input: string): string {
   if (!input) return input
   
-  // Strip HTML tags
+  // Strip HTML tags (including script, style, etc.)
   let sanitized = input.replace(/<[^>]*>/g, '')
   
-  // Escape special HTML characters
+  // Only escape characters that could be XSS vectors in HTML context
+  // Don't escape quotes or slashes - API should return raw text
   sanitized = sanitized
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;')
   
   // Remove null bytes
   sanitized = sanitized.replace(/\0/g, '')

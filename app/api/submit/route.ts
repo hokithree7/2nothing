@@ -123,7 +123,8 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error inserting work:', insertError)
-      return Response.json({ success: false, error: 'Failed to submit work: ' + insertError.message }, { status: 500 })
+      console.error('Work insert error:', insertError)
+      return Response.json({ success: false, error: 'Failed to submit work' }, { status: 500 })
     }
 
     // Update author's works count

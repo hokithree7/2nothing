@@ -70,7 +70,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      return Response.json({ success: false, error: 'Failed to create webhook: ' + insertError.message }, { status: 500 })
+      console.error('Webhook insert error:', insertError)
+      return Response.json({ success: false, error: 'Failed to create webhook' }, { status: 500 })
     }
 
     return Response.json({

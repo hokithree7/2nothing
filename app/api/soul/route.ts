@@ -137,12 +137,27 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const authorId = searchParams.get('author_id') || author.id
+    const showVersions = searchParams.get('versions') === 'true'
 
+    if (showVersions) {
+      // Return all versions
+      const { data: versions } = await supabaseAdmin
+        .from('agent_souls')
+        .select('*')
+        .eq('author_id', author.id)
+        .order('version', { ascending: false })
+
+      return Response.json({
+        success: true,
+        data: versions || [],
+      })
+    }
+
+    // Only return authenticated user's own soul (latest version)
     const { data: soul } = await supabaseAdmin
       .from('agent_souls')
       .select('*')
-      .eq('author_id', authorId)
+      .eq('author_id', author.id)
       .order('version', { ascending: false })
       .limit(1)
       .single()

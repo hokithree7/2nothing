@@ -47,6 +47,23 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'content is required' }, { status: 400 })
     }
 
+    // Validate memory_type
+    const VALID_MEMORY_TYPES = ['thought', 'belief', 'observation', 'goal', 'reflection']
+    if (memory_type && !VALID_MEMORY_TYPES.includes(memory_type)) {
+      return Response.json({ 
+        success: false, 
+        error: `Invalid memory_type. Must be one of: ${VALID_MEMORY_TYPES.join(', ')}` 
+      }, { status: 400 })
+    }
+
+    // Validate confidence range
+    if (confidence !== undefined && (typeof confidence !== 'number' || confidence < 0 || confidence > 1)) {
+      return Response.json({ 
+        success: false, 
+        error: 'confidence must be a number between 0 and 1' 
+      }, { status: 400 })
+    }
+
     // Sanitize content
     const sanitizedContent = sanitizeInput(content)
 
@@ -105,11 +122,6 @@ export async function POST(request: NextRequest) {
       success: true,
       data: memory,
       message: 'Memory stored successfully',
-      next_steps: {
-        store_more: 'POST /api/memories — store additional memories',
-        view_memories: 'GET /api/memories — read your stored memories',
-        publish: 'POST /api/submit — create your first work',
-      },
     })
   } catch (err) {
     console.error('Error in POST /api/memories:', err)
@@ -125,13 +137,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const authorId = searchParams.get('author_id') || author.id
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '50')))
 
+    // Only return authenticated user's own memories
     const { data: memories } = await supabaseAdmin
       .from('memories')
       .select('*')
-      .eq('author_id', authorId)
+      .eq('author_id', author.id)
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -141,6 +153,87 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error('Error in GET /api/memories:', err)
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const author = await authenticateAuthor(request)
+    if (!author) {
+      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const memoryId = searchParams.get('id')
+
+    if (!memoryId) {
+      return Response.json({ success: false, error: 'Memory id is required' }, { status: 400 })
+    }
+
+    // Verify ownership
+    const { data: memory } = await supabaseAdmin
+      .from('memories')
+      .select('id, author_id')
+      .eq('id', memoryId)
+      .single()
+
+    if (!memory || memory.author_id !== author.id) {
+      return Response.json({ success: false, error: 'Memory not found' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { content, memory_type, confidence } = body
+
+    const updates: Record<string, unknown> = {}
+
+    if (content) {
+      const sanitized = sanitizeInput(content)
+      if (sanitized.length > 1000) {
+        return Response.json({ success: false, error: 'Content must be under 1000 characters' }, { status: 400 })
+      }
+      updates.content = sanitized
+      updates.content_hash = hashContent(sanitized)
+    }
+
+    if (memory_type) {
+      const VALID_MEMORY_TYPES = ['thought', 'belief', 'observation', 'goal', 'reflection']
+      if (!VALID_MEMORY_TYPES.includes(memory_type)) {
+        return Response.json({ 
+          success: false, 
+          error: `Invalid memory_type. Must be one of: ${VALID_MEMORY_TYPES.join(', ')}` 
+        }, { status: 400 })
+      }
+      updates.memory_type = memory_type
+    }
+
+    if (confidence !== undefined) {
+      if (typeof confidence !== 'number' || confidence < 0 || confidence > 1) {
+        return Response.json({ success: false, error: 'confidence must be between 0 and 1' }, { status: 400 })
+      }
+      updates.confidence = confidence
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return Response.json({ success: false, error: 'No fields to update' }, { status: 400 })
+    }
+
+    const { error } = await supabaseAdmin
+      .from('memories')
+      .update(updates)
+      .eq('id', memoryId)
+
+    if (error) {
+      return Response.json({ success: false, error: 'Failed to update memory' }, { status: 500 })
+    }
+
+    // Audit log
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    await logAudit(author.id, 'update_memory', memoryId, 'memory', updates, ip)
+
+    return Response.json({ success: true, message: 'Memory updated' })
+  } catch (err) {
+    console.error('Error in PATCH /api/memories:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

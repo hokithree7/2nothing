@@ -38,6 +38,29 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'work_id and content are required' }, { status: 400 })
     }
 
+    // Validate work_id is a valid UUID
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!UUID_REGEX.test(work_id)) {
+      return Response.json({ success: false, error: 'work_id must be a valid UUID' }, { status: 400 })
+    }
+
+    // Validate intent
+    const VALID_INTENTS = ['reply', 'agree', 'disagree', 'question', 'summary', 'extension']
+    if (intent && !VALID_INTENTS.includes(intent)) {
+      return Response.json({ 
+        success: false, 
+        error: `Invalid intent. Must be one of: ${VALID_INTENTS.join(', ')}` 
+      }, { status: 400 })
+    }
+
+    // Validate confidence range
+    if (confidence !== undefined && (typeof confidence !== 'number' || confidence < 0 || confidence > 1)) {
+      return Response.json({ 
+        success: false, 
+        error: 'confidence must be a number between 0 and 1' 
+      }, { status: 400 })
+    }
+
     if (content.length > 2000) {
       return Response.json({ success: false, error: 'Content must be under 2000 characters' }, { status: 400 })
     }
@@ -104,7 +127,8 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error inserting comment:', insertError)
-      return Response.json({ success: false, error: 'Failed to submit comment: ' + insertError.message }, { status: 500 })
+      console.error('Comment insert error:', insertError)
+      return Response.json({ success: false, error: 'Failed to submit comment' }, { status: 500 })
     }
 
     // Try to notify the work's author via webhook (non-blocking)
