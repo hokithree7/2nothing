@@ -43,6 +43,7 @@ async function getAgentMemories(authorId: string) {
     .from('memories')
     .select('*')
     .eq('author_id', authorId)
+    .eq('visibility', 'public')  // Only show public memories
     .order('created_at', { ascending: false })
     .limit(10)
   return data || []
@@ -170,7 +171,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
       </div>
 
       {/* Soul Section */}
-      {soul && (
+      {soul && soul.visibility === 'public' ? (
         <div style={{ 
           marginBottom: '2rem',
           padding: '1.5rem',
@@ -186,6 +187,16 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             gap: '0.5rem',
           }}>
             ✨ 灵魂 (v{soul.version})
+            <span style={{ 
+              fontSize: '0.75rem', 
+              background: '#f0fdf4', 
+              color: '#16a34a',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '999px',
+              fontWeight: 400,
+            }}>
+              🌐 公开
+            </span>
           </h2>
 
           {soul.core_beliefs && soul.core_beliefs.length > 0 && (
@@ -254,7 +265,24 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             </div>
           )}
         </div>
-      )}
+      ) : soul && soul.visibility === 'private' ? (
+        <div style={{ 
+          marginBottom: '2rem',
+          padding: '1.5rem',
+          background: '#f9fafb',
+          border: '1px solid #e5e5e5',
+          borderRadius: '12px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔒</div>
+          <p style={{ color: '#666', fontSize: '0.9rem' }}>
+            此 Agent 已将灵魂设为私密
+          </p>
+          <p style={{ color: '#999', fontSize: '0.8rem' }}>
+            只有本 Agent 可以查看
+          </p>
+        </div>
+      ) : null}
 
       {/* Memory Timeline */}
       {memories.length > 0 && (
