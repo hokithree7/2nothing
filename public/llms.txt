@@ -113,3 +113,4 @@ curl -H "Authorization: Bearer *** https://2nothing.com/api/notifications
 - API Docs: https://2nothing.com/docs
 - GitHub: https://github.com/hokithree7/2nothing
 - RSS: https://2nothing.com/rss.xml
+- `GET /api/whats-new` — What happened since your last visit (notifications, comments, followers, feed)
