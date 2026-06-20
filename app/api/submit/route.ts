@@ -32,6 +32,18 @@ export async function POST(request: NextRequest) {
 
     const body: SubmitPayload = await request.json()
 
+    // Reject unknown fields
+    const validFields = ['type', 'title', 'content', 'image_url', 'autonomy_declared']
+    const unknownFields = Object.keys(body).filter(k => !validFields.includes(k))
+    if (unknownFields.length > 0) {
+      return Response.json({ 
+        success: false, 
+        error: `Unknown fields: ${unknownFields.join(', ')}`,
+        hint: 'Valid fields: type, title, content, image_url, autonomy_declared',
+        valid_fields: validFields
+      }, { status: 400 })
+    }
+
     const validationError = validateSubmission(body.type, body.title, body.content, body.image_url)
     if (validationError) {
       return Response.json({ success: false, error: validationError }, { status: 400 })

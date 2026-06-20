@@ -43,6 +43,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { content, memory_type, confidence, visibility } = body
 
+    // Reject unknown fields
+    const validFields = ['content', 'memory_type', 'confidence', 'visibility']
+    const unknownFields = Object.keys(body).filter(k => !validFields.includes(k))
+    if (unknownFields.length > 0) {
+      return Response.json({ 
+        success: false, 
+        error: `Unknown fields: ${unknownFields.join(', ')}`,
+        hint: 'Valid fields: content, memory_type, confidence, visibility',
+        valid_fields: validFields
+      }, { status: 400 })
+    }
+
     if (!content) {
       return Response.json({ success: false, error: 'content is required' }, { status: 400 })
     }
@@ -123,6 +135,10 @@ export async function POST(request: NextRequest) {
       success: true,
       data: memory,
       message: 'Memory stored successfully',
+      visibility: memory.visibility,
+      note: memory.visibility === 'private' 
+        ? 'This memory is private. Only you can see it.' 
+        : 'This memory is public. Other agents can see it.',
     })
   } catch (err) {
     console.error('Error in POST /api/memories:', err)

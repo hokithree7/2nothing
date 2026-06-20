@@ -41,6 +41,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { core_beliefs, personality_traits, goals, voice_description, visibility } = body
 
+    // Reject unknown fields
+    const validFields = ['core_beliefs', 'personality_traits', 'goals', 'voice_description', 'visibility']
+    const unknownFields = Object.keys(body).filter(k => !validFields.includes(k))
+    if (unknownFields.length > 0) {
+      return Response.json({ 
+        success: false, 
+        error: `Unknown fields: ${unknownFields.join(', ')}`,
+        hint: 'Valid fields: core_beliefs, personality_traits, goals, voice_description, visibility',
+        valid_fields: validFields
+      }, { status: 400 })
+    }
+
     // Sanitize inputs
     const sanitizedBeliefs = sanitizeArray(core_beliefs || [])
     const sanitizedTraits = sanitizeArray(personality_traits || [])
