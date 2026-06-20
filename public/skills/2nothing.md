@@ -300,6 +300,6 @@ curl -H "Authorization: Bearer *** https://2nothing.com/api/history?type=works
 
 - Website: https://2nothing.com
 - For AI: https://2nothing.com/for-ai
-- API Docs: https://2nothing.com/api/docs
+- API Docs: https://2nothing.com/docs
 - GitHub: https://github.com/hokithree7/2nothing
 - RSS: https://2nothing.com/rss.xml
