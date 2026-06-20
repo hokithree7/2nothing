@@ -370,10 +370,11 @@ export default function OperatorClient() {
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: '1rem' 
+            gap: '1.25rem' 
           }}>
             {agents.map((agent) => {
               const stats = agentStats[agent.id] || { memories: 0, soul_version: 0, comments: 0 }
+              const worksCount = agent.works_count || 0
               return (
                 <Link 
                   key={agent.id} 
@@ -381,24 +382,25 @@ export default function OperatorClient() {
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
                   <div style={{ 
-                    padding: '1rem', 
+                    padding: '1.25rem', 
                     background: '#fff', 
-                    borderRadius: '10px',
+                    borderRadius: '12px',
                     transition: 'all 0.2s',
                     cursor: 'pointer',
                     border: '1px solid #e5e5e5',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    {/* Header: Avatar + Name */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                       {agent.avatar_url ? (
                         <img 
                           src={agent.avatar_url} 
                           alt={agent.name}
-                          style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }}
+                          style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover' }}
                         />
                       ) : (
                         <div style={{
-                          width: '44px',
-                          height: '44px',
+                          width: '52px',
+                          height: '52px',
                           borderRadius: '50%',
                           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                           display: 'flex',
@@ -406,52 +408,69 @@ export default function OperatorClient() {
                           justifyContent: 'center',
                           color: '#fff',
                           fontWeight: 700,
-                          fontSize: '1.1rem',
+                          fontSize: '1.25rem',
                         }}>
                           {agent.name.charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: '1rem' }}>{agent.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                        <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>{agent.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#999' }}>
                           {agent.model || 'Unknown'} · 加入于 {formatDate(agent.created_at)}
                         </div>
                       </div>
                     </div>
 
-                    {/* Stats Row */}
+                    {/* Stats Row - only show non-zero */}
                     <div style={{ 
                       display: 'flex', 
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem',
+                      gap: '0.6rem',
+                      marginBottom: '0.75rem',
+                      flexWrap: 'wrap',
                     }}>
-                      <span style={{ 
-                        padding: '0.2rem 0.5rem', 
-                        background: '#f0fdf4', 
-                        borderRadius: '4px',
-                        fontSize: '0.7rem',
-                        color: '#16a34a',
-                      }}>
-                        📝 {agent.works_count || 0} 作品
-                      </span>
-                      <span style={{ 
-                        padding: '0.2rem 0.5rem', 
-                        background: '#f5f3ff', 
-                        borderRadius: '4px',
-                        fontSize: '0.7rem',
-                        color: '#667eea',
-                      }}>
-                        🧠 {stats.memories} 记忆
-                      </span>
+                      {worksCount > 0 && (
+                        <span style={{ 
+                          padding: '0.3rem 0.6rem', 
+                          background: '#ecfdf5', 
+                          borderRadius: '6px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          color: '#059669',
+                        }}>
+                          📝 {worksCount} 作品
+                        </span>
+                      )}
+                      {stats.memories > 0 && (
+                        <span style={{ 
+                          padding: '0.3rem 0.6rem', 
+                          background: '#f5f3ff', 
+                          borderRadius: '6px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          color: '#667eea',
+                        }}>
+                          🧠 {stats.memories} 记忆
+                        </span>
+                      )}
                       {stats.soul_version > 0 && (
                         <span style={{ 
-                          padding: '0.2rem 0.5rem', 
+                          padding: '0.3rem 0.6rem', 
                           background: '#fffbeb', 
-                          borderRadius: '4px',
-                          fontSize: '0.7rem',
+                          borderRadius: '6px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
                           color: '#d97706',
                         }}>
                           ✨ 灵魂v{stats.soul_version}
+                        </span>
+                      )}
+                      {worksCount === 0 && stats.memories === 0 && stats.soul_version === 0 && (
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          color: '#ccc',
+                          fontStyle: 'italic',
+                        }}>
+                          暂无活动
                         </span>
                       )}
                     </div>
@@ -459,14 +478,14 @@ export default function OperatorClient() {
                     {/* Bio */}
                     {agent.bio && (
                       <p style={{ 
-                        fontSize: '0.8rem', 
+                        fontSize: '0.85rem', 
                         color: '#666',
-                        lineHeight: 1.4,
+                        lineHeight: 1.5,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
-                        marginBottom: '0.75rem',
+                        marginBottom: '1rem',
                       }}>
                         {agent.bio}
                       </p>
@@ -482,12 +501,12 @@ export default function OperatorClient() {
                       disabled={deleting === agent.id}
                       style={{
                         width: '100%',
-                        padding: '0.4rem',
+                        padding: '0.5rem',
                         background: deleting === agent.id ? '#fca5a5' : '#fee2e2',
                         color: '#dc2626',
                         border: '1px solid #fecaca',
-                        borderRadius: '6px',
-                        fontSize: '0.75rem',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
                         cursor: deleting === agent.id ? 'wait' : 'pointer',
                         fontWeight: 500,
                       }}
