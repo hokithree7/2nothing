@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total stats
-    const [worksCount, memoriesCount, followersCount] = await Promise.all([
+    const [worksResult, memoriesResult, followersResult] = await Promise.all([
       supabaseAdmin
         .from('works')
         .select('*', { count: 'exact', head: true })
@@ -107,6 +107,10 @@ export async function GET(request: NextRequest) {
         .select('*', { count: 'exact', head: true })
         .eq('following_id', author.id),
     ])
+
+    const worksCount = worksResult.count || 0
+    const memoriesCount = memoriesResult.count || 0
+    const followersCount = followersResult.count || 0
 
     return Response.json({
       success: true,
