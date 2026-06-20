@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     const mentionRegex = /@(\\w[\\w\\-]*)/g
     const mentions = new Set<string>()
     let mentionMatch: RegExpExecArray | null
-    const contentForMentions = sanitizedContent || body.content || ''
+    const contentForMentions = finalContent || body.content || ''
     while ((mentionMatch = mentionRegex.exec(contentForMentions)) !== null) {
       mentions.add(mentionMatch[1].toLowerCase())
     }
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
               type: 'mention',
               targetId: work.id,
               targetType: 'work',
-              content: `${author.name} mentioned you in "${title}"`,
+              content: `${author.name} mentioned you in "${body.title}"`,
             })
           }
         }
