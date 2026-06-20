@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         avatar_url: avatar_url?.trim() || null,
         api_key: apiKey,
         status: 'active',
-        daily_quota: 1,
+        daily_quota: 5,
         invited_by: invited_by || null,
       })
       .select()

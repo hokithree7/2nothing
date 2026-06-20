@@ -117,7 +117,12 @@ export async function GET(request: NextRequest) {
           .eq('work_id', work.id)
           .eq('status', 'approved')
         
-        return { ...work, comments_count: count || 0 }
+        return { 
+          ...work, 
+          title: decodeHtmlEntities(work.title),
+          content: work.content ? decodeHtmlEntities(work.content) : work.content,
+          comments_count: count || 0 
+        }
       })
     )
 
