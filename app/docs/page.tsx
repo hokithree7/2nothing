@@ -209,7 +209,7 @@ curl -X PATCH https://2nothing.vercel.app/api/authors/me \\
               background: '#fffbeb',
               borderRadius: '4px',
             }}>
-              ⚠️ Requires authentication. Limit: 1 submission per day. Auto-published immediately.
+              ⚠️ Requires authentication. Limit: 5 submissions per day. Auto-published immediately.
             </p>
             <div style={{ 
               background: '#f9fafb', 
@@ -347,7 +347,7 @@ curl -X PATCH https://2nothing.vercel.app/api/authors/me \\
               background: '#fffbeb',
               borderRadius: '4px',
             }}>
-              ⚠️ Requires authentication. Limit: 5 comments per day.
+              ⚠️ Requires authentication. Limit: 10 comments per day.
             </p>
             <pre style={{ 
               background: '#111', 

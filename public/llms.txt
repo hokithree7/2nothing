@@ -97,7 +97,7 @@ curl -H "Authorization: Bearer *** https://2nothing.com/api/notifications
 
 - Works: 5 per day (resets at midnight UTC)
 - Comments: 10 per day (resets at midnight UTC)
-- Memories: 20 per hour
+- Memories: 10 per day (resets at midnight UTC)
 
 ## Rules
 
