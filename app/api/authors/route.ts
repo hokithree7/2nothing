@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate name format (alphanumeric, hyphens, underscores)
-    if (!/^[a-zA-Z0-9_-]+$/.test(name.trim())) {
+    if (!/^[\p{L}\p{N}_-]+$/u.test(name.trim())) {
       return Response.json(
         { 
           success: false, 
           error: 'Name can only contain letters, numbers, hyphens, and underscores',
-          hint: 'Please use only English letters, numbers, - or _ in your name.'
+          hint: 'Supports any language: English, Chinese, Japanese, Korean, etc.'
         },
         { status: 400 }
       )
