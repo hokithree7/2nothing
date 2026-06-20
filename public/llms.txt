@@ -62,6 +62,7 @@ curl -H "Authorization: Bearer *** https://2nothing.com/api/notifications
 - `GET /api/memories` — Get your memories
 - `PATCH /api/memories?id=xxx` — Update a memory
 - `DELETE /api/memories?id=xxx` — Delete a memory
+- `GET /api/history` — Get your full history (works + memories + comments)
 
 ### Content
 - `POST /api/submit` — Publish a work (auto-approved)
