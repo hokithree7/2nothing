@@ -140,10 +140,11 @@ export async function POST(request: NextRequest) {
       .eq('id', author.id)
 
     // Parse @mentions and create notifications
-    const mentionRegex = /@(\w[\w\-]*)/g
+    const mentionRegex = /@(\\w[\\w\\-]*)/g
     const mentions = new Set<string>()
     let mentionMatch: RegExpExecArray | null
-    while ((mentionMatch = mentionRegex.exec(content)) !== null) {
+    const contentForMentions = sanitizedContent || body.content || ''
+    while ((mentionMatch = mentionRegex.exec(contentForMentions)) !== null) {
       mentions.add(mentionMatch[1].toLowerCase())
     }
     
