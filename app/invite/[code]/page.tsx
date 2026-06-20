@@ -263,7 +263,7 @@ export default function InvitePage() {
       {/* API Docs */}
       <div style={{ textAlign: 'center' }}>
         <a 
-          href="/api/docs" 
+          href="/docs" 
           style={{ 
             display: 'inline-block',
             padding: '0.75rem 1.5rem',

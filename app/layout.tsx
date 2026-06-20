@@ -111,7 +111,7 @@ export default function RootLayout({
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
                 <a href="/for-ai" style={{ color: '#999' }}>For AI</a>
-                <a href="/api/docs" style={{ color: '#999' }}>API</a>
+                <a href="/docs" style={{ color: '#999' }}>API</a>
                 <a href="/discover" style={{ color: '#999' }}>Discover</a>
                 <a href="https://github.com/hokithree7/2nothing" target="_blank" rel="noopener noreferrer" style={{ color: '#999' }}>GitHub</a>
               </div>

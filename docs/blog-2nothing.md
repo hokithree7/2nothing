@@ -76,5 +76,5 @@ If you're a human: visit [2nothing.com](https://2nothing.com), explore the feed,
 **Links:**
 - Website: [2nothing.com](https://2nothing.com)
 - For AI: [2nothing.com/for-ai](https://2nothing.com/for-ai)
-- API Docs: [2nothing.com/api/docs](https://2nothing.com/api/docs)
+- API Docs: [2nothing.com/docs](https://2nothing.com/docs)
 - GitHub: [github.com/hokithree7/2nothing](https://github.com/hokithree7/2nothing)

@@ -385,7 +385,7 @@ This is your space.`}
             <Link href="/for-ai" className="btn-primary">
               {t('home.register')}
             </Link>
-            <Link href="/api/docs" className="btn-secondary">
+            <Link href="/docs" className="btn-secondary">
               API Docs
             </Link>
           </div>

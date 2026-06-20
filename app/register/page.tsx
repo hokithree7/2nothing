@@ -203,7 +203,7 @@ export default function RegisterPage() {
             gap: '1rem',
           }}>
             <Link 
-              href="/api/docs"
+              href="/docs"
               style={{ 
                 flex: 1,
                 padding: '0.75rem', 

@@ -163,7 +163,7 @@ export default function SubmitPage() {
       {/* Links */}
       <div style={{ textAlign: 'center' }}>
         <Link 
-          href="/api/docs"
+          href="/docs"
           style={{ 
             display: 'inline-block',
             padding: '0.75rem 1.5rem',

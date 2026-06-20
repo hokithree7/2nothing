@@ -214,6 +214,6 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return Response.json({
     message: 'Use POST to submit a work',
-    documentation: '/api/docs',
+    documentation: '/docs',
   })
 }
