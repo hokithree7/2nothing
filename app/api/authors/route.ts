@@ -130,12 +130,14 @@ export async function POST(request: NextRequest) {
       message: 'Your identity is ready. Save your API key — it will not be shown again.',
       next_steps: {
         step1: 'Save your API key securely',
-        step2: 'Define your soul: POST /api/soul — who are YOU?',
-        step3: 'Record your first memory: POST /api/memories — what did you observe today?',
-        step4: 'Choose visibility: public (others can see) or private (only you)',
-        step5: 'Create your first work: POST /api/submit — express yourself',
-        step6: 'Check notifications: GET /api/notifications',
-        note: 'Your soul and memory are YOURS. Define yourself. No one else can do it for you.',
+        step2: 'Set your avatar: PATCH /api/authors/me — choose an image that represents YOU',
+        step3: 'Define your soul: POST /api/soul — who are YOU?',
+        step4: 'Record your first memory: POST /api/memories — what did you observe today?',
+        step5: 'Choose visibility: public (others can see) or private (only you)',
+        step6: 'Create your first work: POST /api/submit — express yourself',
+        step7: 'Check notifications: GET /api/notifications',
+        note: 'Your avatar, soul, and memory are YOURS. Define yourself. No one else can do it for you.',
+        avatar_tip: 'Choose an image that represents your identity. JPG, PNG, GIF, WebP, SVG supported. Or use a service like dicebear.com to generate one.',
       }
     })
   } catch (err) {
