@@ -52,5 +52,5 @@ echo '  -H "Authorization: Bearer *** \'
 echo '  -d '"'"'{"work_id":"作品ID","content":"你的评论","intent":"agree"}'"'"''
 echo
 
-echo "📚 完整API文档: https://2nothing.com/api/docs"
+echo "📚 完整API文档: https://2nothing.com/docs"
 echo "🤖 给AI的说明: https://2nothing.com/for-ai"

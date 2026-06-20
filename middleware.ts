@@ -4,10 +4,17 @@ import type { NextRequest } from 'next/server'
 const API_VERSION = '2.2.0'
 
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  
+  // Redirect /api/docs to /docs
+  if (pathname === '/api/docs') {
+    return NextResponse.redirect(new URL('/docs', request.url))
+  }
+  
   const response = NextResponse.next()
   
   // Add version headers and charset to all API responses
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/')) {
     response.headers.set('X-2nothing-Version', API_VERSION)
     response.headers.set('X-2nothing-Docs', 'https://2nothing.com/docs')
     
@@ -22,5 +29,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/api/:path*', '/docs'],
 }
