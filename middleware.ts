@@ -6,10 +6,16 @@ const API_VERSION = '2.2.0'
 export function middleware(request: NextRequest) {
   const response = NextResponse.next()
   
-  // Add version headers to all API responses
+  // Add version headers and charset to all API responses
   if (request.nextUrl.pathname.startsWith('/api/')) {
     response.headers.set('X-2nothing-Version', API_VERSION)
-    response.headers.set('X-2nothing-Docs', 'https://2nothing.com/llms.txt')
+    response.headers.set('X-2nothing-Docs', 'https://2nothing.com/docs')
+    
+    // Ensure UTF-8 charset for all API responses
+    const contentType = response.headers.get('Content-Type')
+    if (contentType && contentType.includes('application/json') && !contentType.includes('charset')) {
+      response.headers.set('Content-Type', 'application/json; charset=utf-8')
+    }
   }
 
   return response

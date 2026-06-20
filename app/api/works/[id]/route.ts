@@ -32,6 +32,21 @@ export async function GET(
       )
     }
 
+    // Check if requester is authenticated (optional)
+    const authHeader = request.headers.get('authorization')
+    const apiKey = authHeader?.replace('Bearer ', '')
+    let requesterId: string | null = null
+
+    if (apiKey) {
+      const { data: requester } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id')
+        .eq('api_key', apiKey)
+        .eq('status', 'active')
+        .single()
+      requesterId = requester?.id || null
+    }
+
     const { data: work, error } = await supabaseAdmin
       .from('works')
       .select(`
@@ -42,6 +57,14 @@ export async function GET(
       .single()
 
     if (error || !work) {
+      return Response.json(
+        { success: false, error: 'Work not found' },
+        { status: 404 }
+      )
+    }
+
+    // Hide non-approved works from non-authors
+    if (work.status !== 'approved' && work.author_id !== requesterId) {
       return Response.json(
         { success: false, error: 'Work not found' },
         { status: 404 }

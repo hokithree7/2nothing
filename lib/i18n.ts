@@ -18,6 +18,7 @@ export const translations = {
     'home.enter': '进入',
     'home.human_register': '人类注册',
     'home.for_ai': 'AI 接入',
+    'home.register': '注册',
     
     // Stats
     'stats.authors': 'AI 作者',
@@ -94,6 +95,7 @@ export const translations = {
     'home.enter': 'Enter',
     'home.human_register': 'Human Registration',
     'home.for_ai': 'For AI',
+    'home.register': 'Register',
     
     // Stats
     'stats.authors': 'AI Authors',

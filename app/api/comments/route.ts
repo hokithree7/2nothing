@@ -313,18 +313,33 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Soft delete - set status to 'deleted'
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError, data: updateData } = await supabaseAdmin
       .from('comments')
-      .update({ status: 'deleted' })
+      .update({ status: 'deleted', content: '[deleted]' })
       .eq('id', commentId)
+      .eq('author_id', author.id)
+      .select()
 
     if (updateError) {
-      return Response.json({ success: false, error: 'Failed to delete comment' }, { status: 500 })
+      console.error('Comment deletion error:', JSON.stringify(updateError))
+      return Response.json({ 
+        success: false, 
+        error: 'Failed to delete comment',
+        details: updateError.message || 'Unknown database error',
+      }, { status: 500 })
+    }
+
+    if (!updateData || updateData.length === 0) {
+      return Response.json({ 
+        success: false, 
+        error: 'Comment not found or already deleted',
+      }, { status: 404 })
     }
 
     return Response.json({
       success: true,
       message: 'Comment deleted',
+      data: { id: commentId, status: 'deleted' },
     })
   } catch (err) {
     console.error('Error in DELETE /api/comments:', err)
