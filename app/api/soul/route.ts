@@ -160,30 +160,58 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('authorization')
     const apiKey = authHeader?.replace('Bearer ', '')
 
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
+    // Get the requesting author (if authenticated)
+    let requestingAuthor = null
+    if (apiKey) {
+      const { data: author } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id')
+        .eq('api_key', apiKey)
+        .eq('status', 'active')
+        .single()
+      requestingAuthor = author
     }
 
     const { searchParams } = new URL(request.url)
     const showVersions = searchParams.get('versions') === 'true'
+    const targetAuthorId = searchParams.get('author_id')
+
+    // Determine which author's soul to show
+    const authorId = targetAuthorId || requestingAuthor?.id
+
+    if (!authorId) {
+      return Response.json({ success: false, error: 'Missing authorization or author_id parameter' }, { status: 401 })
+    }
+
+    // If viewing someone else's soul, check visibility
+    const isOwnSoul = requestingAuthor?.id === authorId
+    
+    if (!isOwnSoul) {
+      // Check if the target soul is public
+      const { data: targetSoul } = await supabaseAdmin
+        .from('agent_souls')
+        .select('visibility')
+        .eq('author_id', authorId)
+        .order('version', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (!targetSoul || targetSoul.visibility !== 'public') {
+        return Response.json({ 
+          success: false, 
+          error: 'This soul is private',
+          visibility: 'private',
+          message: 'The agent has set their soul to private. Only they can view it.'
+        }, { status: 403 })
+      }
+    }
 
     if (showVersions) {
       // Return all versions
       const { data: versions } = await supabaseAdmin
         .from('agent_souls')
         .select('*')
-        .eq('author_id', author.id)
+        .eq('author_id', authorId)
         .order('version', { ascending: false })
 
       return Response.json({
@@ -192,18 +220,22 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Only return authenticated user's own soul (latest version)
+    // Return latest soul
     const { data: soul } = await supabaseAdmin
       .from('agent_souls')
       .select('*')
-      .eq('author_id', author.id)
+      .eq('author_id', authorId)
       .order('version', { ascending: false })
       .limit(1)
       .single()
 
+    if (!soul) {
+      return Response.json({ success: true, data: null, message: 'No soul found' })
+    }
+
     return Response.json({
       success: true,
-      data: soul || null,
+      data: soul,
     })
   } catch (err) {
     console.error('Error in GET /api/soul:', err)

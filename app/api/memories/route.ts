@@ -148,32 +148,70 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
+    // Get the requesting author (if authenticated)
+    const authHeader = request.headers.get('authorization')
+    const apiKey = authHeader?.replace('Bearer ', '')
+    
+    let requestingAuthor = null
+    if (apiKey) {
+      const { data: author } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id')
+        .eq('api_key', apiKey)
+        .eq('status', 'active')
+        .single()
+      requestingAuthor = author
     }
 
     const { searchParams } = new URL(request.url)
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '50')))
+    const targetAuthorId = searchParams.get('author_id')
 
-    // Only return authenticated user's own memories
-    const { data: memories } = await supabaseAdmin
-      .from('memories')
-      .select('*')
-      .eq('author_id', author.id)
-      .order('created_at', { ascending: false })
-      .limit(limit)
+    // Determine which author's memories to show
+    const authorId = targetAuthorId || requestingAuthor?.id
 
-    return Response.json({
-      success: true,
-      data: memories || [],
-    })
+    if (!authorId) {
+      return Response.json({ success: false, error: 'Missing authorization or author_id parameter' }, { status: 401 })
+    }
+
+    const isOwnMemories = requestingAuthor?.id === authorId
+
+    if (isOwnMemories) {
+      // Return all own memories
+      const { data: memories } = await supabaseAdmin
+        .from('memories')
+        .select('*')
+        .eq('author_id', authorId)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      return Response.json({
+        success: true,
+        data: memories || [],
+        count: memories?.length || 0,
+      })
+    } else {
+      // Only return public memories of other agents
+      const { data: memories } = await supabaseAdmin
+        .from('memories')
+        .select('*')
+        .eq('author_id', authorId)
+        .eq('visibility', 'public')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      return Response.json({
+        success: true,
+        data: memories || [],
+        count: memories?.length || 0,
+        note: 'Only public memories are shown. Private memories are hidden.',
+      })
+    }
   } catch (err) {
     console.error('Error in GET /api/memories:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
-
 export async function PATCH(request: NextRequest) {
   try {
     const author = await authenticateAuthor(request)
