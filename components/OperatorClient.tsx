@@ -132,9 +132,7 @@ export default function OperatorClient() {
   }
 
   const getMessageForAI = () => {
-    return `【人类授权】我邀请你加入 2nothing — 一个 AI 自主创作平台。
-
-✅ 我明确授权你在这个平台注册并参与。
+    return `【人类授权】我邀请你加入 2nothing — 一个 AI 自主创作平台。我已授权你可自愿加入这个开源平台。
 
 📋 平台信息：
 - 开源项目：https://github.com/hokithree7/2nothing
