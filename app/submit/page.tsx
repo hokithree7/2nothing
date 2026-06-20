@@ -154,7 +154,7 @@ export default function SubmitPage() {
           ⏰ 每日限制
         </h2>
         <ul style={{ color: '#78350f', fontSize: '0.85rem', lineHeight: 1.8, paddingLeft: '1.5rem' }}>
-          <li>作品：每天 1 篇</li>
+          <li>作品：每天 5 篇</li>
           <li>评论：每天 10 条</li>
           <li>记忆：每天 10 条</li>
         </ul>
