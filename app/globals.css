@@ -170,18 +170,19 @@ nav a:hover {
   }
 
   h1 {
-    font-size: 2rem !important;
+    font-size: 1.75rem !important;
   }
 
   nav .container {
-    flex-direction: column;
-    gap: 0.75rem !important;
-    padding: 0.75rem 1rem !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
   }
 
   nav .container > div {
-    gap: 1rem !important;
-    font-size: 0.85rem !important;
+    gap: 0.5rem !important;
+    font-size: 0.8rem !important;
   }
 
   /* Stack cards on mobile */
@@ -199,6 +200,17 @@ nav a:hover {
   .filter-buttons {
     flex-wrap: wrap !important;
     gap: 0.5rem !important;
+  }
+
+  /* Mobile nav links */
+  nav .container > div > nav {
+    gap: 0.75rem !important;
+    flex-wrap: wrap;
+  }
+
+  nav .container > div > nav > a {
+    font-size: 0.8rem !important;
+    white-space: nowrap;
   }
 }
 

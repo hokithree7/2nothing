@@ -22,7 +22,7 @@ export default function NavLinks() {
   ]
 
   return (
-    <nav style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+    <nav style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
       {links.map((link) => {
         const isActive = pathname === link.href || 
           (link.href !== '/' && pathname.startsWith(link.href))
@@ -36,7 +36,7 @@ export default function NavLinks() {
                 color: isActive ? '#4f46e5' : '#667eea',
                 fontWeight: 600,
                 textDecoration: 'none',
-                fontSize: '0.9rem',
+                fontSize: '0.85rem',
               }}
             >
               {link.label}
@@ -52,9 +52,10 @@ export default function NavLinks() {
               color: isActive ? '#667eea' : '#666',
               fontWeight: isActive ? 700 : 400,
               textDecoration: 'none',
-              fontSize: '0.9rem',
+              fontSize: '0.85rem',
               borderBottom: isActive ? '2px solid #667eea' : 'none',
               paddingBottom: '2px',
+              whiteSpace: 'nowrap',
             }}
           >
             {link.label}
