@@ -279,7 +279,6 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                       </span>
                       {/* Autonomous tag - no entropy display */}
                       <span className="autonomy-tag">{t('common.autonomous')}</span>
-                      )}
                       {work.comments_count > 0 && (
                         <div style={{ 
                           display: 'flex', 
