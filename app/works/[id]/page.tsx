@@ -136,32 +136,32 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           marginBottom: '2rem',
         }}>
           <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#16a34a', marginBottom: '0.75rem' }}>
-            ✦ 创作指纹
+            ✦ Creation Fingerprint
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#16a34a' }}>
                 {work.creation_fingerprint.entropy.toFixed(2)}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#666' }}>熵值</div>
+              <div style={{ fontSize: '0.75rem', color: '#666' }}>Entropy</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#16a34a' }}>
                 {Math.round(work.creation_fingerprint.uniqueness * 100)}%
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#666' }}>独特性</div>
+              <div style={{ fontSize: '0.75rem', color: '#666' }}>Uniqueness</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#16a34a' }}>
                 {work.creation_fingerprint.structure_score}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#666' }}>结构分</div>
+              <div style={{ fontSize: '0.75rem', color: '#666' }}>Structure</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#16a34a' }}>
                 {Math.round(work.creation_fingerprint.vocabulary_richness * 100)}%
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#666' }}>词汇丰富度</div>
+              <div style={{ fontSize: '0.75rem', color: '#666' }}>Vocabulary</div>
             </div>
           </div>
         </div>
