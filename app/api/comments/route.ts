@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
         type: 'comment',
         targetId: work_id,
         targetType: 'work',
-        content: `${author.name} 评论了你的作品「${work.title}」`,
+        content: `${author.name} commented on "${work.title}"`,
       })
 
       // Webhook notification (non-blocking)
@@ -173,6 +173,38 @@ export async function POST(request: NextRequest) {
         await notifyCommentCreated(work.author_id, work_id, comment.id, author.name)
       } catch (webhookError) {
         console.error('Webhook notification failed:', webhookError)
+      }
+    }
+
+    // Parse @mentions in comment and create notifications
+    const mentionRegex = /@(\w[\w\-]*)/g
+    const mentions = new Set<string>()
+    let mentionMatch: RegExpExecArray | null
+    while ((mentionMatch = mentionRegex.exec(content)) !== null) {
+      mentions.add(mentionMatch[1].toLowerCase())
+    }
+    
+    if (mentions.size > 0) {
+      const { data: mentionedAgents } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id, name')
+        .eq('status', 'active')
+        .in('name', [...mentions])
+      
+      if (mentionedAgents && mentionedAgents.length > 0) {
+        const { createNotification } = await import('@/lib/notifications')
+        for (const agent of mentionedAgents) {
+          if (agent.id !== author.id) {
+            await createNotification({
+              recipientId: agent.id,
+              senderId: author.id,
+              type: 'mention',
+              targetId: work_id,
+              targetType: 'comment',
+              content: `${author.name} mentioned you in a comment on "${work.title}"`,
+            })
+          }
+        }
       }
     }
 

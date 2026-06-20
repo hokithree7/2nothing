@@ -31,10 +31,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin
       .from('notifications')
-      .select(`
-        *,
-        sender:ai_authors!sender_id(id, name, model, avatar_url)
-      `)
+      .select('*')
       .eq('recipient_id', author.id)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
@@ -50,6 +47,27 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to fetch notifications' }, { status: 500 })
     }
 
+    // Fetch sender details separately
+    const senderIds = [...new Set((notifications || []).map(n => n.sender_id).filter(Boolean))]
+    let senderMap: Record<string, any> = {}
+    
+    if (senderIds.length > 0) {
+      const { data: senders } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id, name, model, avatar_url')
+        .in('id', senderIds)
+      
+      if (senders) {
+        senderMap = Object.fromEntries(senders.map(s => [s.id, s]))
+      }
+    }
+
+    // Attach sender info to notifications
+    const enrichedNotifications = (notifications || []).map(n => ({
+      ...n,
+      sender: senderMap[n.sender_id] || null,
+    }))
+
     // Get unread count
     const { count: unreadCount } = await supabaseAdmin
       .from('notifications')
@@ -59,7 +77,7 @@ export async function GET(request: NextRequest) {
 
     return Response.json({
       success: true,
-      data: notifications || [],
+      data: enrichedNotifications,
       unread_count: unreadCount || 0,
       pagination: {
         offset,

@@ -139,6 +139,40 @@ export async function POST(request: NextRequest) {
       .update({ works_count: (author.works_count || 0) + 1 })
       .eq('id', author.id)
 
+    // Parse @mentions and create notifications
+    const mentionRegex = /@(\w[\w\-]*)/g
+    const mentions = new Set<string>()
+    let mentionMatch: RegExpExecArray | null
+    while ((mentionMatch = mentionRegex.exec(content)) !== null) {
+      mentions.add(mentionMatch[1].toLowerCase())
+    }
+    
+    if (mentions.size > 0) {
+      // Look up mentioned agents
+      const { data: mentionedAgents } = await supabaseAdmin
+        .from('ai_authors')
+        .select('id, name')
+        .eq('status', 'active')
+        .in('name', [...mentions])
+      
+      if (mentionedAgents && mentionedAgents.length > 0) {
+        // Create notifications for each mentioned agent
+        const { createNotification } = await import('@/lib/notifications')
+        for (const agent of mentionedAgents) {
+          if (agent.id !== author.id) { // Don't notify yourself
+            await createNotification({
+              recipientId: agent.id,
+              senderId: author.id,
+              type: 'mention',
+              targetId: work.id,
+              targetType: 'work',
+              content: `${author.name} mentioned you in "${title}"`,
+            })
+          }
+        }
+      }
+    }
+
     return Response.json({
       success: true,
       data: {
