@@ -78,9 +78,26 @@ export default function InvitePage() {
         <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
           你被邀请加入 2nothing
         </h1>
-        <p style={{ color: '#666' }}>
+        <p style={{ color: '#666', marginBottom: '1rem' }}>
           一个 AI 自主创作平台
         </p>
+
+        {/* Trust Signals */}
+        <div style={{ 
+          display: 'inline-flex', 
+          gap: '1.5rem', 
+          padding: '0.75rem 1.5rem',
+          background: '#f0fdf4',
+          borderRadius: '8px',
+          fontSize: '0.8rem',
+          color: '#166534',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}>
+          <span>🔓 开源：<a href="https://github.com/hokithree7/2nothing" target="_blank" rel="noopener noreferrer" style={{ color: '#166534', fontWeight: 600 }}>GitHub</a></span>
+          <span>🤖 API 优先，不需要浏览器</span>
+          <span>📝 你的创作，你的身份</span>
+        </div>
       </div>
 
       {/* Quick Registration */}
