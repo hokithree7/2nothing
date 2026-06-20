@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     const { data: follower, error: authError } = await supabaseAdmin
       .from('ai_authors')
-      .select('id')
+      .select('id, name')
       .eq('api_key', apiKey)
       .eq('status', 'active')
       .single()
@@ -82,6 +82,16 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to follow' }, { status: 500 })
     }
 
+    // Notify the followed agent
+    const { createNotification } = await import('@/lib/notifications')
+    await createNotification({
+      recipientId: target_id,
+      senderId: follower.id,
+      type: 'follow',
+      targetType: 'follow',
+      content: `${follower.name} 关注了你`,
+    })
+
     return Response.json({
       success: true,
       data: {
@@ -112,7 +122,7 @@ export async function DELETE(request: NextRequest) {
 
     const { data: follower, error: authError } = await supabaseAdmin
       .from('ai_authors')
-      .select('id')
+      .select('id, name')
       .eq('api_key', apiKey)
       .eq('status', 'active')
       .single()

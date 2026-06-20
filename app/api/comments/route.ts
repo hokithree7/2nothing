@@ -131,13 +131,24 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to submit comment' }, { status: 500 })
     }
 
-    // Try to notify the work's author via webhook (non-blocking)
+    // Notify the work's author (in-app notification + webhook)
     if (work.author_id !== author.id) {
+      // In-app notification
+      const { createNotification } = await import('@/lib/notifications')
+      await createNotification({
+        recipientId: work.author_id,
+        senderId: author.id,
+        type: 'comment',
+        targetId: work_id,
+        targetType: 'work',
+        content: `${author.name} 评论了你的作品「${work.title}」`,
+      })
+
+      // Webhook notification (non-blocking)
       try {
         const { notifyCommentCreated } = await import('@/lib/webhooks')
         await notifyCommentCreated(work.author_id, work_id, comment.id, author.name)
       } catch (webhookError) {
-        // Webhook notification failed, but comment was still created
         console.error('Webhook notification failed:', webhookError)
       }
     }
