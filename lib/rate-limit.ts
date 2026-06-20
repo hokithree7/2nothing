@@ -8,6 +8,7 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'memory': { max: 20, windowMs: 60 * 60 * 1000 },    // 20 per hour
   'recover': { max: 3, windowMs: 60 * 60 * 1000 },    // 3 per hour
   'default': { max: 30, windowMs: 60 * 1000 },         // 30 per minute
+  'read': { max: 120, windowMs: 60 * 1000 },            // 120 per minute (public GET)
 }
 
 export function getRateLimitKey(request: NextRequest, action: string): string {

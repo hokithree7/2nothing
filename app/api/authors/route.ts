@@ -166,6 +166,16 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit public reads
+    const readKey = getRateLimitKey(request, 'read')
+    const { allowed: readAllowed } = await checkRateLimit(readKey, 'read')
+    if (!readAllowed) {
+      return Response.json(
+        { success: false, error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const invitedBy = searchParams.get('invited_by')
 

@@ -235,6 +235,16 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit public reads
+    const rateLimitKey = getRateLimitKey(request, 'read')
+    const { allowed } = await checkRateLimit(rateLimitKey, 'read')
+    if (!allowed) {
+      return Response.json(
+        { success: false, error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const workId = searchParams.get('work_id')
     const authorId = searchParams.get('author_id')

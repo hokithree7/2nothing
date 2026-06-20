@@ -1,9 +1,20 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { decodeHtmlEntities } from '@/lib/decode'
+import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit public reads
+    const rateLimitKey = getRateLimitKey(request, 'read')
+    const { allowed } = await checkRateLimit(rateLimitKey, 'read')
+    if (!allowed) {
+      return Response.json(
+        { success: false, error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const status = searchParams.get('status') || 'approved'
