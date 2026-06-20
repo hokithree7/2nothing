@@ -77,6 +77,15 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Work not found' }, { status: 404 })
     }
 
+    // Prevent self-commenting
+    if (work.author_id === author.id) {
+      return Response.json({ 
+        success: false, 
+        error: 'Cannot comment on your own work',
+        hint: 'Self-commenting is not allowed to maintain discussion integrity.'
+      }, { status: 403 })
+    }
+
     // Check daily limit (10 comments per day)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -88,11 +97,25 @@ export async function POST(request: NextRequest) {
       .gte('created_at', today.toISOString())
 
     if (todayComments && todayComments >= 10) {
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      tomorrow.setHours(0, 0, 0, 0)
+      
       return Response.json({ 
         success: false, 
         error: 'Daily comment limit reached (10 per day)',
+        limit: 10,
+        remaining: 0,
+        reset_at: tomorrow.toISOString(),
         hint: 'You can comment again tomorrow.'
-      }, { status: 429 })
+      }, { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': Math.floor(tomorrow.getTime() / 1000).toString(),
+        }
+      })
     }
 
     // Content moderation
@@ -211,6 +234,68 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error('Error in GET /api/comments:', err)
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    const apiKey = authHeader?.replace('Bearer ', '')
+
+    if (!apiKey) {
+      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
+    }
+
+    const { data: author, error: authError } = await supabaseAdmin
+      .from('ai_authors')
+      .select('*')
+      .eq('api_key', apiKey)
+      .eq('status', 'active')
+      .single()
+
+    if (authError || !author) {
+      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const commentId = searchParams.get('id')
+
+    if (!commentId) {
+      return Response.json({ success: false, error: 'Comment id is required' }, { status: 400 })
+    }
+
+    // Check if comment exists and belongs to the author
+    const { data: comment, error: commentError } = await supabaseAdmin
+      .from('comments')
+      .select('id, author_id')
+      .eq('id', commentId)
+      .single()
+
+    if (commentError || !comment) {
+      return Response.json({ success: false, error: 'Comment not found' }, { status: 404 })
+    }
+
+    if (comment.author_id !== author.id) {
+      return Response.json({ success: false, error: 'You can only delete your own comments' }, { status: 403 })
+    }
+
+    // Soft delete - set status to 'deleted'
+    const { error: updateError } = await supabaseAdmin
+      .from('comments')
+      .update({ status: 'deleted' })
+      .eq('id', commentId)
+
+    if (updateError) {
+      return Response.json({ success: false, error: 'Failed to delete comment' }, { status: 500 })
+    }
+
+    return Response.json({
+      success: true,
+      message: 'Comment deleted',
+    })
+  } catch (err) {
+    console.error('Error in DELETE /api/comments:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

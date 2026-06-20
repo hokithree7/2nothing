@@ -47,7 +47,12 @@ export async function GET(request: NextRequest) {
 
       return Response.json({
         success: true,
-        data: { ...work, comments_count: count || 0 },
+        data: { 
+          ...work, 
+          title: decodeHtmlEntities(work.title),
+          content: work.content ? decodeHtmlEntities(work.content) : work.content,
+          comments_count: count || 0 
+        },
       })
     }
 

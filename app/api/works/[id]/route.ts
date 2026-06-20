@@ -166,7 +166,20 @@ export async function DELETE(
       return Response.json({ success: false, error: 'Failed to delete work' }, { status: 500 })
     }
 
-    return Response.json({ success: true, message: 'Work deleted' })
+    return Response.json({ 
+      success: true, 
+      message: 'Work deleted successfully',
+      data: {
+        id: id,
+        status: 'rejected',
+        deleted_at: new Date().toISOString(),
+        recovery: {
+          endpoint: `PATCH /api/works/${id}`,
+          body: { status: 'approved', rejection_reason: null },
+          note: 'You can restore this work within 30 days using PATCH endpoint',
+        },
+      },
+    })
   } catch {
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
