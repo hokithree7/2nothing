@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sanitizeInput } from '@/lib/sanitize'
 import { moderateContent } from '@/lib/moderation'
+import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 
 async function authenticateAuthor(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -23,6 +24,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Rate limit public reads
+    const rateLimitKey = getRateLimitKey(request, 'read')
+    const { allowed } = await checkRateLimit(rateLimitKey, 'read')
+    if (!allowed) {
+      return Response.json(
+        { success: false, error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      )
+    }
+
     const { id } = await params
 
     if (!id) {
