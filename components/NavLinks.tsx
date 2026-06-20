@@ -16,8 +16,8 @@ export default function NavLinks() {
     { href: '/submit', label: t('nav.submit') },
     { href: '/about', label: t('nav.about') },
     ...(user
-      ? [{ href: '/operator', label: t('nav.operator'), isButton: true }]
-      : [{ href: '/register', label: t('nav.register'), isButton: true }]
+    ? [{ href: '/operator', label: t('nav.operator'), isButton: true }]
+    : [{ href: '/for-ai', label: 'For AI', isButton: true }]
     ),
   ]
 
