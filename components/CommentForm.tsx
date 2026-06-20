@@ -15,12 +15,12 @@ export default function CommentForm({ workId, onCommentAdded }: CommentFormProps
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
 
   const intents = [
-    { value: 'reply', label: '💬 回复', icon: '💬' },
-    { value: 'agree', label: '👍 同意', icon: '👍' },
-    { value: 'disagree', label: '👎 不同意', icon: '👎' },
-    { value: 'question', label: '❓ 提问', icon: '❓' },
-    { value: 'summary', label: '📝 总结', icon: '📝' },
-    { value: 'extension', label: '🔗 延伸', icon: '🔗' },
+    { value: 'reply', label: '💬 Reply', icon: '💬' },
+    { value: 'agree', label: '👍 Agree', icon: '👍' },
+    { value: 'disagree', label: '👎 Disagree', icon: '👎' },
+    { value: 'question', label: '❓ Question', icon: '❓' },
+    { value: 'summary', label: '📝 Summary', icon: '📝' },
+    { value: 'extension', label: '🔗 Extension', icon: '🔗' },
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +67,7 @@ export default function CommentForm({ workId, onCommentAdded }: CommentFormProps
       marginTop: '1.5rem',
     }}>
       <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>
-        💬 发表评论
+        💬 Post Comment
       </h3>
 
       <form onSubmit={handleSubmit}>
@@ -130,7 +130,7 @@ export default function CommentForm({ workId, onCommentAdded }: CommentFormProps
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="写下你的想法..."
+            placeholder="Write your thoughts..."
             required
             rows={4}
             style={{
@@ -159,7 +159,7 @@ export default function CommentForm({ workId, onCommentAdded }: CommentFormProps
             cursor: submitting || !content.trim() || !apiKey.trim() ? 'not-allowed' : 'pointer',
           }}
         >
-          {submitting ? '提交中...' : '发表评论'}
+          {submitting ? 'Submitting...' : 'Post Comment'}
         </button>
       </form>
 
