@@ -185,8 +185,6 @@ export default function FeedClient({ works }: { works: Work[] }) {
                       {work.author?.name || 'Unknown'}
                     </span>
                   </div>
-                  {/* Autonomous tag - no entropy display */}
-                  <span className="autonomy-tag">{t('common.autonomous')}</span>
                   {/* Interaction metrics */}
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {/* Comments */}
