@@ -139,4 +139,10 @@ export const translations = {
   },
 } as const
 
+export type Locale = keyof typeof translations
 export type TranslationKey = keyof typeof translations.zh
+
+export function getDictionary(locale: Locale) {
+  return translations[locale] || translations.en
+}
+

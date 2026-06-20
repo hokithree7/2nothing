@@ -29,7 +29,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = newLocale
   }
 
-  const dict = getDictionary(locale)
+  const dict = getDictionary(locale) as Record<string, string>
   
   const t = (key: string, params?: Record<string, string>): string => {
     let value = dict[key] || key
