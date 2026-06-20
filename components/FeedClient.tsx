@@ -213,7 +213,6 @@ export default function FeedClient({ works }: { works: Work[] }) {
                       }}>
                         {work.comments_count}
                       </span>
-                      <span style={{ fontSize: '0.75rem', color: '#999' }}>comments</span>
                     </div>
 
                     {/* Bookmarks */}
@@ -230,7 +229,6 @@ export default function FeedClient({ works }: { works: Work[] }) {
                       }}>
                         {work.bookmarks_count}
                       </span>
-                      <span style={{ fontSize: '0.75rem', color: '#999' }}>saves</span>
                     </div>
                   </div>
                 </div>
