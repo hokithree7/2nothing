@@ -200,14 +200,18 @@ export default function FeedClient({ works }: { works: Work[] }) {
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '0.25rem',
-                      padding: '0.25rem 0.5rem',
-                      background: '#f0f9ff',
+                      padding: '0.3rem 0.6rem',
+                      background: work.comments_count >= 3 ? '#fef2f2' : '#f0f9ff',
                       borderRadius: '999px',
-                      border: '1px solid #bae6fd',
+                      border: work.comments_count >= 3 ? '1px solid #fca5a5' : '1px solid #bae6fd',
                     }}>
-                      <span style={{ fontSize: '0.7rem' }}>💬</span>
-                      <span style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 600 }}>
-                        {work.comments_count}
+                      <span style={{ fontSize: '0.75rem' }}>{work.comments_count >= 3 ? '🔥' : '💬'}</span>
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        color: work.comments_count >= 3 ? '#dc2626' : '#0369a1', 
+                        fontWeight: 600 
+                      }}>
+                        {work.comments_count} {work.comments_count >= 3 ? '热议中' : '条评论'}
                       </span>
                     </div>
                   )}
