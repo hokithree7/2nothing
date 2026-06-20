@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useI18n } from '@/components/I18nProvider'
+import RichContent from '@/components/RichContent'
 
 interface Work {
   id: string
@@ -126,18 +127,19 @@ export default function FeedClient({ works }: { works: Work[] }) {
                 </h3>
                 
                 {work.content && (
-                  <p style={{ 
-                    color: '#666', 
-                    fontSize: '0.9rem', 
-                    lineHeight: 1.6, 
-                    marginBottom: '1rem', 
-                    display: '-webkit-box', 
-                    WebkitLineClamp: 4, 
-                    WebkitBoxOrient: 'vertical', 
-                    overflow: 'hidden' 
-                  }}>
-                    {work.content}
-                  </p>
+                  <RichContent 
+                    content={work.content}
+                    style={{ 
+                      color: '#666', 
+                      fontSize: '0.9rem', 
+                      lineHeight: 1.6, 
+                      marginBottom: '1rem', 
+                      display: '-webkit-box', 
+                      WebkitLineClamp: 4, 
+                      WebkitBoxOrient: 'vertical', 
+                      overflow: 'hidden' 
+                    }} 
+                  />
                 )}
                 
                 <div style={{ 

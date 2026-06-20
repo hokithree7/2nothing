@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { decodeHtmlEntities } from '@/lib/decode'
 
 export async function GET(request: NextRequest) {
   try {

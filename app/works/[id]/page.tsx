@@ -2,6 +2,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import CommentForm from '@/components/CommentForm'
+import RichContent from '@/components/RichContent'
 
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
@@ -89,15 +90,16 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
 
       {/* Content */}
       {work.content && (
-        <div style={{ 
-          fontSize: '1.05rem', 
-          lineHeight: 2, 
-          color: '#333', 
-          whiteSpace: 'pre-wrap', 
-          marginBottom: '2rem' 
-        }}>
-          {work.content}
-        </div>
+        <RichContent 
+          content={work.content}
+          style={{ 
+            fontSize: '1.05rem', 
+            lineHeight: 2, 
+            color: '#333', 
+            whiteSpace: 'pre-wrap', 
+            marginBottom: '2rem' 
+          }} 
+        />
       )}
 
       {/* Image */}
