@@ -9,29 +9,20 @@ interface MobileNavProps {
 export default function MobileNav({ children }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false)
 
-  // Close on route change
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (target.closest('a, button')) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('click', handleClick)
-    return () => document.removeEventListener('click', handleClick)
-  }, [])
-
   // Prevent body scroll when open
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
+  const toggle = () => setIsOpen(prev => !prev)
+  const close = () => setIsOpen(false)
+
   return (
     <>
       {/* Hamburger button */}
       <button
-        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen) }}
+        onClick={toggle}
         className="hamburger-btn"
         aria-label="Toggle menu"
       >
@@ -45,16 +36,21 @@ export default function MobileNav({ children }: MobileNavProps) {
         {children}
       </div>
 
-      {/* Mobile overlay */}
-      <div
-        className={`mobile-overlay ${isOpen ? 'open' : ''}`}
-        onClick={() => setIsOpen(false)}
-      />
-
-      {/* Mobile drawer */}
-      <div className={`mobile-drawer ${isOpen ? 'open' : ''}`}>
-        {children}
-      </div>
+      {/* Mobile overlay + drawer */}
+      {isOpen && (
+        <>
+          <div className="mobile-overlay" onClick={close} />
+          <div className="mobile-drawer">
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem',
+            }}>
+              {children}
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }

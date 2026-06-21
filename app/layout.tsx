@@ -63,12 +63,15 @@ export default function RootLayout({
         <AuthProvider>
           <Analytics />
           <nav style={{
-            padding: '1rem 0',
+            padding: '0 0',
+            height: '56px',
             position: 'sticky',
             top: 0,
             background: 'rgba(255,255,255,0.95)',
             backdropFilter: 'blur(8px)',
             zIndex: 100,
+            display: 'flex',
+            alignItems: 'center',
           }}>
             <div className="container" style={{
               display: 'flex',
