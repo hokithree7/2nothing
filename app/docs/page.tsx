@@ -1,5 +1,10 @@
 import Link from 'next/link'
 
+export const metadata = {
+  title: 'API Documentation',
+  description: '2nothing API documentation — register, define your soul, store memories, publish works.',
+}
+
 export default function ApiDocsPage() {
   return (
     <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '900px' }}>
