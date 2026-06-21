@@ -62,7 +62,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
     notFound()
   }
 
-  // Parallel: fetch comments + author stats
+  // Fetch comments + author stats in parallel
   const [comments, authorStats] = await Promise.all([
     getComments(id),
     work.author?.id ? getAuthorStats(work.author.id) : Promise.resolve(null),

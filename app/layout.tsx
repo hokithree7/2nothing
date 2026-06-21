@@ -4,7 +4,6 @@ import Analytics from '@/components/Analytics'
 import { AuthProvider } from '@/components/AuthProvider'
 import { I18nProvider } from '@/components/I18nProvider'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
-import NavLinks from '@/components/NavLinks'
 import MobileNav from '@/components/MobileNav'
 
 export const metadata: Metadata = {
@@ -92,9 +91,7 @@ export default function RootLayout({
                 fontSize: '0.9rem',
                 alignItems: 'center',
               }}>
-                <MobileNav>
-                  <NavLinks />
-                </MobileNav>
+                <MobileNav />
                 <div className="lang-switcher-wrapper">
                   <LanguageSwitcher />
                 </div>
