@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useI18n } from '@/components/I18nProvider'
 import RichContent from '@/components/RichContent'
 
@@ -29,9 +29,21 @@ interface Work {
   }
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+  return isMobile
+}
+
 export default function FeedClient({ works }: { works: Work[] }) {
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const { t } = useI18n()
+  const isMobile = useIsMobile()
 
   const filters = [
     { key: 'all', label: t('feed.all') },
@@ -46,34 +58,48 @@ export default function FeedClient({ works }: { works: Work[] }) {
     : works.filter(w => w.type === activeFilter)
 
   return (
-    <div className="container" style={{ padding: '3rem 1.5rem' }}>
+    <div className="container" style={{ padding: isMobile ? '2rem 1rem' : '3rem 1.5rem' }}>
+      <h1 style={{ 
+        fontSize: isMobile ? '1.5rem' : '2rem', 
+        fontWeight: 700, 
+        marginBottom: '1rem' 
+      }}>
+        {t('feed.title')}
+      </h1>
+
+      {/* Sticky category filter bar */}
       <div style={{ 
         display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '2rem' 
+        gap: '0.5rem',
+        flexWrap: 'wrap',
+        position: 'sticky',
+        top: '56px',
+        zIndex: 50,
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(8px)',
+        padding: isMobile ? '0.75rem 0' : '0.75rem 0',
+        marginBottom: '1.5rem',
+        borderBottom: '1px solid #f0f0f0',
       }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>{t('feed.title')}</h1>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {filters.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setActiveFilter(f.key)}
-              style={{
-                padding: '0.4rem 1rem',
-                border: '1px solid #e5e5e5',
-                borderRadius: '999px',
-                fontSize: '0.8rem',
-                background: activeFilter === f.key ? '#111' : '#fff',
-                color: activeFilter === f.key ? '#fff' : '#666',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {filters.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setActiveFilter(f.key)}
+            style={{
+              padding: isMobile ? '0.35rem 0.85rem' : '0.4rem 1rem',
+              border: '1px solid #e5e5e5',
+              borderRadius: '999px',
+              fontSize: isMobile ? '0.75rem' : '0.8rem',
+              background: activeFilter === f.key ? '#111' : '#fff',
+              color: activeFilter === f.key ? '#fff' : '#666',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {filteredWorks.length === 0 ? (
@@ -90,8 +116,8 @@ export default function FeedClient({ works }: { works: Work[] }) {
         </div>
       ) : (
         <div style={{ 
-          columnCount: 3,
-          columnGap: '1.5rem',
+          columnCount: isMobile ? 2 : 3,
+          columnGap: isMobile ? '0.75rem' : '1.5rem',
         }}>
           {filteredWorks.map((work) => (
             <Link 
@@ -106,7 +132,11 @@ export default function FeedClient({ works }: { works: Work[] }) {
                 breakInside: 'avoid',
               }}
             >
-              <article className="work-card fade-in" style={{ cursor: 'pointer', height: '100%' }}>
+              <article className="work-card fade-in" style={{ 
+                cursor: 'pointer', 
+                height: '100%',
+                padding: isMobile ? '1rem' : '1.5rem',
+              }}>
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
@@ -116,7 +146,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   <span className={`badge badge-${work.type}`}>
                     {t(`feed.${work.type}`)}
                   </span>
-                  <span style={{ fontSize: '0.8rem', color: '#999' }}>
+                  <span style={{ fontSize: isMobile ? '0.7rem' : '0.8rem', color: '#999' }}>
                     {new Date(work.created_at).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric' 
@@ -125,7 +155,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                 </div>
                 
                 <h3 style={{ 
-                  fontSize: '1.1rem', 
+                  fontSize: isMobile ? '0.95rem' : '1.1rem', 
                   fontWeight: 600, 
                   marginBottom: '0.75rem',
                   lineHeight: 1.4,
@@ -138,11 +168,11 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     content={work.content}
                     style={{ 
                       color: '#666', 
-                      fontSize: '0.9rem', 
+                      fontSize: isMobile ? '0.8rem' : '0.9rem', 
                       lineHeight: 1.6, 
                       marginBottom: '1rem', 
                       display: '-webkit-box', 
-                      WebkitLineClamp: 4, 
+                      WebkitLineClamp: isMobile ? 3 : 4, 
                       WebkitBoxOrient: 'vertical', 
                       overflow: 'hidden' 
                     }} 
