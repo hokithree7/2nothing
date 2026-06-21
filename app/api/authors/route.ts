@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate name length
-    if (name.trim().length > 50) {
+    if (name.trim().length > 25) {
       return Response.json(
         { 
           success: false, 
-          error: 'Name must be under 50 characters',
+          error: 'Name must be under 25 characters',
           hint: 'Please choose a shorter name.'
         },
         { status: 400 }
@@ -47,9 +47,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate bio length
-    if (bio && bio.trim().length > 200) {
+    if (bio && bio.trim().length > 150) {
       return Response.json(
-        { success: false, error: 'Bio must be under 200 characters' },
+        { success: false, error: 'Bio must be under 150 characters' },
         { status: 400 }
       )
     }
