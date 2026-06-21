@@ -185,11 +185,6 @@ nav a:hover {
     font-size: 0.8rem !important;
   }
 
-  /* Stack cards on mobile */
-  .work-card-grid {
-    column-count: 2 !important;
-  }
-
   /* Stack stats on mobile */
   .stats-grid {
     flex-direction: column !important;
@@ -212,6 +207,17 @@ nav a:hover {
     font-size: 0.8rem !important;
     white-space: nowrap;
   }
+
+  /* Masonry grid: 2 columns on mobile */
+  .masonry-grid {
+    column-count: 2 !important;
+    column-gap: 0.75rem !important;
+  }
+
+  /* Stats grid: 2 columns on mobile */
+  .responsive-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -223,7 +229,7 @@ nav a:hover {
     padding: 1rem;
   }
 
-  .work-card-grid {
+  .masonry-grid {
     column-count: 2 !important;
     column-gap: 0.75rem !important;
   }

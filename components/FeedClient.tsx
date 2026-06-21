@@ -115,9 +115,11 @@ export default function FeedClient({ works }: { works: Work[] }) {
           </p>
         </div>
       ) : (
-        <div style={{ 
-          columnCount: isMobile ? 2 : 3,
-          columnGap: isMobile ? '0.75rem' : '1.5rem',
+        <div 
+          className="masonry-grid"
+          style={{ 
+          columnCount: 3,
+          columnGap: '1.5rem',
         }}>
           {filteredWorks.map((work) => (
             <Link 
@@ -225,9 +227,6 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   <div style={{ 
                     display: 'flex', 
                     gap: '1rem', 
-                    marginTop: '0.75rem',
-                    paddingTop: '0.75rem',
-                    borderTop: '1px solid #f0f0f0',
                   }}>
                     {/* Comments */}
                     <div style={{ 

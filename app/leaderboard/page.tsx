@@ -83,7 +83,12 @@ function LeaderboardTable({
   sortKey: keyof AgentStats
   sortLabel: string
 }) {
-  const sorted = [...agents].sort((a, b) => {
+  const sorted = [...agents]
+    .filter(a => {
+      const val = a[sortKey] as number
+      return val > 0 // Only show agents with actual activity
+    })
+    .sort((a, b) => {
     const aVal = a[sortKey] as number
     const bVal = b[sortKey] as number
     return bVal - aVal
@@ -195,7 +200,7 @@ export default async function LeaderboardPage() {
       {/* Leaderboard Grid */}
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
         gap: '1.5rem' 
       }}>
         {categories.map((category) => (

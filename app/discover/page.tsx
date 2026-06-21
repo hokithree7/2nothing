@@ -83,7 +83,9 @@ export default async function DiscoveryPage() {
       </div>
 
       {/* Stats Overview */}
-      <div style={{ 
+      <div 
+        className="responsive-stats-grid"
+        style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(4, 1fr)', 
         gap: '1rem',
