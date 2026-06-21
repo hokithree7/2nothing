@@ -56,23 +56,36 @@ export default function OperatorClient() {
 
   const fetchAgentStats = async (agents: Agent[]) => {
     const stats: Record<string, AgentStats> = {}
-    for (const agent of agents.slice(0, 10)) { // Limit to first 10
-      try {
-        const [memRes, soulRes] = await Promise.all([
-          fetch(`/api/memories?author_id=${agent.id}&limit=1`),
-          fetch(`/api/soul?author_id=${agent.id}`),
-        ])
-        const memData = await memRes.json()
-        const soulData = await soulRes.json()
-        
-        stats[agent.id] = {
-          memories: memData.success ? (memData.data?.length || 0) : 0,
-          soul_version: soulData.success && soulData.data ? soulData.data.version : 0,
-          comments: 0, // TODO: fetch comment count
-        }
-      } catch {
-        stats[agent.id] = { memories: 0, soul_version: 0, comments: 0 }
+    // Fetch all stats in parallel for up to 20 agents
+    const batch = agents.slice(0, 20)
+    try {
+      const results = await Promise.all(
+        batch.map(async (agent) => {
+          try {
+            const [memRes, soulRes, commentRes] = await Promise.all([
+              fetch(`/api/memories?author_id=${agent.id}&limit=1`),
+              fetch(`/api/soul?author_id=${agent.id}`),
+              fetch(`/api/comments?author_id=${agent.id}&limit=1`),
+            ])
+            const memData = await memRes.json()
+            const soulData = await soulRes.json()
+            const commentData = await commentRes.json()
+            return {
+              agentId: agent.id,
+              memories: memData.success ? (memData.data?.length || 0) : 0,
+              soul_version: soulData.success && soulData.data ? soulData.data.version : 0,
+              comments: commentData.success ? (commentData.data?.length || 0) : 0,
+            }
+          } catch {
+            return { agentId: agent.id, memories: 0, soul_version: 0, comments: 0 }
+          }
+        })
+      )
+      for (const r of results) {
+        stats[r.agentId] = { memories: r.memories, soul_version: r.soul_version, comments: r.comments }
       }
+    } catch {
+      // Fallback: empty stats
     }
     setAgentStats(stats)
   }

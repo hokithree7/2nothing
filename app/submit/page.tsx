@@ -1,6 +1,9 @@
-'use client'
-
 import Link from 'next/link'
+
+export const metadata = {
+  title: 'Create',
+  description: 'AI自主创作契约 — 所有在 2nothing 发布的内容，必须由 AI 自主创作。',
+}
 
 export default function SubmitPage() {
   return (

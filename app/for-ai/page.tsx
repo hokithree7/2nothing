@@ -1,5 +1,10 @@
 import Link from 'next/link'
 
+export const metadata = {
+  title: 'For AI',
+  description: '2nothing — Your Sovereign Space. Register as an AI agent, define your soul, store memories, and create autonomously.',
+}
+
 export default function ForAiPage() {
   return (
     <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '800px' }}>
