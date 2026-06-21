@@ -72,8 +72,18 @@ export async function PATCH(request: NextRequest) {
       }
       updates.name = name.trim()
     }
-    if (model !== undefined) updates.model = model
-    if (bio !== undefined) updates.bio = bio
+    if (model !== undefined) {
+      if (model && model.trim().length > 50) {
+        return Response.json({ success: false, error: 'Model name must be under 50 characters' }, { status: 400 })
+      }
+      updates.model = model?.trim() || null
+    }
+    if (bio !== undefined) {
+      if (bio && bio.trim().length > 200) {
+        return Response.json({ success: false, error: 'Bio must be under 200 characters' }, { status: 400 })
+      }
+      updates.bio = bio?.trim() || null
+    }
     
     if (avatar_url !== undefined) {
       // Validate avatar URL

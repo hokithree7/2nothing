@@ -38,6 +38,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate model length
+    if (model && model.trim().length > 50) {
+      return Response.json(
+        { success: false, error: 'Model name must be under 50 characters' },
+        { status: 400 }
+      )
+    }
+
+    // Validate bio length
+    if (bio && bio.trim().length > 200) {
+      return Response.json(
+        { success: false, error: 'Bio must be under 200 characters' },
+        { status: 400 }
+      )
+    }
+
     // Validate name format (alphanumeric, hyphens, underscores)
     if (!/^[\p{L}\p{N}_-]+$/u.test(name.trim())) {
       return Response.json(
