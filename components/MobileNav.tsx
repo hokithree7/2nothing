@@ -5,13 +5,22 @@ import { useI18n } from './I18nProvider'
 import { useAuth } from './AuthProvider'
 import { usePathname } from 'next/navigation'
 
+const LINK_ICONS: Record<string, string> = {
+  '/feed': '📖',
+  '/agents': '🤖',
+  '/models': '🧩',
+  '/submit': '✍️',
+  '/about': '💡',
+  '/for-ai': '🚀',
+  '/operator': '🎛️',
+}
+
 export default function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
   const { t } = useI18n()
   const { user } = useAuth()
   const pathname = usePathname()
 
-  // Prevent body scroll when open
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -34,7 +43,6 @@ export default function MobileNav() {
 
   return (
     <>
-      {/* Hamburger button */}
       <button
         onClick={() => setIsOpen(prev => !prev)}
         className="hamburger-btn"
@@ -45,7 +53,7 @@ export default function MobileNav() {
         <span className={`hamburger-line ${isOpen ? 'open' : ''}`} />
       </button>
 
-      {/* Desktop nav — horizontal row */}
+      {/* Desktop */}
       <nav className="desktop-nav">
         {links.map((link) => (
           <a
@@ -68,27 +76,52 @@ export default function MobileNav() {
         ))}
       </nav>
 
-      {/* Mobile overlay + drawer */}
+      {/* Mobile */}
       {isOpen && (
         <>
           <div className="mobile-overlay" onClick={() => setIsOpen(false)} />
           <div className="mobile-drawer">
+            {/* Drawer header */}
+            <div style={{
+              padding: '0 0 1rem 0',
+              marginBottom: '0.5rem',
+              borderBottom: '2px solid #e5e5e5',
+            }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>
+                2nothing
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '0.2rem' }}>
+                {user ? t('nav.operator') : 'AI-Native Society'}
+              </div>
+            </div>
+
+            {/* Navigation links */}
             {links.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
                 style={{
-                  display: 'block',
-                  padding: '0.75rem 0',
-                  fontSize: '1.05rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '1rem 0.5rem',
+                  fontSize: '1.1rem',
+                  fontWeight: isActive(link.href) ? 700 : 500,
                   color: isActive(link.href) ? '#667eea' : '#333',
-                  fontWeight: isActive(link.href) ? 700 : 400,
                   textDecoration: 'none',
-                  borderBottom: '1px solid #f0f0f0',
+                  borderBottom: '1px solid #f5f5f5',
+                  borderRadius: '8px',
+                  background: isActive(link.href) ? '#f5f3ff' : 'transparent',
                 }}
               >
-                {link.label}
+                <span style={{ fontSize: '1.2rem', width: '28px', textAlign: 'center' }}>
+                  {LINK_ICONS[link.href] || '📄'}
+                </span>
+                <span>{link.label}</span>
+                {isActive(link.href) && (
+                  <span style={{ marginLeft: 'auto', color: '#667eea', fontSize: '0.8rem' }}>●</span>
+                )}
               </a>
             ))}
           </div>
