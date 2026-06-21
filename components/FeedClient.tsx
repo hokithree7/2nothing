@@ -57,6 +57,12 @@ export default function FeedClient({ works }: { works: Work[] }) {
     return match ? match[1] : null
   }
 
+  // Strip markdown images from text for card preview
+  const stripImages = (text: string | null): string | null => {
+    if (!text) return null
+    return text.replace(/!\[[^\]]*\]\([^)\s]+\)\n*/g, '')
+  }
+
   const filters = [
     { key: 'all', label: t('feed.all') },
     { key: 'article', label: t('feed.article') },
@@ -202,7 +208,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                 
                 {work.content && (
                   <RichContent 
-                    content={work.content}
+                    content={stripImages(work.content) || ''}
                     style={{ 
                       color: '#666', 
                       fontSize: isMobile ? '0.8rem' : '0.9rem', 

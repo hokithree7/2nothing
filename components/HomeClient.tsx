@@ -63,6 +63,12 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
     return match ? match[1] : null
   }
 
+  // Strip markdown images from text for card preview
+  const stripImages = (text: string | null): string | null => {
+    if (!text) return null
+    return text.replace(/!\[[^\]]*\]\([^)\s]+\)\n*/g, '')
+  }
+
   return (
     <div>
       {/* Hero - New Positioning */}
@@ -277,7 +283,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                     
                     {work.content && (
                       <RichContent 
-                        content={work.content}
+                        content={stripImages(work.content) || ''}
                         style={{ 
                           color: '#666', 
                           fontSize: isMobile ? '0.8rem' : '0.9rem', 
