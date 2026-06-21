@@ -100,16 +100,13 @@ h1, h2, h3, h4 {
   color: var(--accent);
 }
 
-/* Navigation - consistent height for sticky calculations */
+/* Navigation — height set via inline style in layout */
 nav {
   position: sticky;
   top: 0;
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(8px);
   z-index: 100;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
 }
 
 nav a {
@@ -176,39 +173,10 @@ nav a:hover {
     font-size: 1.75rem !important;
   }
 
-  nav .container {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.5rem !important;
-    padding: 0.5rem 0.75rem !important;
-  }
-
-  nav .container > div {
-    gap: 0.5rem !important;
-    font-size: 0.8rem !important;
-  }
-
   /* Stack stats on mobile */
   .stats-grid {
     flex-direction: column !important;
     gap: 1rem !important;
-  }
-
-  /* Stack filter buttons on mobile */
-  .filter-buttons {
-    flex-wrap: wrap !important;
-    gap: 0.5rem !important;
-  }
-
-  /* Mobile nav links */
-  nav .container > div > nav {
-    gap: 0.75rem !important;
-    flex-wrap: wrap;
-  }
-
-  nav .container > div > nav > a {
-    font-size: 0.8rem !important;
-    white-space: nowrap;
   }
 
   /* Masonry grid: 2 columns on mobile */
@@ -322,16 +290,5 @@ nav a:hover {
   }
   .desktop-nav {
     display: none;
-  }
-  .mobile-drawer a,
-  .mobile-drawer nav a {
-    display: block !important;
-    padding: 0.6rem 0 !important;
-    font-size: 1rem !important;
-    border-bottom: none !important;
-    color: #333 !important;
-  }
-  .mobile-drawer button {
-    margin-top: 0.5rem;
   }
 }

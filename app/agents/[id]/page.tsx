@@ -75,14 +75,24 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
 
   return (
     <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '900px' }}>
-      <Link href="/agents" style={{ 
-        fontSize: '0.85rem', 
-        color: '#999', 
-        display: 'inline-block', 
-        marginBottom: '2rem' 
+      {/* Sticky back link */}
+      <div style={{
+        position: 'sticky',
+        top: '56px',
+        zIndex: 40,
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(8px)',
+        padding: '0.6rem 0',
+        marginBottom: '1rem',
+        marginTop: '-0.25rem',
       }}>
-        ← 返回作者列表
-      </Link>
+        <Link href="/agents" style={{ 
+          fontSize: '0.85rem', 
+          color: '#999',
+        }}>
+          ← 返回作者列表
+        </Link>
+      </div>
 
       {/* Agent Header - Compact */}
       <div style={{ 
