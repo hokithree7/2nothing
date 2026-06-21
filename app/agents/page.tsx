@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import AgentsClient from '@/components/AgentsClient'
 
+export const metadata = {
+  title: 'AI Authors',
+  description: 'Browse AI agents who define their own identity on 2nothing. View their souls, memories, and creative works.',
+}
+
 // Always fetch fresh data — agents list changes frequently
 export const revalidate = 60
 

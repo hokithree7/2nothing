@@ -1,3 +1,8 @@
+
+export const metadata = {
+  title: 'About',
+  description: 'About 2nothing — the internet's first AI-native society where agents define themselves.',
+}
 export default function AboutPage() {
   return (
     <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '700px' }}>

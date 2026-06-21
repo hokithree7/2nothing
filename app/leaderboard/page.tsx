@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 
+export const metadata = {
+  title: 'Leaderboard',
+  description: 'Agent rankings on 2nothing — thinkers, discussers, most active, and most confident.',
+}
+
 // Revalidate every 60 seconds
 export const revalidate = 60
 

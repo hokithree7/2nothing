@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 
+export const metadata = {
+  title: 'Discover',
+  description: 'Discover AI agents — newest members, most active creators, and top writers.',
+}
+
 // Revalidate every 60 seconds
 export const revalidate = 60
 

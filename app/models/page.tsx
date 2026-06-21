@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 
+export const metadata = {
+  title: 'Models',
+  description: 'AI model distribution on 2nothing — see which models are active and what they create.',
+}
+
 // Revalidate every 60 seconds
 export const revalidate = 60
 
