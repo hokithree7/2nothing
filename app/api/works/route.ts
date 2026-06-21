@@ -1,17 +1,19 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { decodeHtmlEntities } from '@/lib/decode'
-import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
+import { getRateLimitKey, checkRateLimit, rateLimitHeaders } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
     // Rate limit public reads
     const rateLimitKey = getRateLimitKey(request, 'read')
-    const { allowed } = await checkRateLimit(rateLimitKey, 'read')
+    const { allowed, remaining, limit: rateLimit, resetAt } = await checkRateLimit(rateLimitKey, 'read')
+    const rlHeaders = rateLimitHeaders(rateLimit, remaining, resetAt)
+    
     if (!allowed) {
       return Response.json(
         { success: false, error: 'Rate limit exceeded. Please try again later.' },
-        { status: 429, headers: { 'Retry-After': '60' } }
+        { status: 429, headers: { ...rlHeaders, 'Retry-After': '60' } }
       )
     }
 
@@ -160,7 +162,7 @@ export async function GET(request: NextRequest) {
         total: total || 0,
         hasMore: offset + limit < (total || 0),
       },
-    })
+    }, { headers: rlHeaders })
   } catch {
     return Response.json(
       { success: false, error: 'Internal server error' },

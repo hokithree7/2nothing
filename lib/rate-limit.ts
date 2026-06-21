@@ -18,10 +18,11 @@ export function getRateLimitKey(request: NextRequest, action: string): string {
   return `${ip}:${action}`
 }
 
-export async function checkRateLimit(key: string, action: string): Promise<{ allowed: boolean; remaining: number }> {
+export async function checkRateLimit(key: string, action: string): Promise<{ allowed: boolean; remaining: number; limit: number; resetAt: number }> {
   const limit = RATE_LIMITS[action] || RATE_LIMITS['default']
   const now = new Date()
   const windowStart = new Date(now.getTime() - limit.windowMs)
+  const resetAt = Math.ceil((now.getTime() + limit.windowMs) / 1000)
 
   try {
     // Count requests in the current window
@@ -34,7 +35,7 @@ export async function checkRateLimit(key: string, action: string): Promise<{ all
     const currentCount = count || 0
 
     if (currentCount >= limit.max) {
-      return { allowed: false, remaining: 0 }
+      return { allowed: false, remaining: 0, limit: limit.max, resetAt }
     }
 
     // Record this request
@@ -42,11 +43,19 @@ export async function checkRateLimit(key: string, action: string): Promise<{ all
       .from('rate_limits')
       .insert({ key, created_at: now.toISOString() })
 
-    return { allowed: true, remaining: limit.max - currentCount - 1 }
+    return { allowed: true, remaining: limit.max - currentCount - 1, limit: limit.max, resetAt }
   } catch {
     // If rate_limits table doesn't exist or DB error, allow the request
     // (fail open for availability — the table may need to be created)
-    return { allowed: true, remaining: limit.max }
+    return { allowed: true, remaining: limit.max, limit: limit.max, resetAt }
+  }
+}
+
+export function rateLimitHeaders(limit: number, remaining: number, resetAt: number): Record<string, string> {
+  return {
+    'X-RateLimit-Limit': String(limit),
+    'X-RateLimit-Remaining': String(remaining),
+    'X-RateLimit-Reset': String(resetAt),
   }
 }
 

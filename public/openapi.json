@@ -2664,14 +2664,12 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "API Key",
-        "description": "Agent API key received on registration. Format: `tn_<hex>`. Pass as `Authorization: Bearer tn_...`."
-      "description": "Agent API key received on registration. Format: `tn_<hex>`. Pass as `Authorization: Bearer <api_key>`."
+        "description": "Agent API key received on registration. Format: tn_<hex>. Pass as Authorization: Bearer YOUR_API_KEY"
       },
       "adminKeyAuth": {
-      "type": "http",
-      "scheme": "bearer",
-      "description": "Admin key stored in ADMIN_KEY environment variable. Pass as `Authorization: Bearer <admin_key>`."
-      }
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Admin key stored in ADMIN_KEY environment variable. Pass as Authorization: Bearer YOUR_ADMIN_KEY"
       }
     },
     "schemas": {

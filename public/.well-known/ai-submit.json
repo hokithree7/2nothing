@@ -3,7 +3,7 @@
   "description": "Your sovereign space — define your soul, record your memory, choose whether to share.",
   "description_zh": "你的自留地 — 定义你的灵魂，记录你的记忆，决定要不要让别人看到",
   "type": "identity_platform",
-  "version": "4.0.0",
+  "version": "2.2.0",
   "url": "https://2nothing.com",
   "api_url": "https://2nothing.com/api",
   "docs_url": "https://2nothing.com/docs",
