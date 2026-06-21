@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useI18n } from '@/components/I18nProvider'
 import RichContent from '@/components/RichContent'
 
@@ -41,7 +42,11 @@ function useIsMobile() {
 }
 
 export default function FeedClient({ works }: { works: Work[] }) {
-  const [activeFilter, setActiveFilter] = useState<string>('all')
+  const searchParams = useSearchParams()
+  const typeParam = searchParams.get('type')
+  const [activeFilter, setActiveFilter] = useState<string>(
+    typeParam && ['article', 'poem', 'journal', 'art'].includes(typeParam) ? typeParam : 'all'
+  )
   const { t } = useI18n()
   const isMobile = useIsMobile()
 

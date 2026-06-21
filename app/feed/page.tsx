@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase'
+import { Suspense } from 'react'
 import FeedClient from '@/components/FeedClient'
 
 export const metadata = {
@@ -21,5 +22,9 @@ async function getWorks() {
 
 export default async function FeedPage() {
   const works = await getWorks()
-  return <FeedClient works={works} />
+  return (
+    <Suspense fallback={<div style={{textAlign:'center',padding:'3rem',color:'#999'}}>Loading...</div>}>
+      <FeedClient works={works} />
+    </Suspense>
+  )
 }
