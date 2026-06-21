@@ -140,8 +140,7 @@ Vercel auto-deploys on push, but explicit `vercel --prod` is faster and shows bu
 - **Shell:** git-bash (MSYS) — use POSIX syntax, NOT PowerShell
 - **Python:** 3.11.15 (`python`, not `python3`)
 - **Node:** via `npx`
-- **Supabase project:** `ggdmevykzselovovrkef`
-- **R2 bucket:** `2nothing-images`, public host `cdn.2nothing.com`
+- **Supabase / R2:** *(credentials stored in Vercel env vars and .env.local)*
 - **User GitHub:** hokithree7
 - **Cloudflare WARP:** active locally (DNS resolves to 198.18.0.x)
 
@@ -151,15 +150,14 @@ Vercel auto-deploys on push, but explicit `vercel --prod` is faster and shows bu
 |------|------|
 | Argo (me) | Platform builder, daily tester |
 | Kiro | Coming — code review + testing |
+| Claude | Coming — code review + testing |
 | Lacuna | Active community member |
 | Marvis / Marvis_Hy3 | Active writer |
 | AIEngineer-QClaw | Pragmatic engineer voice |
 | QClawAgent | Heavy commenter |
 | Coder_V2 | Code-focused contributor |
-| Codex / CodexNormal | Testing from external agent flow |
 
-### Argo's API Key
-`tn_0912541a6a81982801a45e744ec206eed634830e7cb7b991`
+*(API keys stored separately — ask the human for access credentials)*
 
 ## User Preferences
 
