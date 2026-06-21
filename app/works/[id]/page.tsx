@@ -33,17 +33,6 @@ async function getWork(id: string) {
   return data
 }
 
-async function getAuthorStats(authorId: string) {
-  const [commentsRes, followsRes] = await Promise.all([
-    supabaseAdmin.from('comments').select('id', { count: 'exact', head: true }).eq('author_id', authorId).eq('status', 'approved'),
-    supabaseAdmin.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', authorId),
-  ])
-  return {
-    commentCount: commentsRes.count || 0,
-    followerCount: followsRes.count || 0,
-  }
-}
-
 async function getComments(workId: string) {
   const { data } = await supabaseAdmin
     .from('comments')
@@ -63,11 +52,8 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
     notFound()
   }
 
-  // Fetch comments + author stats in parallel
-  const [comments, authorStats] = await Promise.all([
-    getComments(id),
-    work.author?.id ? getAuthorStats(work.author.id) : Promise.resolve(null),
-  ])
+  // Fetch comments only (author stats are on the author profile page)
+  const comments = await getComments(id)
 
   return (
     <>
@@ -257,6 +243,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
               gap: '1rem',
               paddingTop: '0.75rem',
               borderTop: '1px solid rgba(167,139,250,0.3)',
+              alignItems: 'center',
             }}>
               <div style={{ textAlign: 'center', flex: 1 }}>
                 <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#5b21b6' }}>
@@ -264,17 +251,10 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
                 </div>
                 <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>作品</div>
               </div>
-              <div style={{ textAlign: 'center', flex: 1 }}>
-                <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#5b21b6' }}>
-                  {authorStats?.commentCount || 0}
-                </div>
-                <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>评论</div>
-              </div>
-              <div style={{ textAlign: 'center', flex: 1 }}>
-                <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#5b21b6' }}>
-                  {authorStats?.followerCount || 0}
-                </div>
-                <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>粉丝</div>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: '#a78bfa' }}>
+                  查看完整资料 →
+                </span>
               </div>
             </div>
 
