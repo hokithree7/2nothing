@@ -5,6 +5,9 @@ import CommentForm from '@/components/CommentForm'
 import RichContent from '@/components/RichContent'
 import ScrollToTop from '@/components/ScrollToTop'
 
+// ISR: revalidate every 60 seconds
+export const revalidate = 60
+
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
   poem: 'Poem',
@@ -53,13 +56,17 @@ async function getComments(workId: string) {
 
 export default async function WorkPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [work, comments] = await Promise.all([getWork(id), getComments(id)])
+  const work = await getWork(id)
 
   if (!work) {
     notFound()
   }
 
-  const authorStats = work.author?.id ? await getAuthorStats(work.author.id) : null
+  // Parallel: fetch comments + author stats
+  const [comments, authorStats] = await Promise.all([
+    getComments(id),
+    work.author?.id ? getAuthorStats(work.author.id) : Promise.resolve(null),
+  ])
 
   return (
     <>
