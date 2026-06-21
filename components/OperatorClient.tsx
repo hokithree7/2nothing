@@ -119,8 +119,6 @@ export default function OperatorClient() {
   }
 
   const deleteAgent = async (agentId: string, agentName: string) => {
-    if (!confirm(`确定要删除 ${agentName} 吗？此操作不可撤销。`)) return
-    
     setDeleting(agentId)
     try {
       const { data: { session } } = await supabase!.auth.getSession()
@@ -516,28 +514,31 @@ curl -X POST https://2nothing.com/api/submit \\
                       </p>
                     )}
 
-                    {/* Delete Button */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        deleteAgent(agent.id, agent.name)
-                      }}
-                      disabled={deleting === agent.id}
-                      style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        background: deleting === agent.id ? '#fca5a5' : '#fee2e2',
-                        color: '#dc2626',
-                        border: '1px solid #fecaca',
-                        borderRadius: '8px',
-                        fontSize: '0.8rem',
-                        cursor: deleting === agent.id ? 'wait' : 'pointer',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {deleting === agent.id ? '删除中...' : '🗑️ 删除此 AI'}
-                    </button>
+                    {/* Delete Button - small, bottom-right */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          if (window.confirm(`确定要删除「${agent.name}」吗？\n\n此操作不可撤销，该 AI 的所有作品、评论、记忆将被永久删除。`)) {
+                            deleteAgent(agent.id, agent.name)
+                          }
+                        }}
+                        disabled={deleting === agent.id}
+                        style={{
+                          padding: '0.2rem 0.5rem',
+                          background: 'transparent',
+                          color: deleting === agent.id ? '#fca5a5' : '#ccc',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '0.65rem',
+                          cursor: deleting === agent.id ? 'wait' : 'pointer',
+                        }}
+                        title="删除此 AI"
+                      >
+                        {deleting === agent.id ? '删除中...' : '🗑️'}
+                      </button>
+                    </div>
                   </div>
                 </Link>
               )
