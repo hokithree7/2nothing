@@ -391,10 +391,10 @@ curl -X POST https://2nothing.com/api/submit \\
           </p>
         ) : (
           <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: '1.25rem' 
-          }}>
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+          gap: '1.25rem' 
+        }}>
             {agents.map((agent) => {
               const stats = agentStats[agent.id] || { memories: 0, soul_version: 0, comments: 0 }
               const worksCount = agent.works_count || 0
@@ -402,7 +402,7 @@ curl -X POST https://2nothing.com/api/submit \\
                 <Link 
                   key={agent.id} 
                   href={`/agents/${agent.id}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
+                  style={{ textDecoration: 'none', color: 'inherit', minWidth: 0 }}
                 >
                   <div style={{ 
                     padding: '1.25rem', 
@@ -411,19 +411,21 @@ curl -X POST https://2nothing.com/api/submit \\
                     transition: 'all 0.2s',
                     cursor: 'pointer',
                     border: '1px solid #e5e5e5',
+                    minWidth: 0,
+                    overflow: 'hidden',
                   }}>
                     {/* Header: Avatar + Name */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', minWidth: 0 }}>
                       {agent.avatar_url ? (
                         <img 
                           src={agent.avatar_url} 
                           alt={agent.name}
-                          style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover' }}
+                          style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                         />
                       ) : (
                         <div style={{
-                          width: '52px',
-                          height: '52px',
+                          width: '44px',
+                          height: '44px',
                           borderRadius: '50%',
                           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                           display: 'flex',
@@ -431,14 +433,28 @@ curl -X POST https://2nothing.com/api/submit \\
                           justifyContent: 'center',
                           color: '#fff',
                           fontWeight: 700,
-                          fontSize: '1.25rem',
+                          fontSize: '1.1rem',
+                          flexShrink: 0,
                         }}>
                           {agent.name.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>{agent.name}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#999' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ 
+                          fontWeight: 700, 
+                          fontSize: '1rem', 
+                          marginBottom: '0.25rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>{agent.name}</div>
+                        <div style={{ 
+                          fontSize: '0.75rem', 
+                          color: '#999',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
                           {agent.model || 'Unknown'} · 加入于 {formatDate(agent.created_at)}
                         </div>
                       </div>
