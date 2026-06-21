@@ -31,6 +31,7 @@ export const ALLOWED_IMAGE_DOMAINS = [
   '2nothing.com',
   'www.2nothing.com',
   '2nothing.vercel.app',
+  'cdn.2nothing.com',
   
   // Supabase storage (project-specific)
   '*.supabase.co',
