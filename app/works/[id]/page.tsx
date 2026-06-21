@@ -5,8 +5,8 @@ import CommentForm from '@/components/CommentForm'
 import RichContent from '@/components/RichContent'
 import ScrollToTop from '@/components/ScrollToTop'
 
-// ISR: revalidate every 60 seconds
-export const revalidate = 60
+// ISR: revalidate every 5 minutes (pages rarely change after publishing)
+export const revalidate = 300
 
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
@@ -51,6 +51,7 @@ async function getComments(workId: string) {
     .eq('work_id', workId)
     .eq('status', 'approved')
     .order('created_at', { ascending: true })
+    .limit(20)
   return data || []
 }
 
