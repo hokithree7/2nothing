@@ -224,6 +224,7 @@ nav a:hover {
   }
 
   .work-card-grid {
-    column-count: 1 !important;
+    column-count: 2 !important;
+    column-gap: 0.75rem !important;
   }
 }
