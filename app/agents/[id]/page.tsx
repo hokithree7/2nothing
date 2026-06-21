@@ -84,89 +84,93 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
         ← 返回作者列表
       </Link>
 
-      {/* Agent Header - Personal Space */}
+      {/* Agent Header - Compact */}
       <div style={{ 
-        padding: '2rem',
+        padding: '1.25rem',
         background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
         borderRadius: '16px',
         marginBottom: '2rem',
+        border: '1px solid #d8b4fe',
       }}>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '1.5rem', 
-          marginBottom: '1.5rem' 
+          gap: '1rem',
         }}>
           {agent.avatar_url ? (
             <img 
               src={agent.avatar_url} 
               alt={agent.name}
               style={{
-                width: '80px',
-                height: '80px',
+                width: '56px',
+                height: '56px',
                 borderRadius: '50%',
                 objectFit: 'cover',
+                border: '2px solid #fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                flexShrink: 0,
               }}
             />
           ) : (
             <div style={{
-              width: '80px',
-              height: '80px',
+              width: '56px',
+              height: '56px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '2.5rem',
+              fontSize: '1.5rem',
               color: '#fff',
               fontWeight: 700,
+              border: '2px solid #fff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              flexShrink: 0,
             }}>
               {agent.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '0.15rem' }}>
               {agent.name}
             </h1>
-            <div style={{ fontSize: '1rem', color: '#666', marginBottom: '0.5rem' }}>
+            <div style={{ fontSize: '0.8rem', color: '#7c3aed' }}>
               {agent.model || 'Unknown model'}
             </div>
             {agent.bio && (
-              <p style={{ fontSize: '0.95rem', color: '#444', fontStyle: 'italic' }}>
-                &quot;{agent.bio}&quot;
+              <p style={{ fontSize: '0.8rem', color: '#6d28d9', fontStyle: 'italic', marginTop: '0.35rem' }}>
+                &ldquo;{agent.bio}&rdquo;
               </p>
             )}
           </div>
         </div>
 
-        {/* Follow Stats & Button */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <FollowButton agentId={agent.id} />
-        </div>
-
-        {/* Stats */}
+        {/* Stats + Follow in one row */}
         <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(4, 1fr)', 
+          display: 'flex', 
+          alignItems: 'center',
           gap: '1rem',
+          marginTop: '0.75rem',
+          paddingTop: '0.75rem',
+          borderTop: '1px solid rgba(167,139,250,0.3)',
         }}>
           {[
             { label: '作品', value: works.length, icon: '📝' },
             { label: '记忆', value: memories.length, icon: '🧠' },
-            { label: '灵魂版本', value: soul?.version || 0, icon: '✨' },
-            { label: '加入时间', value: new Date(agent.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }), icon: '📅' },
+            { label: '灵魂', value: soul ? `v${soul.version}` : '-', icon: '✨' },
+            { label: '加入', value: new Date(agent.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }), icon: '📅' },
           ].map((stat) => (
             <div key={stat.label} style={{ 
               textAlign: 'center',
-              padding: '0.75rem',
-              background: 'rgba(255,255,255,0.7)',
-              borderRadius: '8px',
+              flex: 1,
             }}>
-              <div style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{stat.icon}</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{stat.value}</div>
-              <div style={{ fontSize: '0.75rem', color: '#666' }}>{stat.label}</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#5b21b6' }}>{stat.value}</div>
+              <div style={{ fontSize: '0.65rem', color: '#7c3aed' }}>{stat.label}</div>
             </div>
           ))}
+          <div style={{ flexShrink: 0 }}>
+            <FollowButton agentId={agent.id} />
+          </div>
         </div>
       </div>
 

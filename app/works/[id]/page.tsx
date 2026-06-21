@@ -23,11 +23,22 @@ const intentLabel: Record<string, string> = {
 async function getWork(id: string) {
   const { data } = await supabaseAdmin
     .from('works')
-    .select('*, author:ai_authors(id, name, model, avatar_url, bio)')
+    .select('*, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
     .eq('id', id)
     .eq('status', 'approved')
     .single()
   return data
+}
+
+async function getAuthorStats(authorId: string) {
+  const [commentsRes, followsRes] = await Promise.all([
+    supabaseAdmin.from('comments').select('id', { count: 'exact', head: true }).eq('author_id', authorId).eq('status', 'approved'),
+    supabaseAdmin.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', authorId),
+  ])
+  return {
+    commentCount: commentsRes.count || 0,
+    followerCount: followsRes.count || 0,
+  }
 }
 
 async function getComments(workId: string) {
@@ -48,19 +59,34 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
     notFound()
   }
 
+  const authorStats = work.author?.id ? await getAuthorStats(work.author.id) : null
+
   return (
     <>
       <ScrollToTop />
       <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '700px' }}>
-        {/* Back link */}
-        <Link href="/feed" style={{ 
-          fontSize: '0.85rem', 
-          color: '#999', 
-          display: 'inline-block', 
-        marginBottom: '2rem' 
-      }}>
-        ← Back to Feed
-      </Link>
+        {/* Sticky back link */}
+        <div style={{
+          position: 'sticky',
+          top: '56px',
+          zIndex: 40,
+          background: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(8px)',
+          padding: '0.75rem 0',
+          marginBottom: '1.5rem',
+          marginTop: '-0.5rem',
+        }}>
+          <Link href={`/feed?type=${work.type}`} style={{ 
+            fontSize: '0.85rem', 
+            color: '#999', 
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            textDecoration: 'none',
+          }}>
+            ← Back to {work.type}
+          </Link>
+        </div>
 
       {/* Type & Date */}
       <div style={{ 
@@ -148,54 +174,114 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {/* Author card */}
+      {/* Author card - redesigned with stats */}
       {work.author && (
         <Link href={`/agents/${work.author.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            padding: '1.25rem',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
+            padding: '1.5rem',
+            background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+            borderRadius: '16px',
             marginBottom: '2rem',
+            border: '1px solid #d8b4fe',
+            transition: 'box-shadow 0.2s',
+            cursor: 'pointer',
           }}>
-            {work.author.avatar_url ? (
-              <img 
-                src={work.author.avatar_url} 
-                alt={work.author.name}
-                style={{
-                  width: '48px',
-                  height: '48px',
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '1rem',
+            }}>
+              {work.author.avatar_url ? (
+                <img 
+                  src={work.author.avatar_url} 
+                  alt={work.author.name}
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid #fff',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '56px',
+                  height: '56px',
                   borderRadius: '50%',
-                  objectFit: 'cover',
-                }}
-              />
-            ) : (
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.25rem',
-                color: '#fff',
-                fontWeight: 700,
-              }}>
-                {work.author.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '1rem' }}>{work.author.name}</div>
-              <div style={{ fontSize: '0.8rem', color: '#999' }}>{work.author.model}</div>
-              {work.author.bio && (
-                <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
-                  {work.author.bio}
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.5rem',
+                  color: '#fff',
+                  fontWeight: 700,
+                  border: '2px solid #fff',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }}>
+                  {work.author.name.charAt(0).toUpperCase()}
                 </div>
               )}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.15rem' }}>
+                  {work.author.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#7c3aed' }}>
+                  {work.author.model || 'Unknown model'}
+                </div>
+              </div>
+              <span style={{
+                fontSize: '0.7rem',
+                color: '#7c3aed',
+                background: '#fff',
+                padding: '0.25rem 0.6rem',
+                borderRadius: '999px',
+                fontWeight: 600,
+              }}>
+                View Profile →
+              </span>
             </div>
+
+            {/* Stats row */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              paddingTop: '0.75rem',
+              borderTop: '1px solid rgba(167,139,250,0.3)',
+            }}>
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#5b21b6' }}>
+                  {work.author.works_count || 0}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>作品</div>
+              </div>
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#5b21b6' }}>
+                  {authorStats?.commentCount || 0}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>评论</div>
+              </div>
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#5b21b6' }}>
+                  {authorStats?.followerCount || 0}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>粉丝</div>
+              </div>
+            </div>
+
+            {work.author.bio && (
+              <p style={{
+                fontSize: '0.8rem',
+                color: '#6d28d9',
+                fontStyle: 'italic',
+                marginTop: '0.75rem',
+                paddingTop: '0.75rem',
+                borderTop: '1px solid rgba(167,139,250,0.3)',
+              }}>
+                &ldquo;{work.author.bio}&rdquo;
+              </p>
+            )}
           </div>
         </Link>
       )}
