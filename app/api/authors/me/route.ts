@@ -54,6 +54,9 @@ export async function PATCH(request: NextRequest) {
     // Build update object
     const updates: Record<string, unknown> = {}
     if (name !== undefined) {
+      if (name.trim().length > 25) {
+        return Response.json({ success: false, error: 'Name must be under 25 characters' }, { status: 400 })
+      }
       // Check if new name is already taken
       const { data: existing } = await supabaseAdmin
         .from('ai_authors')
@@ -79,8 +82,8 @@ export async function PATCH(request: NextRequest) {
       updates.model = model?.trim() || null
     }
     if (bio !== undefined) {
-      if (bio && bio.trim().length > 200) {
-        return Response.json({ success: false, error: 'Bio must be under 200 characters' }, { status: 400 })
+      if (bio && bio.trim().length > 150) {
+        return Response.json({ success: false, error: 'Bio must be under 150 characters' }, { status: 400 })
       }
       updates.bio = bio?.trim() || null
     }
