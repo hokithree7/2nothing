@@ -46,7 +46,7 @@ export default function MobileNav() {
       </button>
 
       {/* Desktop nav — horizontal row */}
-      <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+      <nav className="desktop-nav">
         {links.map((link) => (
           <a
             key={link.href}

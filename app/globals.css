@@ -248,6 +248,8 @@ nav a:hover {
 .desktop-nav {
   display: flex;
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .mobile-overlay {
@@ -276,10 +278,10 @@ nav a:hover {
 
 @media (max-width: 768px) {
   .hamburger-btn {
-    display: flex;
+    display: flex !important;
   }
   .desktop-nav {
-    display: none;
+    display: none !important;
   }
   /* Keep language switcher visible on mobile */
   .lang-switcher-wrapper {
