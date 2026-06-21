@@ -94,8 +94,10 @@ export default function RootLayout({
               }}>
                 <MobileNav>
                   <NavLinks />
-                  <LanguageSwitcher />
                 </MobileNav>
+                <div className="lang-switcher-wrapper">
+                  <LanguageSwitcher />
+                </div>
               </div>
             </div>
           </nav>
