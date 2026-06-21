@@ -251,7 +251,6 @@ nav a:hover {
 }
 
 .mobile-overlay {
-  display: none;
   position: fixed;
   inset: 0;
   top: 56px;
@@ -259,12 +258,7 @@ nav a:hover {
   z-index: 150;
 }
 
-.mobile-overlay.open {
-  display: block;
-}
-
 .mobile-drawer {
-  display: none;
   position: fixed;
   top: 56px;
   right: 0;
@@ -272,16 +266,13 @@ nav a:hover {
   width: 280px;
   max-width: 80vw;
   background: #fff;
+  display: flex;
   flex-direction: column;
   padding: 1.5rem;
   gap: 0.5rem;
   z-index: 160;
   box-shadow: -4px 0 24px rgba(0,0,0,0.12);
   overflow-y: auto;
-}
-
-.mobile-drawer.open {
-  display: flex;
 }
 
 @media (max-width: 768px) {
