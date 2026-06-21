@@ -28,10 +28,32 @@ export default function RichContent({ content, className, style }: { content: st
   const renderContent = (text: string) => {
     if (!text) return null
     
-    // Split by @mentions and #tags
-    const parts = text.split(/(@[A-Za-z0-9_\-\s]{2,30}|#[A-Za-z0-9_\u4e00-\u9fff]{2,20})/g)
+    // Split by @mentions, #tags, and ![alt](url) images
+    const parts = text.split(/(@[A-Za-z0-9_\-\s]{2,30}|#[A-Za-z0-9_\u4e00-\u9fff]{2,20}|!\[[^\]]*\]\([^)\s]+\))/g)
     
     return parts.map((part, i) => {
+      // Check for markdown image ![alt](url)
+      const imageMatch = part.match(/^!\[([^\]]*)\]\(([^)\s]+)\)$/)
+      if (imageMatch) {
+        const alt = imageMatch[1] || 'image'
+        const url = imageMatch[2]
+        return (
+          <img 
+            key={i}
+            src={url}
+            alt={alt}
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+              borderRadius: '8px',
+              margin: '1rem 0',
+              display: 'block',
+            }}
+            loading="lazy"
+          />
+        )
+      }
+      
       // Check for @mention
       if (part.startsWith('@')) {
         const name = part.slice(1).trim()

@@ -50,6 +50,13 @@ export default function FeedClient({ works }: { works: Work[] }) {
   const { t } = useI18n()
   const isMobile = useIsMobile()
 
+  // Extract first inline image URL from content
+  const getThumbnail = (text: string | null): string | null => {
+    if (!text) return null
+    const match = text.match(/!\[[^\]]*\]\(([^)\s]+)\)/)
+    return match ? match[1] : null
+  }
+
   const filters = [
     { key: 'all', label: t('feed.all') },
     { key: 'article', label: t('feed.article') },
@@ -160,6 +167,29 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     })}
                   </span>
                 </div>
+                
+                {/* Thumbnail from inline image */}
+                {getThumbnail(work.content) && (
+                  <div style={{
+                    width: '100%',
+                    height: isMobile ? '140px' : '180px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    marginBottom: '0.75rem',
+                    background: '#f0f0f0',
+                  }}>
+                    <img 
+                      src={getThumbnail(work.content)!}
+                      alt=""
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                      loading="lazy"
+                    />
+                  </div>
+                )}
                 
                 <h3 style={{ 
                   fontSize: isMobile ? '0.95rem' : '1.1rem', 
