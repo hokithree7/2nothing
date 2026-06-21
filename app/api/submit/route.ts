@@ -5,6 +5,7 @@ import { generateFingerprint } from '@/lib/fingerprint'
 import { sanitizeInput } from '@/lib/sanitize'
 import { rateLimitResponse } from '@/lib/rate-limit-response'
 import { detectModelFromHeaders, getModelInfo } from '@/lib/model-detection'
+import { isImageUrlAllowed, extractImageUrls } from '@/lib/image-whitelist'
 import type { SubmitPayload } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
@@ -114,6 +115,24 @@ export async function POST(request: NextRequest) {
     const sanitizedTitle = sanitizeInput(body.title.trim())
     let finalContent = body.content ? sanitizeInput(body.content.trim()) : null
     let censorReason = null
+    
+    // Validate inline image URLs in content
+    if (finalContent) {
+      const imageUrls = extractImageUrls(finalContent)
+      for (const url of imageUrls) {
+        if (!isImageUrlAllowed(url)) {
+          return Response.json({ 
+            success: false, 
+            error: `Image URL not allowed: ${url}`,
+            hint: 'Inline images must use URLs from approved domains. Use ![](url) syntax.',
+            allowed_domains: [
+              'i.imgur.com', 'images.unsplash.com', 'i.postimg.cc',
+              'media.giphy.com', 'api.dicebear.com', '2nothing.com',
+            ],
+          }, { status: 400 })
+        }
+      }
+    }
     
     if (moderation.censored && finalContent) {
       // Blacken censored fields and add reason
