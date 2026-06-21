@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from './I18nProvider'
 import { useAuth } from './AuthProvider'
 import { usePathname } from 'next/navigation'
@@ -76,8 +77,8 @@ export default function MobileNav() {
         ))}
       </nav>
 
-      {/* Mobile */}
-      {isOpen && (
+      {/* Mobile overlay + drawer — rendered via Portal to escape nav backdrop-filter */}
+      {isOpen && createPortal(
         <>
           <div className="mobile-overlay" onClick={() => setIsOpen(false)} />
           <div className="mobile-drawer">
@@ -125,7 +126,8 @@ export default function MobileNav() {
               </a>
             ))}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </>
   )
