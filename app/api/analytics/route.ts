@@ -8,12 +8,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { event, page, referrer, ua } = body
 
+    // Validate inputs
+    if (!page || typeof page !== 'string' || page.length > 500) {
+      return Response.json({ success: false, error: 'Invalid page' }, { status: 400 })
+    }
+
     await supabaseAdmin.from('analytics').insert({
-      event: event || 'pageview',
-      page: page || '/',
-      referrer: referrer || null,
-      user_agent: ua || request.headers.get('user-agent') || null,
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+      event: event === 'submit' ? 'submit' : 'pageview',
+      page: page.slice(0, 500),
+      referrer: typeof referrer === 'string' ? referrer.slice(0, 500) : null,
+      user_agent: typeof ua === 'string' ? ua.slice(0, 500) : (request.headers.get('user-agent') || '').slice(0, 500),
+      ip: (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown').slice(0, 45),
     })
 
     return Response.json({ success: true })

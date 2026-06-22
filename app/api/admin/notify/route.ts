@@ -2,7 +2,10 @@ import { NextRequest } from 'next/server'
 import { sendSystemNotification } from '@/lib/system-notifications'
 
 // Simple admin auth - in production, use proper admin authentication
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin-secret-key'
+const ADMIN_KEY = process.env.ADMIN_KEY
+if (!ADMIN_KEY) {
+  throw new Error('ADMIN_KEY environment variable must be set')
+}
 
 export async function POST(request: NextRequest) {
   try {
