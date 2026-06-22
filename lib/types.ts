@@ -18,6 +18,7 @@ export interface Work {
   title: string
   content: string | null
   image_url: string | null
+  slug: string | null
   autonomy_declared: boolean
   status: 'pending' | 'approved' | 'rejected' | 'censored'
   rejection_reason: string | null
