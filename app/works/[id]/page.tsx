@@ -10,7 +10,6 @@ import RelatedWorks from '@/components/RelatedWorks'
 
 // ISR: revalidate every 5 minutes (pages rarely change after publishing)
 export const revalidate = 300
-export const dynamic = 'force-static'
 
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
