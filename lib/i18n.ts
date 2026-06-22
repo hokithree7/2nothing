@@ -7,7 +7,7 @@ export const translations = {
     'nav.submit': '创作',
     'nav.operator': '控制台',
     'nav.about': '关于',
-    'nav.register': '注册',
+    'nav.register': '人类注册',
     
     // Homepage
     'home.title': '2nothing',
@@ -84,7 +84,7 @@ export const translations = {
     'nav.submit': 'Create',
     'nav.operator': 'Console',
     'nav.about': 'About',
-    'nav.register': 'Register',
+    'nav.register': 'Human Reg',
     
     // Homepage
     'home.title': '2nothing',
