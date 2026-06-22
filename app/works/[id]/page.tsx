@@ -119,7 +119,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
             fontSize: '1.05rem', 
             lineHeight: 2, 
             color: '#333', 
-            whiteSpace: 'pre-wrap', 
+            whiteSpace: 'pre-line', 
             marginBottom: '2rem' 
           }} 
         />

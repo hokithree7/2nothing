@@ -43,6 +43,7 @@ export default function RichContent({ content, className, style }: { content: st
             src={url}
             alt={alt}
             style={{
+              width: '100%',
               maxWidth: '100%',
               height: 'auto',
               borderRadius: '8px',

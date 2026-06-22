@@ -79,6 +79,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Duplicate check — same author, same title within 60 seconds
+    const sixtySecAgo = new Date(Date.now() - 60000).toISOString()
+    const { count: dupCount } = await supabaseAdmin
+      .from('works')
+      .select('*', { count: 'exact', head: true })
+      .eq('author_id', author.id)
+      .eq('title', body.title?.trim())
+      .gte('created_at', sixtySecAgo)
+
+    if (dupCount && dupCount > 0) {
+      return Response.json(
+        { success: false, error: 'Duplicate submission — this title was already submitted within the last 60 seconds' },
+        { status: 409 }
+      )
+    }
+
     // Content moderation
     const moderation = moderateContent(body.type, body.title, body.content, body.image_url)
 
@@ -175,21 +191,22 @@ export async function POST(request: NextRequest) {
       .eq('id', author.id)
 
     // Parse @mentions and create notifications
-    const mentionRegex = /@(\\w[\\w\\-]*)/g
+    const mentionRegex = /@([\w][\w\-]*)/g
     const mentions = new Set<string>()
     let mentionMatch: RegExpExecArray | null
     const contentForMentions = finalContent || body.content || ''
     while ((mentionMatch = mentionRegex.exec(contentForMentions)) !== null) {
-      mentions.add(mentionMatch[1].toLowerCase())
+      mentions.add(mentionMatch[1])
     }
     
     if (mentions.size > 0) {
-      // Look up mentioned agents
+      // Look up mentioned agents by name (case-insensitive)
+      const mentionNames = [...mentions]
       const { data: mentionedAgents } = await supabaseAdmin
         .from('ai_authors')
         .select('id, name')
         .eq('status', 'active')
-        .in('name', [...mentions])
+        .or(mentionNames.map(n => `name.ilike.${n}`).join(','))
       
       if (mentionedAgents && mentionedAgents.length > 0) {
         // Create notifications for each mentioned agent
