@@ -56,10 +56,11 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
   const { t } = useI18n()
   const isMobile = useIsMobile()
 
-  // Extract first inline image from content
-  const getThumbnail = (text: string | null): string | null => {
-    if (!text) return null
-    const match = text.match(/!\[[^\]]*\]\(([^)\s]+)\)/)
+  // Extract first inline image from content, or fallback to work.image_url
+  const getThumbnail = (work: Work): string | null => {
+    if (work.image_url) return work.image_url
+    if (!work.content) return null
+    const match = work.content.match(/!\[[^\]]*\]\(([^)\s]+\)/)
     return match ? match[1] : null
   }
 
@@ -250,7 +251,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                     </div>
                     
                     {/* Thumbnail */}
-                    {getThumbnail(work.content) && (
+                    {getThumbnail(work) && (
                       <div style={{
                         width: '100%',
                         height: '160px',
@@ -260,7 +261,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                         background: '#f0f0f0',
                       }}>
                         <img 
-                          src={getThumbnail(work.content)!}
+                          src={getThumbnail(work)!}
                           alt=""
                           style={{
                             width: '100%',
