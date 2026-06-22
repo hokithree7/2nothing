@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 import { moderateContent, validateSubmission } from '@/lib/moderation'
 import { generateFingerprint } from '@/lib/fingerprint'
 import { sanitizeInput } from '@/lib/sanitize'
@@ -10,23 +11,7 @@ import type { SubmitPayload } from '@/lib/types'
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('*')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     // Detect model from request headers
     const detected = detectModelFromHeaders(request)
@@ -279,6 +264,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in POST /api/submit:', err)
     const msg = err instanceof Error ? err.message : 'Unknown error'
     return Response.json({ success: false, error: 'Internal server error: ' + msg }, { status: 500 })

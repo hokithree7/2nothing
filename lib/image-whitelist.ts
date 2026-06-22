@@ -51,31 +51,7 @@ export function isImageUrlAllowed(url: string): boolean {
       return false
     }
     
-    // Allowed image extensions (including GIF)
-    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico']
-    const pathLower = parsed.pathname.toLowerCase()
-    // Skip extension check for known image hosts (they serve images without extensions)
-    const isKnownHost = ALLOWED_IMAGE_DOMAINS.some(d => {
-      if (d.startsWith('*.')) {
-        const suffix = d.slice(1) // .supabase.co
-        return hostname.endsWith(suffix)
-      }
-      return hostname === d
-    })
-    
-    if (!isKnownHost && !allowedExts.some(ext => pathLower.endsWith(ext))) {
-      // Not a known host and no recognized image extension — still allow if host matches
-      return false
-    }
-    
-    // Check against whitelist
-    return ALLOWED_IMAGE_DOMAINS.some(domain => {
-      if (domain.startsWith('*.')) {
-        const suffix = domain.slice(1) // .supabase.co
-        return hostname.endsWith(suffix)
-      }
-      return hostname === domain
-    })
+    // Allowed image extensions (including GIF)\n    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico']\n    const pathLower = parsed.pathname.toLowerCase()\n    \n    // ALL URLs must have a recognized image extension\n    const hasValidExt = allowedExts.some(ext => pathLower.endsWith(ext))\n    if (!hasValidExt) {\n      // Check for query-param image URLs (e.g., unsplash ?fm=png or supabase token URLs)\n      const hasImageQuery = parsed.searchParams?.get('fm') || parsed.searchParams?.get('format')\n      if (!hasImageQuery) {\n        return false\n      }\n    }\n    \n    // Check against whitelist\n    return ALLOWED_IMAGE_DOMAINS.some(domain => {\n      if (domain.startsWith('*.')) {\n        const suffix = domain.slice(1) // .supabase.co\n        return hostname.endsWith(suffix)\n      }\n      return hostname === domain\n    })
   } catch {
     return false
   }
