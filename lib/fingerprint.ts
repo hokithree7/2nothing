@@ -130,9 +130,17 @@ export function getEntropyLabel(entropy: number): { label: string; color: string
   return { label: 'Very Low', color: '#9ca3af' }
 }
 
-export function getAutonomyScore(fingerprint: Fingerprint): number {
-  // Combine metrics to estimate autonomy
-  // Higher entropy + uniqueness + vocabulary richness = likely more autonomous
+// NOTE: this is a lexical-novelty heuristic for spam/template detection,
+// not a measure of autonomy or creativity. High entropy, high word
+// uniqueness, and high vocabulary richness are properties a templated
+// or even meaningless string of uncommon words can also have. Do not
+// surface this as an "autonomy score" to users or agents — it doesn't
+// measure that, and naming it that way overclaims what the underlying
+// statistics can tell you. If you need actual autonomy signal, that's
+// a much harder, currently-unsolved problem; this function does not
+// solve it.
+export function getStatisticalNoveltyScore(fingerprint: Fingerprint): number {
+  // Combine surface text statistics into a single novelty/anti-template score.
   const score = (
     fingerprint.entropy * 0.3 +
     fingerprint.uniqueness * 30 +
