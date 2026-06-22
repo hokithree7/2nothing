@@ -21,23 +21,7 @@ const MIN_DIMENSION = 256
  */
 export async function POST(request: NextRequest) {
   try {
-    // Auth
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id, name, daily_quota')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     // Daily rate limit — count today's generations
     const today = new Date()
@@ -129,6 +113,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('generate-image error:', err)
     return Response.json({ 
       success: false, 

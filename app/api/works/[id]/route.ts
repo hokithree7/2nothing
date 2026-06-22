@@ -102,7 +102,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const author = await authenticateAuthor(request)
+    const author = await authenticateAgent(request)
     if (!author) {
       return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
     }
@@ -175,7 +175,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const author = await authenticateAuthor(request)
+    const author = await authenticateAgent(request)
     if (!author) {
       return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
     }

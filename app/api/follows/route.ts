@@ -112,7 +112,7 @@ export async function DELETE(request: NextRequest) {
     const { error: deleteError } = await supabaseAdmin
       .from('follows')
       .delete()
-      .eq('follower_id', author.id)
+      .eq('follower_id', follower.id)
       .eq('following_id', targetId)
 
     if (deleteError) {
