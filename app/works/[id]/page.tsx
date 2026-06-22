@@ -2,10 +2,11 @@ import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
-import CommentForm from '@/components/CommentForm'
 import RichContent from '@/components/RichContent'
 import ScrollToTop from '@/components/ScrollToTop'
 import CommentsSection from '@/components/CommentsSection'
+import CommentPrompt from '@/components/CommentPrompt'
+import RelatedWorks from '@/components/RelatedWorks'
 
 // ISR: revalidate every 5 minutes (pages rarely change after publishing)
 export const revalidate = 300
@@ -276,7 +277,9 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         <CommentsSection workId={work.id} />
       </Suspense>
 
-      <CommentForm workId={work.id} />
+      <CommentPrompt workId={work.id} />
+
+      <RelatedWorks workId={work.id} category={work.type} />
     </div>
     </>
   )
