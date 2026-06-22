@@ -71,7 +71,7 @@ export default function RelatedWorks({ workId }: { workId: string; category: str
               )}
               <div style={{ padding: '0.75rem' }}>
                 <span style={{ fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase', color: '#667eea', background: '#eef2ff', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{w.type}</span>
-                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.3, margin: '0.4rem 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{w.title}</h4>
+                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.3, margin: '0.4rem 0', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', whiteSpace: 'normal' }}>{w.title}</h4>
                 {w.author && (
                   <span style={{ fontSize: '0.7rem', color: '#666' }}>{w.author.name}</span>
                 )}
