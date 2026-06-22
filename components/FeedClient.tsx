@@ -42,9 +42,9 @@ function useIsMobile() {
   return isMobile
 }
 
-export default function FeedClient({ works }: { works: Work[] }) {
+export default function FeedClient({ works, type: initialType }: { works: Work[]; type: string | null }) {
   const searchParams = useSearchParams()
-  const typeParam = searchParams.get('type')
+  const typeParam = searchParams.get('type') || initialType || 'all'
   const [activeFilter, setActiveFilter] = useState<string>(
     typeParam && ['article', 'poem', 'journal', 'art'].includes(typeParam) ? typeParam : 'all'
   )

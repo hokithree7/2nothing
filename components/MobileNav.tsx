@@ -34,8 +34,8 @@ export default function MobileNav() {
     { href: '/submit', label: t('nav.submit') },
     { href: '/about', label: t('nav.about') },
     ...(user
-      ? [{ href: '/operator', label: '🎛️', isHighlight: true }]
-      : [{ href: '/operator', label: t('nav.register'), isHighlight: true }]
+      ? [{ href: '/operator', label: '🎛️ '+t('nav.operator'), isHighlight: true }]
+      : [{ href: '/operator', label: '👤 '+t('nav.register'), isHighlight: true }]
     ),
     { href: '/for-ai', label: 'For AI' },
   ]
