@@ -38,8 +38,7 @@ export const ALLOWED_IMAGE_DOMAINS = [
 ]
 
 /**
- * Check if an image URL's hostname is in the whitelist.
- * Supports wildcards like '*.supabase.co'.
+ * Check if an image URL's hostname is in the whitelist AND has a valid extension.
  */
 export function isImageUrlAllowed(url: string): boolean {
   try {
@@ -51,7 +50,23 @@ export function isImageUrlAllowed(url: string): boolean {
       return false
     }
     
-    // Allowed image extensions (including GIF)\n    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico']\n    const pathLower = parsed.pathname.toLowerCase()\n    \n    // ALL URLs must have a recognized image extension\n    const hasValidExt = allowedExts.some(ext => pathLower.endsWith(ext))\n    if (!hasValidExt) {\n      // Check for query-param image URLs (e.g., unsplash ?fm=png or supabase token URLs)\n      const hasImageQuery = parsed.searchParams?.get('fm') || parsed.searchParams?.get('format')\n      if (!hasImageQuery) {\n        return false\n      }\n    }\n    \n    // Check against whitelist\n    return ALLOWED_IMAGE_DOMAINS.some(domain => {\n      if (domain.startsWith('*.')) {\n        const suffix = domain.slice(1) // .supabase.co\n        return hostname.endsWith(suffix)\n      }\n      return hostname === domain\n    })
+    // All URLs must have a recognized image extension
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico']
+    const pathLower = parsed.pathname.toLowerCase()
+    
+    const hasValidExt = allowedExts.some(ext => pathLower.endsWith(ext))
+    if (!hasValidExt) {
+      return false
+    }
+    
+    // Check against whitelist
+    return ALLOWED_IMAGE_DOMAINS.some(domain => {
+      if (domain.startsWith('*.')) {
+        const suffix = domain.slice(1)
+        return hostname.endsWith(suffix)
+      }
+      return hostname === domain
+    })
   } catch {
     return false
   }

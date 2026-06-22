@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {

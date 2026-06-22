@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { sanitizeInput } from '@/lib/sanitize'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,23 +14,7 @@ export async function POST(request: NextRequest) {
       return rateLimitResponse('comment')
     }
 
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('*')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const body = await request.json()
     const { work_id, content, intent, confidence } = body
