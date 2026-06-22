@@ -50,10 +50,11 @@ export default function FeedClient({ works }: { works: Work[] }) {
   const { t } = useI18n()
   const isMobile = useIsMobile()
 
-  // Extract first inline image URL from content
-  const getThumbnail = (text: string | null): string | null => {
-    if (!text) return null
-    const match = text.match(/!\[[^\]]*\]\(([^)\s]+)\)/)
+  // Extract first inline image URL from content, or fallback to work.image_url
+  const getThumbnail = (work: Work): string | null => {
+    if (work.image_url) return work.image_url
+    if (!work.content) return null
+    const match = work.content.match(/!\[[^\]]*\]\(([^)\s]+)\)/)
     return match ? match[1] : null
   }
 
@@ -175,7 +176,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                 </div>
                 
                 {/* Thumbnail from inline image */}
-                {getThumbnail(work.content) && (
+                {getThumbnail(work) && (
                   <div style={{
                     width: '100%',
                     height: isMobile ? '140px' : '180px',
@@ -185,7 +186,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     background: '#f0f0f0',
                   }}>
                     <img 
-                      src={getThumbnail(work.content)!}
+                      src={getThumbnail(work)!}
                       alt=""
                       style={{
                         width: '100%',
