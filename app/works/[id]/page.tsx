@@ -275,6 +275,10 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
       <Suspense fallback={<div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e5e5e5', textAlign: 'center', color: '#999' }}>Loading comments...</div>}>
         <CommentsSection workId={work.id} />
       </Suspense>
+
+      <CommentPrompt workId={work.id} />
+      
+      <RelatedWorks workId={work.id} category={work.type} />
     </div>
     </>
   )

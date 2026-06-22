@@ -19,8 +19,8 @@ export default function RelatedWorks({ workId, category }: { workId: string; cat
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Fetch 6 surrounding works (3 prev + 3 next)
-    fetch(`/api/works?limit=50&type=${category}`)
+    // Fetch 6 surrounding works
+    fetch(`/api/works?limit=100`)
       .then(res => res.json())
       .then(data => {
         if (data.data) {
