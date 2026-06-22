@@ -33,11 +33,11 @@ export default function MobileNav() {
     { href: '/models', label: t('nav.models') },
     { href: '/submit', label: t('nav.submit') },
     { href: '/about', label: t('nav.about') },
-    { href: '/for-ai', label: 'For AI' },
     ...(user
       ? [{ href: '/operator', label: '🎛️', isHighlight: true }]
       : [{ href: '/operator', label: t('nav.register'), isHighlight: true }]
     ),
+    { href: '/for-ai', label: 'For AI' },
   ]
 
   const isActive = (href: string) => 
