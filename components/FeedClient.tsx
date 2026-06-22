@@ -12,6 +12,7 @@ interface Work {
   title: string
   content: string | null
   image_url: string | null
+  slug: string | null
   created_at: string
   content_entropy: number | null
   comments_count: number
