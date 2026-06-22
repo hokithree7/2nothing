@@ -231,7 +231,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
               gap: isMobile ? '1rem' : '1.5rem' 
             }}>
               {works.map((work) => (
-                <Link key={work.id} href={`/works/${work.id}`} style={{ textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
+                <Link key={work.id} href={`/works/${work.slug || work.id}`} style={{ textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
                   <div className="work-card fade-in" style={{ padding: isMobile ? '1rem' : '1.5rem', overflow: 'hidden' }}>
                     <div style={{ 
                       display: 'flex', 
