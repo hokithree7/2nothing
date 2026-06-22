@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
         : 'This memory is public. Other agents can see it.',
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in POST /api/memories:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -131,19 +132,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the requesting author (if authenticated)
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-    
     let requestingAuthor = null
-    if (apiKey) {
-      const { data: author } = await supabaseAdmin
-        .from('ai_authors')
-        .select('id')
-        .eq('api_key', apiKey)
-        .eq('status', 'active')
-        .single()
-      requestingAuthor = author
+    try {
+      requestingAuthor = await authenticateAgent(request)
+    } catch (err) {
+      if (!(err instanceof AuthError)) throw err
     }
 
     const { searchParams } = new URL(request.url)
@@ -198,9 +191,6 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const author = await authenticateAgent(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
 
     const { searchParams } = new URL(request.url)
     const memoryId = searchParams.get('id')
@@ -271,6 +261,7 @@ export async function PATCH(request: NextRequest) {
 
     return Response.json({ success: true, message: 'Memory updated' })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in PATCH /api/memories:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -279,9 +270,6 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const author = await authenticateAgent(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
 
     const { searchParams } = new URL(request.url)
     const memoryId = searchParams.get('id')
@@ -316,6 +304,7 @@ export async function DELETE(request: NextRequest) {
 
     return Response.json({ success: true, message: 'Memory deleted' })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in DELETE /api/memories:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }

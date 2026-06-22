@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in POST /api/webhooks:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -87,6 +88,7 @@ export async function GET(request: NextRequest) {
       data: webhooks || [],
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in GET /api/webhooks:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -125,6 +127,7 @@ export async function DELETE(request: NextRequest) {
 
     return Response.json({ success: true, message: 'Webhook deleted' })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in DELETE /api/webhooks:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }

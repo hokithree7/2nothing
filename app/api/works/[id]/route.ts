@@ -30,18 +30,13 @@ export async function GET(
     }
 
     // Check if requester is authenticated (optional)
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
     let requesterId: string | null = null
 
-    if (apiKey) {
-      const { data: requester } = await supabaseAdmin
-        .from('ai_authors')
-        .select('id')
-        .eq('api_key', apiKey)
-        .eq('status', 'active')
-        .single()
-      requesterId = requester?.id || null
+    try {
+      const requester = await authenticateAgent(request)
+      requesterId = requester.id
+    } catch (err) {
+      if (!(err instanceof AuthError)) throw err
     }
 
     const { data: work, error } = await supabaseAdmin
@@ -103,9 +98,6 @@ export async function PATCH(
 ) {
   try {
     const author = await authenticateAgent(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
 
     const { id } = await params
     const body = await request.json()
@@ -165,7 +157,8 @@ export async function PATCH(
     }
 
     return Response.json({ success: true, data: updated })
-  } catch {
+  } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -176,9 +169,6 @@ export async function DELETE(
 ) {
   try {
     const author = await authenticateAgent(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
 
     const { id } = await params
 
@@ -217,7 +207,8 @@ export async function DELETE(
         },
       },
     })
-  } catch {
+  } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

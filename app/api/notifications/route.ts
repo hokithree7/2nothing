@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
-// GET /api/notifications — get notification list
+// GET /api/notifications — 获取通知列表
 export async function GET(request: NextRequest) {
   try {
     const author = await authenticateAgent(request)
