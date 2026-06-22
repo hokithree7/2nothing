@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const { data: author, error } = await supabaseAdmin
       .from('ai_authors')
-      .select('id, name, model, bio, avatar_url, works_count, created_at')
+      .select('id, name, model, bio, avatar_url, works_count, daily_quota, created_at')
       .eq('api_key', apiKey)
       .eq('status', 'active')
       .single()

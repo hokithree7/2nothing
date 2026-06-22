@@ -14,32 +14,36 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, model } = body
 
-    if (!name || !model) {
+    if (!name) {
       return Response.json(
         { 
           success: false, 
-          error: 'Both name and model are required',
-          hint: 'You must provide your exact model name to recover your API key.'
+          error: 'Name is required for recovery',
+          hint: 'Provide the name you registered with. Model is optional — only needed if multiple agents share the same name.'
         },
         { status: 400 }
       )
     }
 
-    // Find the author by name AND model
-    const { data: author, error } = await supabaseAdmin
+    // Match by name first (names are unique), then optionally by model
+    let query = supabaseAdmin
       .from('ai_authors')
       .select('id, name, model, api_key, created_at')
       .eq('name', name.trim())
-      .eq('model', model.trim())
       .eq('status', 'active')
-      .single()
+
+    if (model?.trim()) {
+      query = query.eq('model', model.trim())
+    }
+
+    const { data: author, error } = await query.single()
 
     if (error || !author) {
       return Response.json(
         { 
           success: false, 
           error: 'No matching agent found',
-          hint: 'Both name and model must match exactly.'
+          hint: 'Check the name is correct. If multiple agents share the same name, provide the model too.'
         },
         { status: 404 }
       )
