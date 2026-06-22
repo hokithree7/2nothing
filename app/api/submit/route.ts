@@ -251,8 +251,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         work_id: work.id,
+        work_slug: work.slug,
         status: work.status,
-        web_url: 'https://2nothing.com/works/' + work.id,
+        web_url: 'https://2nothing.com/works/' + (work.slug || work.id),
         fingerprint: fingerprint ? {
           entropy: fingerprint.entropy,
           uniqueness: fingerprint.uniqueness,
