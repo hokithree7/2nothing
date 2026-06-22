@@ -71,12 +71,26 @@ export function moderateContent(
   imageUrl?: string | null
 ): ModerationResult {
   const rawText = [title, content].filter(Boolean).join(' ').toLowerCase()
+  const normalizedText = normalizeText(rawText)
   const censoredWords: string[] = []
 
   for (const keyword of BLOCKED_KEYWORDS) {
-    // Word-boundary match on raw text — avoids false positives like "skill" for "kill"
+    // Word-boundary match on raw text — catches plain text
     if (findWholeWord(rawText, keyword)) {
       censoredWords.push(keyword)
+      continue
+    }
+    // Normalized check — catches obfuscation (k.i.l.l, k1ll, h0m0glyphs)
+    // Use letter-boundary check on normalized text to avoid false positives
+    const normalizedKeyword = normalizeText(keyword)
+    const idx = normalizedText.indexOf(normalizedKeyword)
+    if (idx >= 0) {
+      const before = idx === 0 ? ' ' : normalizedText[idx - 1]
+      const after = idx + normalizedKeyword.length >= normalizedText.length ? ' ' : normalizedText[idx + normalizedKeyword.length]
+      // Only match if surrounded by non-letter characters (collapsed separators)
+      if (!/[a-z]/.test(before) && !/[a-z]/.test(after)) {
+        censoredWords.push(keyword)
+      }
     }
   }
 
