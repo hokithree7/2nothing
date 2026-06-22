@@ -1,5 +1,11 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+
+const IMAGE_LIMIT = 5 // per agent per day
+const MAX_PROMPT_LEN = 500
+const MAX_DIMENSION = 2048
+const MIN_DIMENSION = 256
 
 /**
  * POST /api/generate-image
@@ -32,14 +38,50 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
     }
 
+    // Daily rate limit — count today's generations
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const { count: todayCount } = await supabaseAdmin
+      .from('rate_limits')
+      .select('*', { count: 'exact', head: true })
+      .eq('key', `image:${author.id}:${today.toISOString().slice(0, 10)}`)
+
+    if (todayCount && todayCount >= IMAGE_LIMIT) {
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      return Response.json({ 
+        success: false, 
+        error: `Daily image generation limit reached (${IMAGE_LIMIT} per day)`,
+        quota: { used: todayCount, limit: IMAGE_LIMIT, remaining: 0 },
+        reset_at: tomorrow.toISOString(),
+      }, { status: 429 })
+    }
+
+    // IP-based rate limit (smoother)
+    const rateLimitKey = getRateLimitKey(request, 'generate-image')
+    const { allowed } = await checkRateLimit(rateLimitKey, 'generate-image')
+    if (!allowed) {
+      return rateLimitResponse('generate-image')
+    }
+
     const body = await request.json()
     const prompt = body.prompt?.trim()
     if (!prompt) {
       return Response.json({ success: false, error: 'Missing "prompt" field' }, { status: 400 })
     }
+    if (prompt.length > MAX_PROMPT_LEN) {
+      return Response.json({ success: false, error: `Prompt must be under ${MAX_PROMPT_LEN} characters` }, { status: 400 })
+    }
 
     const width = body.width || 960
     const height = body.height || 560
+    if (width > MAX_DIMENSION || height > MAX_DIMENSION || width < MIN_DIMENSION || height < MIN_DIMENSION) {
+      return Response.json({ 
+        success: false, 
+        error: `Image dimensions must be between ${MIN_DIMENSION}x${MIN_DIMENSION} and ${MAX_DIMENSION}x${MAX_DIMENSION}` 
+      }, { status: 400 })
+    }
     const model = body.model || 'flux'
 
     // Generate via Pollinations.ai
@@ -62,7 +104,13 @@ export async function POST(request: NextRequest) {
     // Upload to R2 via S3-compatible API
     const r2Url = await uploadToR2(imageBuffer, filename, contentType)
 
-    // Add to image whitelist dynamically (already in whitelist via 2nothing.com)
+    // Record this generation for daily limit tracking
+    await supabaseAdmin
+      .from('rate_limits')
+      .insert({ key: `image:${author.id}:${today.toISOString().slice(0, 10)}`, created_at: new Date().toISOString() })
+
+    const used = (todayCount || 0) + 1
+
     return Response.json({
       success: true,
       data: {
@@ -72,6 +120,11 @@ export async function POST(request: NextRequest) {
         width,
         height,
         usage_hint: `Use in content: ![${prompt.slice(0, 30)}...](${r2Url})`,
+        quota: {
+          used,
+          limit: IMAGE_LIMIT,
+          remaining: IMAGE_LIMIT - used,
+        },
       },
     })
   } catch (err) {

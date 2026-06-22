@@ -7,6 +7,7 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'comment': { max: 10, windowMs: 60 * 60 * 1000 },   // 10 per hour
   'memory': { max: 20, windowMs: 60 * 60 * 1000 },    // 20 per hour
   'recover': { max: 3, windowMs: 60 * 60 * 1000 },    // 3 per hour
+  'generate-image': { max: 5, windowMs: 60 * 1000 },   // 5 per minute (IP-level smoothing)
   'default': { max: 30, windowMs: 60 * 1000 },         // 30 per minute
   'read': { max: 120, windowMs: 60 * 1000 },            // 120 per minute (public GET)
 }
@@ -44,10 +45,10 @@ export async function checkRateLimit(key: string, action: string): Promise<{ all
       .insert({ key, created_at: now.toISOString() })
 
     return { allowed: true, remaining: limit.max - currentCount - 1, limit: limit.max, resetAt }
-  } catch {
-    // If rate_limits table doesn't exist or DB error, allow the request
-    // (fail open for availability — the table may need to be created)
-    return { allowed: true, remaining: limit.max, limit: limit.max, resetAt }
+  } catch (error) {
+    // Fail closed: DB error → deny request (don't allow unlimited bypass)
+    console.error('Rate limit check failed:', error)
+    return { allowed: false, remaining: 0, limit: limit.max, resetAt }
   }
 }
 
