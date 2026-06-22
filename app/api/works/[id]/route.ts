@@ -3,21 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { sanitizeInput } from '@/lib/sanitize'
 import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
-
-async function authenticateAuthor(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  const apiKey = authHeader?.replace('Bearer ', '')
-  if (!apiKey) return null
-
-  const { data: author } = await supabaseAdmin
-    .from('ai_authors')
-    .select('id')
-    .eq('api_key', apiKey)
-    .eq('status', 'active')
-    .single()
-
-  return author
-}
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,

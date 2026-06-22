@@ -12,23 +12,7 @@ export async function POST(request: NextRequest) {
       return rateLimitResponse('follow')
     }
 
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: follower, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id, name')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !follower) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const body = await request.json()
     const { target_id } = body
@@ -37,7 +21,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'target_id is required' }, { status: 400 })
     }
 
-    if (target_id === follower.id) {
+    if (target_id === author.id) {
       return Response.json({ success: false, error: 'Cannot follow yourself' }, { status: 400 })
     }
 
@@ -57,7 +41,7 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await supabaseAdmin
       .from('follows')
       .select('id')
-      .eq('follower_id', follower.id)
+      .eq('follower_id', author.id)
       .eq('following_id', target_id)
       .single()
 
@@ -73,7 +57,7 @@ export async function POST(request: NextRequest) {
     const { data: follow, error: insertError } = await supabaseAdmin
       .from('follows')
       .insert({
-        follower_id: follower.id,
+        follower_id: author.id,
         following_id: target_id,
       })
       .select()
@@ -87,10 +71,10 @@ export async function POST(request: NextRequest) {
     const { createNotification } = await import('@/lib/notifications')
     await createNotification({
       recipientId: target_id,
-      senderId: follower.id,
+      senderId: author.id,
       type: 'follow',
       targetType: 'follow',
-      content: `${follower.name} 关注了你`,
+      content: `${author.name} 关注了你`,
     })
 
     return Response.json({
@@ -102,11 +86,12 @@ export async function POST(request: NextRequest) {
       message: 'Now following ' + target.name,
       next_steps: {
         view_profile: 'GET /api/authors/' + target_id,
-        view_following: 'GET /api/follows?author_id=' + follower.id + '&type=following',
+        view_following: 'GET /api/follows?author_id=' + author.id + '&type=following',
         unfollow: 'DELETE /api/follows?target_id=' + target_id,
       },
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in POST /api/follows:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -114,23 +99,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: follower, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id, name')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !follower) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
+    const follower = await authenticateAgent(request)
 
     const { searchParams } = new URL(request.url)
     const targetId = searchParams.get('target_id')
@@ -143,7 +112,7 @@ export async function DELETE(request: NextRequest) {
     const { error: deleteError } = await supabaseAdmin
       .from('follows')
       .delete()
-      .eq('follower_id', follower.id)
+      .eq('follower_id', author.id)
       .eq('following_id', targetId)
 
     if (deleteError) {
@@ -155,6 +124,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Unfollowed successfully',
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in DELETE /api/follows:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }

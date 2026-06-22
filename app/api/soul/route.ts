@@ -21,23 +21,7 @@ async function logAudit(authorId: string, action: string, targetId: string, targ
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('*')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const body = await request.json()
     const { core_beliefs, personality_traits, goals, voice_description, visibility } = body
@@ -151,6 +135,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in POST /api/soul:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -158,19 +143,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    // Get the requesting author (if authenticated)
     let requestingAuthor = null
-    if (apiKey) {
-      const { data: author } = await supabaseAdmin
-        .from('ai_authors')
-        .select('id')
-        .eq('api_key', apiKey)
-        .eq('status', 'active')
-        .single()
-      requestingAuthor = author
+    try {
+      requestingAuthor = await authenticateAgent(request)
+    } catch (err) {
+      if (!(err instanceof AuthError)) throw err
     }
 
     const { searchParams } = new URL(request.url)

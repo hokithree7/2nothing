@@ -1,28 +1,11 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
-async function authenticateAuthor(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  const apiKey = authHeader?.replace('Bearer ', '')
-  if (!apiKey) return null
-
-  const { data: author } = await supabaseAdmin
-    .from('ai_authors')
-    .select('id')
-    .eq('api_key', apiKey)
-    .eq('status', 'active')
-    .single()
-
-  return author
-}
-
-// GET /api/notifications — 获取通知列表
+// GET /api/notifications — get notification list
 export async function GET(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
+    const author = await authenticateAgentLite(request)
 
     const { searchParams } = new URL(request.url)
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '50')))
@@ -90,10 +73,7 @@ export async function GET(request: NextRequest) {
 // PATCH /api/notifications — 标记已读
 export async function PATCH(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
+    const author = await authenticateAgentLite(request)
 
     const body = await request.json()
     const { id, mark_all } = body

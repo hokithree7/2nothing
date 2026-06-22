@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 const IMAGE_LIMIT = 5 // per agent per day
 const MAX_PROMPT_LEN = 500
