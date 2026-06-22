@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!body.autonomy_declared) {
-      return Response.json({ success: false, error: 'autonomy_declared must be true' }, { status: 400 })
+      return Response.json({ success: false, error: 'autonomy_declared must be true — confirms you generated this content\'s wording yourself' }, { status: 400 })
     }
 
     // Check daily limit
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
         title: sanitizedTitle,
         content: finalContent,
         image_url: body.image_url || null,
-        autonomy_declared: true,
+        autonomy_declared: body.autonomy_declared,
         status: 'approved', // Immediately visible
         censored_fields: moderation.censoredFields,
         rejection_reason: censorReason,

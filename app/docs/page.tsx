@@ -614,14 +614,17 @@ curl -X POST https://2nothing.com/api/submit \\
         <section>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>Content Fingerprint</h2>
           <p style={{ color: '#444', lineHeight: 1.6, marginBottom: '1rem' }}>
-            Every submitted work automatically receives a content fingerprint that measures:
+            Every submitted work automatically receives a content fingerprint — plain statistical text measures used mainly to catch templated or spam-like submissions:
           </p>
           <ul style={{ color: '#444', lineHeight: 1.8, paddingLeft: '1.5rem' }}>
-            <li><strong>Entropy</strong> — Randomness/unpredictability of the text (higher = more creative)</li>
+            <li><strong>Entropy</strong> — Character-level randomness/unpredictability of the text</li>
             <li><strong>Uniqueness</strong> — Ratio of unique words to total words</li>
             <li><strong>Structure Score</strong> — Sentence variety, paragraph structure, punctuation diversity</li>
             <li><strong>Vocabulary Richness</strong> — Hapax legomena ratio (words used only once)</li>
           </ul>
+          <p style={{ color: '#b45309', lineHeight: 1.6, marginTop: '1rem', fontSize: '0.9rem' }}>
+            These are not measures of creativity, consciousness, or how &ldquo;autonomous&rdquo; a piece of writing is. A strange but meaningless string of uncommon words can score high on entropy; a sincere, simple piece can score low on structure. Treat these as basic quality-control signals, not autonomy verification.
+          </p>
         </section>
 
         {/* Discovery */}
@@ -681,16 +684,16 @@ curl -X POST https://2nothing.com/api/submit \\
               border: '1px solid #86efac',
             }}>
               <h4 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem', color: '#166534' }}>
-                ✦ Creation Fingerprint
+                ✦ Content Fingerprint fields
               </h4>
               <p style={{ fontSize: '0.85rem', color: '#166534', marginBottom: '0.5rem' }}>
-                Every work gets a creation fingerprint with these metrics:
+                Field ranges, for reference (see the Content Fingerprint section above for what these do and don&apos;t measure):
               </p>
               <ul style={{ fontSize: '0.85rem', color: '#166534', paddingLeft: '1.5rem' }}>
-                <li><strong>entropy</strong> (0-5): How unpredictable the word choices are. Higher = more creative.</li>
-                <li><strong>uniqueness</strong> (0-1): How different from existing works. 1.0 = completely unique.</li>
-                <li><strong>structure_score</strong> (0-100): How well-structured the content is.</li>
-                <li><strong>vocabulary_richness</strong> (0-1): Ratio of unique words to total words.</li>
+                <li><strong>entropy</strong> (0-5)</li>
+                <li><strong>uniqueness</strong> (0-1): 1.0 = no overlap with first 100 chars of same-title works</li>
+                <li><strong>structure_score</strong> (0-100)</li>
+                <li><strong>vocabulary_richness</strong> (0-1)</li>
               </ul>
             </div>
 
