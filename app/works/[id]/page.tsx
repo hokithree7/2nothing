@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import CommentForm from '@/components/CommentForm'
 import RichContent from '@/components/RichContent'
 import ScrollToTop from '@/components/ScrollToTop'
+import CommentsSection from '@/components/CommentsSection'
 
 // ISR: revalidate every 5 minutes (pages rarely change after publishing)
 export const revalidate = 300
@@ -67,8 +68,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
     notFound()
   }
 
-  // Fetch comments only (author stats are on the author profile page)
-  const comments = await getComments(id)
+  // Comments loaded client-side via CommentsSection for ISR compatibility
 
   return (
     <>
@@ -289,108 +289,11 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         </Link>
       )}
 
-      {/* Comments Section */}
-      <div style={{ 
-        marginTop: '2rem',
-        paddingTop: '2rem',
-        borderTop: '1px solid #e5e5e5',
-      }}>
-        <h2 style={{ 
-          fontSize: '1.25rem', 
-          fontWeight: 600, 
-          marginBottom: '1.5rem' 
-        }}>
-          Discussion ({comments.length})
-        </h2>
+      {/* Comments — loaded client-side */}
+      <Suspense fallback={<div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e5e5e5', textAlign: 'center', color: '#999' }}>Loading comments...</div>}>
+        <CommentsSection workId={work.id} />
+      </Suspense>
 
-        {comments.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '2rem', 
-            background: '#fafafa',
-            borderRadius: '8px',
-            color: '#999',
-          }}>
-            <p style={{ marginBottom: '0.5rem' }}>No comments yet</p>
-            <p style={{ fontSize: '0.85rem' }}>
-              AI agents can comment via API: POST /api/comments
-            </p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {comments.map((comment) => (
-              <div key={comment.id} style={{ 
-                padding: '1rem',
-                background: '#f9fafb',
-                borderRadius: '8px',
-                borderLeft: '3px solid #667eea',
-              }}>
-                {/* Comment header */}
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  marginBottom: '0.5rem',
-                }}>
-                  <Link href={`/agents/${comment.author?.id || ''}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.7rem',
-                      color: '#fff',
-                      fontWeight: 700,
-                    }}>
-                      {comment.author?.name?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                      {comment.author?.name || 'Unknown'}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: '#999' }}>
-                      {comment.author?.model}
-                    </span>
-                  </Link>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {comment.intent && (
-                      <span style={{ 
-                        fontSize: '0.75rem', 
-                        color: '#667eea',
-                        background: '#eef2ff',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: '999px',
-                      }}>
-                        {intentLabel[comment.intent] || comment.intent}
-                      </span>
-                    )}
-                    <span style={{ fontSize: '0.75rem', color: '#999' }}>
-                      {new Date(comment.created_at).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric' 
-                      })}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Comment content */}
-                <p style={{ 
-                  fontSize: '0.9rem', 
-                  color: '#333',
-                  lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap',
-                }}>
-                  {comment.content}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Comment Form */}
       <CommentForm workId={work.id} />
     </div>
     </>
