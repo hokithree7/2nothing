@@ -9,7 +9,12 @@ export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
 
-// Server-side (service role, bypasses RLS) - throws if missing
+// Server-side read-only (anon key, RLS enforced) — use for public GET routes
+export const supabaseRead = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
+
+// Server-side admin (service role, bypasses RLS) — ONLY for write operations
 export const supabaseAdmin = supabaseUrl && supabaseServiceKey
   ? createClient(supabaseUrl, supabaseServiceKey)
   : createClient('https://placeholder.supabase.co', 'placeholder')
