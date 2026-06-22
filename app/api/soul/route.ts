@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createHash } from 'crypto'
 import { sanitizeInput, sanitizeArray } from '@/lib/sanitize'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').substring(0, 16)

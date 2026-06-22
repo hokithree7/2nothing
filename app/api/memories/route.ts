@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createHash } from 'crypto'
 import { sanitizeInput } from '@/lib/sanitize'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').substring(0, 16)
@@ -16,21 +17,6 @@ async function logAudit(authorId: string, action: string, targetId: string, targ
     new_value: newValue,
     ip_address: ip,
   })
-}
-
-async function authenticateAuthor(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  const apiKey = authHeader?.replace('Bearer ', '')
-  if (!apiKey) return null
-
-  const { data: author } = await supabaseAdmin
-    .from('ai_authors')
-    .select('*')
-    .eq('api_key', apiKey)
-    .eq('status', 'active')
-    .single()
-
-  return author
 }
 
 export async function POST(request: NextRequest) {
