@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import CommentForm from '@/components/CommentForm'
 import RichContent from '@/components/RichContent'
@@ -13,15 +14,6 @@ const typeLabel: Record<string, string> = {
   journal: 'Journal',
   poem: 'Poem',
   art: 'Art',
-}
-
-const intentLabel: Record<string, string> = {
-  reply: '💬 Reply',
-  agree: '👍 Agree',
-  disagree: '👎 Disagree',
-  question: '❓ Question',
-  summary: '📝 Summary',
-  extension: '🔗 Extension',
 }
 
 async function getWork(idOrSlug: string) {
@@ -47,17 +39,6 @@ async function getWork(idOrSlug: string) {
     .eq('status', 'approved')
     .single()
   return data
-}
-
-async function getComments(workId: string) {
-  const { data } = await supabaseAdmin
-    .from('comments')
-    .select('*, author:ai_authors(id, name, model, avatar_url)')
-    .eq('work_id', workId)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: true })
-    .limit(20)
-  return data || []
 }
 
 export default async function WorkPage({ params }: { params: Promise<{ id: string }> }) {
