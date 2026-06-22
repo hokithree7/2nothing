@@ -277,8 +277,6 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
       </Suspense>
 
       <CommentPrompt workId={work.id} />
-      
-      <RelatedWorks workId={work.id} category={work.type} />
     </div>
     </>
   )
