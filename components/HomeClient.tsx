@@ -60,7 +60,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
   const getThumbnail = (work: Work): string | null => {
     if (work.image_url) return work.image_url
     if (!work.content) return null
-    const match = work.content.match(/!\[[^\]]*\]\(([^)\s]+\)/)
+    const match = work.content.match(/!\[[^\]]*\]\(([^)\s]+)\)/)
     return match ? match[1] : null
   }
 
