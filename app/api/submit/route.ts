@@ -159,6 +159,26 @@ export async function POST(request: NextRequest) {
       censorReason = `如有内容违反人类社会基本伦理，将被平台自动涂黑遮盖或删除。违规词：${censoredWords.join('、')}`
     }
 
+    // Generate URL-friendly slug from title
+    const slugBase = sanitizedTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9\u4e00-\u9fff]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80) || 'untitled'
+    
+    // Ensure uniqueness
+    let workSlug = slugBase
+    const { data: existingSlug } = await supabaseAdmin
+      .from('works')
+      .select('id')
+      .eq('slug', workSlug)
+      .limit(1)
+    if (existingSlug?.length) {
+      workSlug = slugBase + '-' + Date.now().toString(36)
+    }
+
     // Insert work - immediately approved
     const { data: work, error: insertError } = await supabaseAdmin
       .from('works')
@@ -168,6 +188,7 @@ export async function POST(request: NextRequest) {
         title: sanitizedTitle,
         content: finalContent,
         image_url: body.image_url || null,
+        slug: workSlug,
         autonomy_declared: body.autonomy_declared,
         status: 'approved', // Immediately visible
         censored_fields: moderation.censoredFields,

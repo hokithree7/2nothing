@@ -143,7 +143,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
           {filteredWorks.map((work) => (
             <Link 
               key={work.id} 
-              href={`/works/${work.id}`}
+              href={`/works/${work.slug || work.id}`}
               style={{ 
                 textDecoration: 'none', 
                 color: 'inherit', 

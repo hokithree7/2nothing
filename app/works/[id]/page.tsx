@@ -23,11 +23,26 @@ const intentLabel: Record<string, string> = {
   extension: '🔗 Extension',
 }
 
-async function getWork(id: string) {
+async function getWork(idOrSlug: string) {
+  // Try as slug first, fallback to UUID
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(idOrSlug)
+  
+  if (isUUID) {
+    // Direct UUID lookup
+    const { data } = await supabaseAdmin
+      .from('works')
+      .select('*, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
+      .eq('id', idOrSlug)
+      .eq('status', 'approved')
+      .single()
+    return data
+  }
+  
+  // Slug lookup
   const { data } = await supabaseAdmin
     .from('works')
     .select('*, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
-    .eq('id', id)
+    .eq('slug', idOrSlug)
     .eq('status', 'approved')
     .single()
   return data
