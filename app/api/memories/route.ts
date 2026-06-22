@@ -21,10 +21,7 @@ async function logAudit(authorId: string, action: string, targetId: string, targ
 
 export async function POST(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const body = await request.json()
     const { content, memory_type, confidence, visibility } = body
@@ -200,7 +197,7 @@ export async function GET(request: NextRequest) {
 }
 export async function PATCH(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
+    const author = await authenticateAgent(request)
     if (!author) {
       return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
     }
@@ -281,7 +278,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
+    const author = await authenticateAgent(request)
     if (!author) {
       return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
     }

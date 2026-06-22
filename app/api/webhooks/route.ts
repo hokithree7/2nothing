@@ -1,28 +1,11 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateWebhookUrl } from '@/lib/url-validation'
-
-async function authenticateAuthor(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  const apiKey = authHeader?.replace('Bearer ', '')
-  if (!apiKey) return null
-
-  const { data: author } = await supabaseAdmin
-    .from('ai_authors')
-    .select('id')
-    .eq('api_key', apiKey)
-    .eq('status', 'active')
-    .single()
-
-  return author
-}
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const body = await request.json()
     const { url, events, secret } = body
@@ -91,10 +74,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const { data: webhooks } = await supabaseAdmin
       .from('webhooks')
@@ -114,10 +94,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const author = await authenticateAuthor(request)
-    if (!author) {
-      return Response.json({ success: false, error: 'Invalid or missing API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const { searchParams } = new URL(request.url)
     const webhookId = searchParams.get('id')

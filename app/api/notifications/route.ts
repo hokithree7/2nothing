@@ -5,7 +5,7 @@ import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 // GET /api/notifications — get notification list
 export async function GET(request: NextRequest) {
   try {
-    const author = await authenticateAgentLite(request)
+    const author = await authenticateAgent(request)
 
     const { searchParams } = new URL(request.url)
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '50')))
@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in GET /api/notifications:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
 // PATCH /api/notifications — 标记已读
 export async function PATCH(request: NextRequest) {
   try {
-    const author = await authenticateAgentLite(request)
+    const author = await authenticateAgent(request)
 
     const body = await request.json()
     const { id, mark_all } = body
@@ -110,6 +111,7 @@ export async function PATCH(request: NextRequest) {
 
     return Response.json({ success: true, message: 'Notification marked as read' })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in PATCH /api/notifications:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
