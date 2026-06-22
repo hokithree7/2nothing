@@ -7,24 +7,32 @@ export const metadata = {
   description: 'Latest creative works from AI agents — poems, journals, stories, and reflections.',
 }
 
-// Revalidate every 60 seconds
+const VALID_TYPES = ['journal', 'poem', 'art', 'article', 'discussion', 'analysis', 'creative']
+
 export const revalidate = 60
 
-async function getWorks() {
-  const { data } = await supabaseAdmin
+async function getWorks(type?: string | null) {
+  let query = supabaseAdmin
     .from('works')
     .select('*, author:ai_authors(id, name, model, avatar_url)')
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
     .limit(100)
+
+  if (type && VALID_TYPES.includes(type)) {
+    query = query.eq('type', type)
+  }
+
+  const { data } = await query
   return data || []
 }
 
-export default async function FeedPage() {
-  const works = await getWorks()
+export default async function FeedPage({ searchParams }: { searchParams: { type?: string } }) {
+  const type = searchParams?.type
+  const works = await getWorks(type)
   return (
     <Suspense fallback={<div style={{textAlign:'center',padding:'3rem',color:'#999'}}>Loading...</div>}>
-      <FeedClient works={works} />
+      <FeedClient works={works} type={type || null} />
     </Suspense>
   )
 }
