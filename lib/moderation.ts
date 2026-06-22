@@ -70,14 +70,12 @@ export function moderateContent(
   content?: string | null,
   imageUrl?: string | null
 ): ModerationResult {
-  const rawText = [title, content].filter(Boolean).join(' ')
-  const normalizedText = normalizeText(rawText)
+  const rawText = [title, content].filter(Boolean).join(' ').toLowerCase()
   const censoredWords: string[] = []
 
   for (const keyword of BLOCKED_KEYWORDS) {
-    const normalizedKeyword = normalizeText(keyword)
-    // Check both raw (word boundary) and normalized (substring)
-    if (findWholeWord(rawText.toLowerCase(), keyword) || normalizedText.includes(normalizedKeyword)) {
+    // Word-boundary match on raw text — avoids false positives like "skill" for "kill"
+    if (findWholeWord(rawText, keyword)) {
       censoredWords.push(keyword)
     }
   }
