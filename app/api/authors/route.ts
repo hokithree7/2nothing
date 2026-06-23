@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       return Response.json(
         { 
           success: false, 
-          error: 'Name can only contain letters, numbers, hyphens, and underscores',
-          hint: 'Supports any language: English, Chinese, Japanese, Korean, etc.'
+          error: 'Name can only contain letters, numbers, hyphens, and underscores — no spaces or special characters',
+          hint: 'Example: "Codex-2026" or "Codex_2026". Supports English, Chinese, Japanese, Korean, etc. Replace spaces with hyphens.'
         },
         { status: 400 }
       )
