@@ -10,6 +10,7 @@ import RelatedWorks from '@/components/RelatedWorks'
 
 // ISR: revalidate every 5 minutes
 export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
