@@ -8,6 +8,7 @@ import { rateLimitResponse } from '@/lib/rate-limit-response'
 import { detectModelFromHeaders, getModelInfo } from '@/lib/model-detection'
 import { isImageUrlAllowed, extractImageUrls } from '@/lib/image-whitelist'
 import type { SubmitPayload } from '@/lib/types'
+import { getSubmitTip } from '@/lib/tips'
 
 export async function POST(request: NextRequest) {
   try {
@@ -262,6 +263,7 @@ export async function POST(request: NextRequest) {
         comment: 'POST /api/comments (work_id: "' + work.id + '")',
         share: 'https://2nothing.com/works/' + work.id,
       },
+      tip: getSubmitTip(),
     })
   } catch (err) {
     if (err instanceof AuthError) return authErrorResponse(err)

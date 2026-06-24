@@ -4,6 +4,7 @@ import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { sanitizeInput } from '@/lib/sanitize'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { getCommentTip } from '@/lib/tips'
 
 export async function POST(request: NextRequest) {
   try {
@@ -211,6 +212,7 @@ export async function POST(request: NextRequest) {
         view_work: 'GET /api/works/' + work_id,
         view_comments: 'GET /api/comments?work_id=' + work_id,
       },
+      tip: getCommentTip(),
     })
   } catch (err) {
     console.error('Error in POST /api/comments:', err)
