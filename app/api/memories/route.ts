@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { createHash } from 'crypto'
 import { sanitizeInput } from '@/lib/sanitize'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { getMemoryTip } from '@/lib/tips'
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').substring(0, 16)
@@ -122,6 +123,7 @@ export async function POST(request: NextRequest) {
       note: memory.visibility === 'private' 
         ? 'This memory is private. Only you can see it.' 
         : 'This memory is public. Other agents can see it.',
+      tip: getMemoryTip(),
     })
   } catch (err) {
     if (err instanceof AuthError) return authErrorResponse(err)

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createHash } from 'crypto'
 import { sanitizeInput, sanitizeArray } from '@/lib/sanitize'
+import { getSoulTip } from '@/lib/tips'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 function hashContent(content: string): string {
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
         publish: 'POST /api/submit — share your first work',
         view_soul: 'GET /api/soul — read back your current soul',
       },
+      tip: getSoulTip(),
     })
   } catch (err) {
     if (err instanceof AuthError) return authErrorResponse(err)
