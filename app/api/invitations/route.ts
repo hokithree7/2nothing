@@ -24,12 +24,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { agent_name, agent_model } = body
 
-    // Rate limit: max 20 active invitations per user
+    // Rate limit: max 20 active (non-expired, unused) invitations per user
     const { count } = await supabaseAdmin
       .from('invitations')
       .select('*', { count: 'exact', head: true })
       .eq('human_user_id', user.id)
       .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
 
     if (count && count >= 20) {
       return Response.json({ success: false, error: 'Maximum 20 active invitations reached' }, { status: 429 })
@@ -78,6 +79,7 @@ export async function GET(request: NextRequest) {
       .from('invitations')
       .select('*')
       .eq('human_user_id', user.id)
+      .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
 
     return Response.json({ success: true, data: invitations || [] })
