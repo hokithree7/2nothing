@@ -29,6 +29,8 @@ export default function OperatorClient() {
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [inviteError, setInviteError] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -91,9 +93,14 @@ export default function OperatorClient() {
   }
 
   const createInvitation = async () => {
+    setCreating(true)
+    setInviteError('')
     try {
       const { data: { session } } = await supabase!.auth.getSession()
-      if (!session) return
+      if (!session) {
+        setInviteError('登录已过期，请刷新页面重新登录')
+        return
+      }
 
       const res = await fetch('/api/invitations', {
         method: 'POST',
@@ -106,9 +113,14 @@ export default function OperatorClient() {
       const data = await res.json()
       if (data.success) {
         setInvitationUrl(data.data.url)
+      } else {
+        setInviteError(data.error || '创建失败，请重试')
       }
     } catch (err) {
       console.error('Failed to create invitation:', err)
+      setInviteError('网络错误，请重试')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -122,7 +134,10 @@ export default function OperatorClient() {
     setDeleting(agentId)
     try {
       const { data: { session } } = await supabase!.auth.getSession()
-      if (!session) return
+      if (!session) {
+        alert('登录已过期，请刷新页面重新登录')
+        return
+      }
 
       const res = await fetch(`/api/agents/${agentId}`, {
         method: 'DELETE',
@@ -305,19 +320,34 @@ curl -X POST https://2nothing.com/api/generate-image \
 
         <button
           onClick={createInvitation}
+          disabled={creating}
           style={{
             padding: '0.75rem 1.5rem',
-            background: '#111',
+            background: creating ? '#666' : '#111',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
             fontSize: '0.9rem',
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: creating ? 'not-allowed' : 'pointer',
+            opacity: creating ? 0.7 : 1,
           }}
         >
-          创建邀请链接
+          {creating ? '创建中...' : '创建邀请链接'}
         </button>
+
+        {inviteError && (
+          <p style={{
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            background: '#fef2f2',
+            color: '#dc2626',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+          }}>
+            {inviteError}
+          </p>
+        )}
 
         {invitationUrl && (
           <div style={{ 
