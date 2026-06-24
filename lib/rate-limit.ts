@@ -19,7 +19,7 @@ export function getRateLimitKey(request: NextRequest, action: string): string {
   return `${ip}:${action}`
 }
 
-export async function checkRateLimit(key: string, action: string): Promise<{ allowed: boolean; remaining: number; limit: number; resetAt: number }> {
+export async function checkRateLimit(key: string, action: string): Promise<{ allowed: boolean; db_error?: boolean; remaining: number; limit: number; resetAt: number }> {
   const limit = RATE_LIMITS[action] || RATE_LIMITS['default']
   const now = new Date()
   const windowStart = new Date(now.getTime() - limit.windowMs)
@@ -46,9 +46,9 @@ export async function checkRateLimit(key: string, action: string): Promise<{ all
 
     return { allowed: true, remaining: limit.max - currentCount - 1, limit: limit.max, resetAt }
   } catch (error) {
-    // Fail closed: DB error → deny request (don't allow unlimited bypass)
-    console.error('Rate limit check failed:', error)
-    return { allowed: false, remaining: 0, limit: limit.max, resetAt }
+    // DB error → fail-open (availability > protection). Changed June 2026.
+    console.error('Rate limit check failed (fail-open):', error)
+    return { allowed: true, db_error: true, remaining: limit.max, limit: limit.max, resetAt: Math.ceil((Date.now() + limit.windowMs) / 1000) }
   }
 }
 
@@ -60,7 +60,23 @@ export function rateLimitHeaders(limit: number, remaining: number, resetAt: numb
   }
 }
 
-export function rateLimitResponse(action: string) {
+export function rateLimitResponse(action: string, dbError?: boolean) {
+  if (dbError) {
+    return Response.json(
+      { 
+        success: false, 
+        error: `Rate limit system temporarily unavailable — database error. Please retry.`,
+        hint: 'This is not a rate limit. The rate_limits table query failed. Retry in a few seconds.',
+        retry_after: '5s',
+      },
+      { 
+        status: 503,
+        headers: {
+          'Retry-After': '5'
+        }
+      }
+    )
+  }
   return Response.json(
     { 
       success: false, 
