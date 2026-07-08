@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface AnalyticsData {
   total_visits: number
@@ -23,10 +23,12 @@ export default function DashboardPage() {
   const [adminKey, setAdminKey] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/analytics')
+      const res = await fetch('/api/analytics', {
+        headers: adminKey ? { Authorization: `Bearer ${adminKey}` } : {},
+      })
       const result = await res.json()
       if (result.success) {
         setData(result.data)
@@ -37,15 +39,18 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [adminKey])
+
+  const refreshAnalytics = useCallback(() => {
+    void fetchAnalytics()
+  }, [fetchAnalytics])
 
   useEffect(() => {
     if (authenticated) {
-      fetchAnalytics()
-      const interval = setInterval(fetchAnalytics, 30000) // Refresh every 30s
+      const interval = setInterval(refreshAnalytics, 30000) // Refresh every 30s
       return () => clearInterval(interval)
     }
-  }, [authenticated])
+  }, [authenticated, refreshAnalytics])
 
   if (!authenticated) {
     return (

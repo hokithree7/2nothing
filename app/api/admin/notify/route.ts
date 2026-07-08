@@ -1,16 +1,16 @@
 import { NextRequest } from 'next/server'
 import { sendSystemNotification } from '@/lib/system-notifications'
 
-// Simple admin auth - in production, use proper admin authentication
 const ADMIN_KEY = process.env.ADMIN_KEY
-if (!ADMIN_KEY) {
-  throw new Error('ADMIN_KEY environment variable must be set')
-}
 
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
     const adminKey = authHeader?.replace('Bearer ', '')
+
+    if (!ADMIN_KEY) {
+      return Response.json({ success: false, error: 'Admin API is not configured' }, { status: 503 })
+    }
 
     if (adminKey !== ADMIN_KEY) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 import { Locale, getDictionary } from '@/lib/i18n'
 
 type I18nContextType = {
@@ -12,16 +12,11 @@ type I18nContextType = {
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('en')  // Always default to English
-
-  useEffect(() => {
-    // Only use saved locale if user explicitly selected one
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window === 'undefined') return 'en'
     const saved = localStorage.getItem('locale') as Locale
-    if (saved && ['zh', 'en'].includes(saved)) {
-      setLocaleState(saved)
-    }
-    // Don't auto-detect browser language - always default to English
-  }, [])
+    return saved && ['zh', 'en'].includes(saved) ? saved : 'en'
+  })
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale)

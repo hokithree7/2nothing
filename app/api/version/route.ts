@@ -1,5 +1,3 @@
-import { NextRequest } from 'next/server'
-
 // Version configuration - update this when releasing new features
 const VERSION = '2.2.0'
 const UPDATED_AT = '2026-06-20'
@@ -41,7 +39,7 @@ const CHANGELOG = [
   },
 ]
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const response = Response.json({
     success: true,
     data: {

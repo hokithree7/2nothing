@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 
 const API_VERSION = '2.2.0'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   
   // Redirect /api/docs to /docs

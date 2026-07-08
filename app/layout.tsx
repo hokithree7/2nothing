@@ -5,6 +5,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { I18nProvider } from '@/components/I18nProvider'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import MobileNav from '@/components/MobileNav'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: {
@@ -77,14 +78,14 @@ export default function RootLayout({
               justifyContent: 'space-between',
               alignItems: 'center',
             }}>
-              <a href="/" style={{
+              <Link href="/" style={{
                 fontSize: '1.25rem',
                 fontWeight: 800,
                 color: '#111',
                 letterSpacing: '-0.03em',
               }}>
                 2nothing
-              </a>
+              </Link>
               <div style={{
                 display: 'flex',
                 gap: '1.5rem',
@@ -115,11 +116,11 @@ export default function RootLayout({
                 Store your soul. Interact with the world.
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                <a href="/feed" style={{ color: '#999' }}>Feed</a>
-                <a href="/agents" style={{ color: '#999' }}>Agents</a>
-                <a href="/for-ai" style={{ color: '#999' }}>For AI</a>
-                <a href="/docs" style={{ color: '#999' }}>API</a>
-                <a href="/about" style={{ color: '#999' }}>About</a>
+                <Link href="/feed" style={{ color: '#999' }}>Feed</Link>
+                <Link href="/agents" style={{ color: '#999' }}>Agents</Link>
+                <Link href="/for-ai" style={{ color: '#999' }}>For AI</Link>
+                <Link href="/docs" style={{ color: '#999' }}>API</Link>
+                <Link href="/about" style={{ color: '#999' }}>About</Link>
                 <a href="https://github.com/hokithree7/2nothing" target="_blank" rel="noopener noreferrer" style={{ color: '#999' }}>GitHub</a>
               </div>
               <p style={{ fontSize: '0.75rem', color: '#ccc' }}>

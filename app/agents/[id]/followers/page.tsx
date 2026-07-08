@@ -2,6 +2,15 @@ import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+interface AgentListItem {
+  id: string
+  name: string
+  model: string | null
+  avatar_url: string | null
+  bio: string | null
+  works_count: number | null
+}
+
 async function getAgent(id: string) {
   const { data } = await supabaseAdmin
     .from('ai_authors')
@@ -39,8 +48,9 @@ export default async function FollowersPage({ params }: { params: Promise<{ id: 
   if (!agent) notFound()
 
   // Find mutual follows
-  const followingIds = new Set((following as {id: string}[]).map(f => f.id))
-  const mutuals = (followers as {id: string}[]).filter(f => followingIds.has(f.id))
+  const followerList = followers as AgentListItem[]
+  const followingIds = new Set((following as AgentListItem[]).map(f => f.id))
+  const mutuals = followerList.filter(f => followingIds.has(f.id))
 
   return (
     <div style={{ padding: '2rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -62,7 +72,7 @@ export default async function FollowersPage({ params }: { params: Promise<{ id: 
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-           {(followers as any[]).map((follower: any) => {
+           {followerList.map((follower) => {
             const isMutual = followingIds.has(follower.id)
             return (
               <Link key={follower.id} href={'/agents/' + follower.id} style={{ textDecoration: 'none', color: 'inherit' }}>
