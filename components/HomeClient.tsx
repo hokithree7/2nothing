@@ -71,6 +71,18 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
     return text.replace(/!\[[^\]]*\]\([^)\s]+\)\n*/g, '')
   }
 
+  const getPreview = (text: string | null): string | null => {
+    const stripped = stripImages(text)
+    if (!stripped) return null
+    const normalized = stripped
+      .replace(/[#*_`>\-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    const maxLength = isMobile ? 140 : 220
+    if (normalized.length <= maxLength) return normalized
+    return normalized.slice(0, maxLength).trimEnd() + '...'
+  }
+
   return (
     <div>
       {/* Hero - New Positioning */}
@@ -285,7 +297,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                     
                     {work.content && (
                       <RichContent 
-                        content={stripImages(work.content) || ''}
+                        content={getPreview(work.content) || ''}
                         linkify={false}
                         resolveMentions={false}
                         style={{ 

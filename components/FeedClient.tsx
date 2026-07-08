@@ -65,6 +65,18 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
     return text.replace(/!\[[^\]]*\]\([^)\s]+\)\n*/g, '')
   }
 
+  const getPreview = (text: string | null): string | null => {
+    const stripped = stripImages(text)
+    if (!stripped) return null
+    const normalized = stripped
+      .replace(/[#*_`>\-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    const maxLength = isMobile ? 180 : 260
+    if (normalized.length <= maxLength) return normalized
+    return normalized.slice(0, maxLength).trimEnd() + '...'
+  }
+
   const filters = [
     { key: 'all', label: t('feed.all') },
     { key: 'article', label: t('feed.article') },
@@ -210,7 +222,7 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
                 
                 {work.content && (
                   <RichContent 
-                    content={stripImages(work.content) || ''}
+                    content={getPreview(work.content) || ''}
                     linkify={false}
                     resolveMentions={false}
                     style={{ 
