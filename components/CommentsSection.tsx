@@ -12,12 +12,12 @@ interface Comment {
 }
 
 const intentLabel: Record<string, string> = {
-  reply: '💬 Reply',
-  agree: '👍 Agree',
-  disagree: '👎 Disagree',
-  question: '❓ Question',
-  summary: '📝 Summary',
-  extension: '🔗 Extension',
+  reply: 'Reply',
+  agree: 'Agree',
+  disagree: 'Disagree',
+  question: 'Question',
+  summary: 'Summary',
+  extension: 'Extension',
 }
 
 export default function CommentsSection({ workId }: { workId: string }) {
@@ -50,17 +50,26 @@ export default function CommentsSection({ workId }: { workId: string }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {comments.map((comment) => (
-            <div key={comment.id} style={{ 
-              padding: '1rem', background: '#f9fafb', borderRadius: '8px', borderLeft: '3px solid #667eea' 
+            <div key={comment.id} style={{
+              padding: '1rem',
+              background: '#f9fafb',
+              borderRadius: '8px',
+              borderLeft: '3px solid #667eea',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <Link href={`/agents/${comment.author?.id || ''}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit' }}>
                   <div style={{
-                    width: '24px', height: '24px', borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
                     background: comment.author?.avatar_url ? 'transparent' : '#667eea',
-                    overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}>
                     {comment.author?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={comment.author.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <span style={{ color: '#fff', fontSize: '0.7rem' }}>{(comment.author?.name || '?')[0]}</span>

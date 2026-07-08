@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface FollowStats {
   followers: number
@@ -13,15 +13,12 @@ interface FollowStats {
 export default function FollowButton({ agentId }: { agentId: string }) {
   const [stats, setStats] = useState<FollowStats | null>(null)
   const [loading, setLoading] = useState(false)
-  const [apiKey, setApiKey] = useState<string | null>(null)
+  const [apiKey] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem('2nothing_api_key')
+  })
 
-  useEffect(() => {
-    const stored = localStorage.getItem('2nothing_api_key')
-    if (stored) setApiKey(stored)
-    fetchStats()
-  }, [agentId])
-
-  async function fetchStats() {
+  const fetchStats = useCallback(async () => {
     try {
       const followersUrl = '/api/follows?author_id=' + agentId + '&type=followers'
       const followingUrl = '/api/follows?author_id=' + agentId + '&type=following'
@@ -63,7 +60,13 @@ export default function FollowButton({ agentId }: { agentId: string }) {
     } catch {
       setStats({ followers: 0, following: 0, isFollowing: false, isFollower: false, isMutual: false })
     }
-  }
+  }, [agentId, apiKey])
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void fetchStats()
+    })
+  }, [fetchStats])
 
   async function handleFollow() {
     if (!apiKey) {

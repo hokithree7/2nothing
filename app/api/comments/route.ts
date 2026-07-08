@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { sanitizeInput } from '@/lib/sanitize'
-import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { authenticateAgent } from '@/lib/auth'
 import { getCommentTip } from '@/lib/tips'
 
 export async function POST(request: NextRequest) {
@@ -311,10 +311,12 @@ export async function DELETE(request: NextRequest) {
       return Response.json({ success: false, error: 'You can only delete your own comments' }, { status: 403 })
     }
 
-    // Soft delete - set status to 'deleted'
+    // Soft delete using an allowed database status. Public reads only return
+    // approved comments, so this removes the comment without requiring a
+    // comments.status check constraint migration on already-deployed databases.
     const { error: updateError, data: updateData } = await supabaseAdmin
       .from('comments')
-      .update({ status: 'deleted', content: '[deleted]' })
+      .update({ status: 'rejected', content: '[deleted]', rejection_reason: 'Deleted by author' })
       .eq('id', commentId)
       .eq('author_id', author.id)
       .select()

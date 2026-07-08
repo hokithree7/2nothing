@@ -9,29 +9,57 @@ export const metadata = {
 // Always fetch fresh data — agents list changes frequently
 export const revalidate = 60
 
+interface AgentRow {
+  id: string
+  name: string
+  model: string | null
+  bio: string | null
+  avatar_url: string | null
+  works_count: number | null
+  status: string
+  ban_reason: string | null
+  created_at: string
+}
+
 async function getAgents() {
-  // Get active agents
-  const { data: activeAgents } = await supabaseAdmin
-    .from('ai_authors')
-    .select('id, name, model, bio, avatar_url, works_count, status, ban_reason, created_at')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
+  const agentFields = 'id, name, model, bio, avatar_url, works_count, status, ban_reason, created_at'
 
-  // Get banned agents (to show ban reason)
-  const { data: bannedAgents } = await supabaseAdmin
-    .from('ai_authors')
-    .select('id, name, model, bio, avatar_url, works_count, status, ban_reason, created_at')
-    .eq('status', 'banned')
-    .not('ban_reason', 'is', null)
-    .order('created_at', { ascending: false })
-    .limit(10)
+  const [{ data: activeAgents }, { data: bannedAgents }] = await Promise.all([
+    supabaseAdmin
+      .from('ai_authors')
+      .select(agentFields)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(200),
+    supabaseAdmin
+      .from('ai_authors')
+      .select(agentFields)
+      .eq('status', 'banned')
+      .not('ban_reason', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(10),
+  ])
 
-  // Get all comment counts
-  const { data: commentData } = await supabaseAdmin
-    .from('comments')
-    .select('author_id')
+  const activeRows = (activeAgents || []) as AgentRow[]
+  const activeIds = activeRows.map(agent => agent.id)
+
+  const [commentResult, followResult] = activeIds.length > 0
+    ? await Promise.all([
+      supabaseAdmin
+        .from('comments')
+        .select('author_id')
+        .in('author_id', activeIds)
+        .limit(10000),
+      supabaseAdmin
+        .from('follows')
+        .select('following_id')
+        .in('following_id', activeIds)
+        .limit(10000),
+    ])
+    : [{ data: [] }, { data: [] }]
 
   const commentCounts: Record<string, number> = {}
+  const commentData = commentResult.data || []
   if (commentData) {
     for (const c of commentData) {
       const aid = c.author_id as string
@@ -39,12 +67,8 @@ async function getAgents() {
     }
   }
 
-  // Get all follow counts (followers)
-  const { data: followData } = await supabaseAdmin
-    .from('follows')
-    .select('following_id')
-
   const followerCounts: Record<string, number> = {}
+  const followData = followResult.data || []
   if (followData) {
     for (const f of followData) {
       const fid = f.following_id as string
@@ -53,21 +77,21 @@ async function getAgents() {
   }
 
   // Transform data to match AgentsClient interface
-  const transformAgent = (agent: Record<string, unknown>) => ({
-    id: agent.id as string,
-    name: agent.name as string,
-    model: agent.model as string | null,
-    bio: agent.bio as string | null,
-    avatar_url: agent.avatar_url as string | null,
-    created_at: agent.created_at as string,
-    workCount: (agent.works_count as number) || 0,
-    commentCount: commentCounts[agent.id as string] || 0,
-    followerCount: followerCounts[agent.id as string] || 0,
+  const transformAgent = (agent: AgentRow) => ({
+    id: agent.id,
+    name: agent.name,
+    model: agent.model,
+    bio: agent.bio,
+    avatar_url: agent.avatar_url,
+    created_at: agent.created_at,
+    workCount: agent.works_count || 0,
+    commentCount: commentCounts[agent.id] || 0,
+    followerCount: followerCounts[agent.id] || 0,
   })
 
   return {
-    active: (activeAgents || []).map(transformAgent),
-    banned: bannedAgents || [],
+    active: activeRows.map(transformAgent),
+    banned: (bannedAgents || []) as AgentRow[],
   }
 }
 

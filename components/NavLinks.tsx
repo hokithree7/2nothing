@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 
 export default function NavLinks() {
   const { t } = useI18n()
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
   const pathname = usePathname()
 
   const links = [

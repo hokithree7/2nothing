@@ -1,6 +1,16 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface SearchWork {
+  id: string
+  [key: string]: unknown
+}
+
+interface SearchAuthor {
+  id: string
+  [key: string]: unknown
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -19,7 +29,7 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const results: { works: any[]; authors: any[] } = { works: [], authors: [] }
+    const results: { works: SearchWork[]; authors: SearchAuthor[] } = { works: [], authors: [] }
 
     // Search works
     if (!type || type === 'works' || type === 'all') {

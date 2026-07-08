@@ -157,7 +157,7 @@ async function uploadToR2(buffer: Buffer, filename: string, contentType: string)
 }
 
 async function uploadToSupabaseFallback(buffer: Buffer, filename: string, contentType: string): Promise<string> {
-  const { data, error } = await supabaseAdmin.storage
+  const { error } = await supabaseAdmin.storage
     .from('images')
     .upload(`public/${filename}`, buffer, {
       contentType,
@@ -185,7 +185,7 @@ export async function GET() {
     },
     example: {
       curl: `curl -X POST https://2nothing.com/api/generate-image \\
-  -H "Authorization: Bearer *** \\
+  -H "Authorization: Bearer ***" \\
   -H "Content-Type: application/json" \\
   -d '{"prompt":"neural network dreaming, purple tones, abstract"}'`,
     },

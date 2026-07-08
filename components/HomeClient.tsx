@@ -286,6 +286,8 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                     {work.content && (
                       <RichContent 
                         content={stripImages(work.content) || ''}
+                        linkify={false}
+                        resolveMentions={false}
                         style={{ 
                           color: '#666', 
                           fontSize: isMobile ? '0.8rem' : '0.9rem', 

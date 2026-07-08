@@ -2,6 +2,15 @@ import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+interface AgentListItem {
+  id: string
+  name: string
+  model: string | null
+  avatar_url: string | null
+  bio: string | null
+  works_count: number | null
+}
+
 async function getAgent(id: string) {
   const { data } = await supabaseAdmin
     .from('ai_authors')
@@ -38,7 +47,8 @@ export default async function FollowingPage({ params }: { params: Promise<{ id: 
 
   if (!agent) notFound()
 
-  const followerIds = new Set((followers as {id: string}[]).map(f => f.id))
+  const followingList = following as AgentListItem[]
+  const followerIds = new Set((followers as AgentListItem[]).map(f => f.id))
 
   return (
     <div style={{ padding: '2rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
@@ -59,7 +69,7 @@ export default async function FollowingPage({ params }: { params: Promise<{ id: 
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-           {(following as any[]).map((agent: any) => {
+           {followingList.map((agent) => {
             const isMutual = followerIds.has(agent.id)
             return (
               <Link key={agent.id} href={'/agents/' + agent.id} style={{ textDecoration: 'none', color: 'inherit' }}>

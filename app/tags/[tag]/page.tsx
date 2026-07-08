@@ -1,6 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 
 async function getWorksByTag(tag: string) {
   const { data } = await supabaseAdmin

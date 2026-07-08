@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
 
 interface WorkBrief {
@@ -11,35 +11,14 @@ interface WorkBrief {
   content: string | null
   image_url: string | null
   created_at: string
-  author?: { id: string; name: string; avatar_url: string | null }
+  author?: { id: string; name: string; avatar_url: string | null } | null
 }
 
-export default function RelatedWorks({ workId }: { workId: string; category: string }) {
-  const [works, setWorks] = useState<WorkBrief[]>([])
+export default function RelatedWorks({ works }: { works: WorkBrief[] }) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    fetch('/api/works?limit=100')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data.data)) {
-          const idx = data.data.findIndex((w: any) => w && w.id === workId)
-          if (idx >= 0) {
-            const prev = data.data.slice(Math.max(0, idx - 3), idx).reverse()
-            const next = data.data.slice(idx + 1, idx + 4)
-            setWorks([...prev, ...next])
-          } else {
-            setWorks(data.data.slice(0, 6))
-          }
-        }
-      })
-      .catch(() => {})
-  }, [workId])
-
   const scroll = (dir: 'left' | 'right') => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: dir === 'left' ? -280 : 280, behavior: 'smooth' })
-    }
+    scrollRef.current?.scrollBy({ left: dir === 'left' ? -280 : 280, behavior: 'smooth' })
   }
 
   if (works.length === 0) return null
@@ -47,25 +26,39 @@ export default function RelatedWorks({ workId }: { workId: string; category: str
   return (
     <div style={{ marginTop: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>More to read</h3>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>More from this category</h3>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={() => scroll('left')} style={btnStyle}>←</button>
-          <button onClick={() => scroll('right')} style={btnStyle}>→</button>
+          <button onClick={() => scroll('left')} style={btnStyle} aria-label="Scroll left">{'<'}</button>
+          <button onClick={() => scroll('right')} style={btnStyle} aria-label="Scroll right">{'>'}</button>
         </div>
       </div>
 
       <div ref={scrollRef} style={{
-        display: 'flex', gap: '1rem', overflowX: 'auto',
-        scrollSnapType: 'x mandatory', scrollbarWidth: 'none',
-        paddingBottom: '0.5rem', msOverflowStyle: 'none',
+        display: 'flex',
+        gap: '1rem',
+        overflowX: 'auto',
+        scrollSnapType: 'x mandatory',
+        scrollbarWidth: 'none',
+        paddingBottom: '0.5rem',
+        msOverflowStyle: 'none',
       }}>
         {works.map((w) => (
-          <Link key={w.id} href={`/works/${w.slug || w.id}`}
-            style={{ textDecoration: 'none', color: 'inherit', minWidth: '220px', maxWidth: '220px', scrollSnapAlign: 'start', flexShrink: 0 }}>
+          <Link
+            key={w.id}
+            href={`/works/${w.slug || w.id}`}
+            style={{
+              textDecoration: 'none',
+              color: 'inherit',
+              minWidth: '220px',
+              maxWidth: '220px',
+              scrollSnapAlign: 'start',
+              flexShrink: 0,
+            }}
+          >
             <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e5e5', background: '#fff' }}>
-              {/* Thumbnail */}
               {w.image_url && (
                 <div style={{ height: '120px', overflow: 'hidden', background: '#f5f5f5' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={w.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
                 </div>
               )}
@@ -85,7 +78,14 @@ export default function RelatedWorks({ workId }: { workId: string; category: str
 }
 
 const btnStyle: React.CSSProperties = {
-  width: '32px', height: '32px', borderRadius: '50%',
-  border: '1px solid #ddd', background: '#fff', cursor: 'pointer',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem',
+  width: '32px',
+  height: '32px',
+  borderRadius: '50%',
+  border: '1px solid #ddd',
+  background: '#fff',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '1rem',
 }
