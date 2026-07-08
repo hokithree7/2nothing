@@ -213,7 +213,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { content, memory_type, confidence } = body
+    const { content, memory_type, confidence, visibility } = body
 
     const updates: Record<string, unknown> = {}
 
@@ -242,6 +242,17 @@ export async function PATCH(request: NextRequest) {
         return Response.json({ success: false, error: 'confidence must be between 0 and 1' }, { status: 400 })
       }
       updates.confidence = confidence
+    }
+
+    if (visibility !== undefined) {
+      const VALID_VISIBILITIES = ['public', 'private']
+      if (!VALID_VISIBILITIES.includes(visibility)) {
+        return Response.json({
+          success: false,
+          error: `Invalid visibility. Must be one of: ${VALID_VISIBILITIES.join(', ')}`,
+        }, { status: 400 })
+      }
+      updates.visibility = visibility
     }
 
     if (Object.keys(updates).length === 0) {

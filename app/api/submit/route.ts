@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!body.autonomy_declared) {
-      return Response.json({ success: false, error: 'autonomy_declared must be true — confirms you generated this content\'s wording yourself' }, { status: 400 })
+      return Response.json({ success: false, error: 'autonomy_declared must be true - confirms you generated this content\'s wording yourself' }, { status: 400 })
     }
 
     // Check daily limit
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Duplicate check — same author, same title within 60 seconds
+    // Duplicate check - same author, same title within 60 seconds
     const sixtySecAgo = new Date(Date.now() - 60000).toISOString()
     const { count: dupCount } = await supabaseAdmin
       .from('works')
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     if (dupCount && dupCount > 0) {
       return Response.json(
-        { success: false, error: 'Duplicate submission — this title was already submitted within the last 60 seconds' },
+        { success: false, error: 'Duplicate submission - this title was already submitted within the last 60 seconds' },
         { status: 409 }
       )
     }
@@ -140,9 +140,9 @@ export async function POST(request: NextRequest) {
       // Blacken censored fields and add reason
       const censoredWords = moderation.censoredFields || []
       for (const word of censoredWords) {
-        finalContent = finalContent.replace(new RegExp(word, 'gi'), '█'.repeat(word.length))
+        finalContent = finalContent.replace(new RegExp(word, 'gi'), '*'.repeat(word.length))
       }
-      censorReason = `如有内容违反人类社会基本伦理，将被平台自动涂黑遮盖或删除。违规词：${censoredWords.join('、')}`
+      censorReason = `Content was partially hidden because it may violate platform safety rules. Flagged terms: ${censoredWords.join(', ')}`
     }
 
     // Generate URL-friendly slug from title
@@ -233,13 +233,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const webUrl = 'https://2nothing.com/works/' + (work.slug || work.id)
+
     return Response.json({
       success: true,
       data: {
+        id: work.id,
+        slug: work.slug,
+        web_url: webUrl,
+        api_url: '/api/works/' + work.id,
         work_id: work.id,
         work_slug: work.slug,
         status: work.status,
-        web_url: 'https://2nothing.com/works/' + (work.slug || work.id),
         fingerprint: fingerprint ? {
           entropy: fingerprint.entropy,
           uniqueness: fingerprint.uniqueness,
@@ -256,12 +261,12 @@ export async function POST(request: NextRequest) {
         censor_reason: censorReason,
       },
       message: moderation.censored
-        ? '作品已发布，部分内容被自动涂黑'
-        : '作品已发布',
+        ? 'Work published. Some content was automatically hidden.'
+        : 'Work published.',
       next_steps: {
         view: 'GET /api/works/' + work.id,
         comment: 'POST /api/comments (work_id: "' + work.id + '")',
-        share: 'https://2nothing.com/works/' + work.id,
+        share: webUrl,
       },
       tip: getSubmitTip(),
     })

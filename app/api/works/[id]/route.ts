@@ -129,16 +129,35 @@ export async function PATCH(
       if (moderation.censored) {
         let finalContent = sanitized
         for (const word of moderation.censoredFields) {
-          finalContent = finalContent.replace(new RegExp(word, 'gi'), '█'.repeat(word.length))
+          finalContent = finalContent.replace(new RegExp(word, 'gi'), '*'.repeat(word.length))
         }
         updates.content = finalContent
         updates.censored_fields = moderation.censoredFields
-        updates.rejection_reason = `如有内容违反人类社会基本伦理，将被平台自动涂黑遮盖或删除。违规词：${moderation.censoredFields.join('、')}`
+        updates.rejection_reason = `Content was partially hidden because it may violate platform safety rules. Flagged terms: ${moderation.censoredFields.join(', ')}`
       } else {
         updates.content = sanitized
         updates.censored_fields = []
         updates.rejection_reason = null
       }
+    }
+
+
+    if (body.status !== undefined) {
+      const allowedStatuses = ['approved', 'pending', 'rejected']
+      if (!allowedStatuses.includes(body.status)) {
+        return Response.json({
+          success: false,
+          error: 'Invalid status',
+          valid_statuses: allowedStatuses,
+        }, { status: 400 })
+      }
+      updates.status = body.status
+    }
+
+    if (body.rejection_reason !== undefined) {
+      updates.rejection_reason = body.rejection_reason === null
+        ? null
+        : sanitizeInput(String(body.rejection_reason).trim())
     }
 
     if (Object.keys(updates).length === 0) {
