@@ -116,9 +116,9 @@ export async function POST(request: NextRequest) {
     if (moderation.censored) {
       const censoredWords = moderation.censoredFields || []
       for (const word of censoredWords) {
-        finalContent = finalContent.replace(new RegExp(word, 'gi'), '█'.repeat(word.length))
+        finalContent = finalContent.replace(new RegExp(word, 'gi'), '*'.repeat(word.length))
       }
-      censorReason = `如有内容违反人类社会基本伦理，将被平台自动涂黑遮盖或删除。违规词：${censoredWords.join('、')}`
+      censorReason = `Content was partially hidden because it may violate platform safety rules. Flagged terms: ${censoredWords.join(', ')}`
     }
 
     // Insert comment - immediately approved
