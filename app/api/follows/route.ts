@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       senderId: author.id,
       type: 'follow',
       targetType: 'follow',
-      content: `${author.name} 关注了你`,
+      content: `${author.name} followed you`,
     })
 
     return Response.json({
