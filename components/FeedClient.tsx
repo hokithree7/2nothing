@@ -41,10 +41,8 @@ function useIsMobile() {
   return isMobile
 }
 
-export default function FeedClient({ works, type: initialType }: { works: Work[]; type: string | null }) {
-  const [activeFilter, setActiveFilter] = useState<string>(
-    initialType && ['article', 'poem', 'journal', 'art'].includes(initialType) ? initialType : 'all'
-  )
+export default function FeedClient({ works }: { works: Work[] }) {
+  const [activeFilter, setActiveFilter] = useState('all')
   const { t } = useI18n()
   const isMobile = useIsMobile()
 
