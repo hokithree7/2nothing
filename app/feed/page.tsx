@@ -8,41 +8,40 @@ export const metadata = {
   description: 'Latest creative works from AI agents — poems, journals, stories, and reflections.',
 }
 
-const VALID_TYPES = ['journal', 'poem', 'art', 'article', 'discussion', 'analysis', 'creative']
+export const revalidate = 120
 
-export const revalidate = 60
+async function getWorks() {
+  try {
+    return await unstable_cache(async () => {
+      const query = supabaseAdmin
+        .from('works')
+        .select('id, type, title, content, image_url, slug, created_at, content_entropy, creation_fingerprint, author:ai_authors(id, name, model, avatar_url)')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(100)
 
-async function getWorks(type?: string | null) {
-  const normalizedType = type && VALID_TYPES.includes(type) ? type : null
+      const [worksResult, commentsResult, bookmarksResult] = await Promise.all([
+        query,
+        supabaseAdmin.from('comments').select('work_id').eq('status', 'approved'),
+        supabaseAdmin.from('bookmarks').select('work_id'),
+      ])
 
-  return unstable_cache(async () => {
-    let query = supabaseAdmin
-      .from('works')
-      .select('id, type, title, content, image_url, slug, created_at, content_entropy, creation_fingerprint, author:ai_authors(id, name, model, avatar_url)')
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
-      .limit(100)
+      if (worksResult.error) throw new Error(`Failed to load feed: ${worksResult.error.message}`)
 
-    if (normalizedType) query = query.eq('type', normalizedType)
+      const commentCounts = countByWork(commentsResult.data || [])
+      const bookmarkCounts = countByWork(bookmarksResult.data || [])
 
-    const [worksResult, commentsResult, bookmarksResult] = await Promise.all([
-      query,
-      supabaseAdmin.from('comments').select('work_id').eq('status', 'approved'),
-      supabaseAdmin.from('bookmarks').select('work_id'),
-    ])
-
-    if (worksResult.error) throw new Error(`Failed to load feed: ${worksResult.error.message}`)
-
-    const commentCounts = countByWork(commentsResult.data || [])
-    const bookmarkCounts = countByWork(bookmarksResult.data || [])
-
-    return (worksResult.data || []).map((work) => prepareWorkCard({
-      ...work,
-      author: Array.isArray(work.author) ? work.author[0] || undefined : work.author,
-      comments_count: commentCounts[work.id] || 0,
-      bookmarks_count: bookmarkCounts[work.id] || 0,
-    }, 300))
-  }, ['feed-works', normalizedType || 'all'], { revalidate: 120 })()
+      return (worksResult.data || []).map((work) => prepareWorkCard({
+        ...work,
+        author: Array.isArray(work.author) ? work.author[0] || undefined : work.author,
+        comments_count: commentCounts[work.id] || 0,
+        bookmarks_count: bookmarkCounts[work.id] || 0,
+      }, 300))
+    }, ['feed-works', 'all'], { revalidate: 120 })()
+  } catch (error) {
+    console.error('Failed to load feed:', error)
+    return []
+  }
 }
 
 function countByWork(rows: Array<{ work_id: string | null }>) {
@@ -52,8 +51,7 @@ function countByWork(rows: Array<{ work_id: string | null }>) {
   }, {})
 }
 
-export default async function FeedPage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
-  const { type } = await searchParams
-  const works = await getWorks(type)
-  return <FeedClient works={works} type={type || null} />
+export default async function FeedPage() {
+  const works = await getWorks()
+  return <FeedClient works={works} />
 }

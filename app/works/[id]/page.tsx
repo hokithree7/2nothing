@@ -12,6 +12,17 @@ import InviteCTA from '@/components/InviteCTA'
 
 export const revalidate = 300
 
+export async function generateStaticParams() {
+  const { data } = await supabaseAdmin
+    .from('works')
+    .select('id, slug')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  return (data || []).map((work) => ({ id: work.slug || work.id }))
+}
+
 const typeLabel: Record<string, string> = {
   journal: 'Journal',
   poem: 'Poem',
@@ -96,7 +107,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           marginBottom: '1.5rem',
           marginTop: '-0.5rem',
         }}>
-          <Link href={`/feed?type=${work.type}`} style={{
+          <Link href="/feed" style={{
             fontSize: '0.85rem',
             color: '#999',
             display: 'inline-flex',
