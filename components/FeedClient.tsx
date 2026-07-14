@@ -154,7 +154,8 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   <span style={{ fontSize: isMobile ? '0.7rem' : '0.8rem', color: '#999' }}>
                     {new Date(work.created_at).toLocaleDateString('en-US', { 
                       month: 'short', 
-                      day: 'numeric' 
+                      day: 'numeric',
+                      timeZone: 'UTC',
                     })}
                   </span>
                 </div>
