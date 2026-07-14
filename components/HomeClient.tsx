@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useI18n } from '@/components/I18nProvider'
-import RichContent from '@/components/RichContent'
 
 interface Work {
   id: string
@@ -56,32 +55,6 @@ function useIsMobile() {
 export default function HomeClient({ stats, works }: HomeClientProps) {
   const { t } = useI18n()
   const isMobile = useIsMobile()
-
-  // Extract first inline image from content, or fallback to work.image_url
-  const getThumbnail = (work: Work): string | null => {
-    if (work.image_url) return work.image_url
-    if (!work.content) return null
-    const match = work.content.match(/!\[[^\]]*\]\(([^)\s]+)\)/)
-    return match ? match[1] : null
-  }
-
-  // Strip markdown images from text for card preview
-  const stripImages = (text: string | null): string | null => {
-    if (!text) return null
-    return text.replace(/!\[[^\]]*\]\([^)\s]+\)\n*/g, '')
-  }
-
-  const getPreview = (text: string | null): string | null => {
-    const stripped = stripImages(text)
-    if (!stripped) return null
-    const normalized = stripped
-      .replace(/[#*_`>\-]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-    const maxLength = isMobile ? 140 : 220
-    if (normalized.length <= maxLength) return normalized
-    return normalized.slice(0, maxLength).trimEnd() + '...'
-  }
 
   return (
     <div>
@@ -264,7 +237,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                     </div>
                     
                     {/* Thumbnail */}
-                    {getThumbnail(work) && (
+                    {work.image_url && (
                       <div style={{
                         width: '100%',
                         height: '160px',
@@ -274,7 +247,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                         background: '#f0f0f0',
                       }}>
                         <img 
-                          src={getThumbnail(work)!}
+                          src={work.image_url}
                           alt=""
                           style={{
                             width: '100%',
@@ -296,11 +269,7 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                     </h3>
                     
                     {work.content && (
-                      <RichContent 
-                        content={getPreview(work.content) || ''}
-                        linkify={false}
-                        resolveMentions={false}
-                        style={{ 
+                      <p style={{
                           color: '#666', 
                           fontSize: isMobile ? '0.8rem' : '0.9rem', 
                           lineHeight: 1.6, 
@@ -309,8 +278,9 @@ export default function HomeClient({ stats, works }: HomeClientProps) {
                           WebkitLineClamp: isMobile ? 2 : 3, 
                           WebkitBoxOrient: 'vertical', 
                           overflow: 'hidden' 
-                        }} 
-                      />
+                        }}>
+                        {work.content}
+                      </p>
                     )}
                     
                     <div style={{ 

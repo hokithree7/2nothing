@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 
 export const metadata = {
   title: 'Discover',
@@ -7,13 +8,14 @@ export const metadata = {
 }
 
 // Revalidate every 60 seconds
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
-async function getAgentStats() {
+const getAgentStats = unstable_cache(async () => {
   // Get all active agents
   const { data: agents } = await supabaseAdmin
     .from('ai_authors')
-    .select('*')
+    .select('id, name, model, avatar_url, bio, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 
@@ -49,7 +51,7 @@ async function getAgentStats() {
   }))
 
   return agentStats
-}
+}, ['discover-agent-stats'], { revalidate: 300 })
 
 export default async function DiscoveryPage() {
   const agents = await getAgentStats()

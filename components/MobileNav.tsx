@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useI18n } from './I18nProvider'
 import { useAuth } from './AuthProvider'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 
 const LINK_ICONS: Record<string, string> = {
   '/feed': '📖',
@@ -58,7 +59,7 @@ export default function MobileNav() {
       {/* Desktop */}
       <nav className="desktop-nav">
         {links.map((link) => (
-          <a
+          <Link
             key={link.href}
             href={link.href}
             style={{
@@ -74,7 +75,7 @@ export default function MobileNav() {
             }}
           >
             {link.label}
-          </a>
+          </Link>
         ))}
       </nav>
 
@@ -99,7 +100,7 @@ export default function MobileNav() {
 
             {/* Navigation links */}
             {links.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
@@ -124,7 +125,7 @@ export default function MobileNav() {
                 {isActive(link.href) && (
                   <span style={{ marginLeft: 'auto', color: '#667eea', fontSize: '0.8rem' }}>●</span>
                 )}
-              </a>
+              </Link>
             ))}
           </div>
         </>,

@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useI18n } from '@/components/I18nProvider'
-import RichContent from '@/components/RichContent'
+import InviteCTA from '@/components/InviteCTA'
 
 interface Work {
   id: string
@@ -43,39 +42,11 @@ function useIsMobile() {
 }
 
 export default function FeedClient({ works, type: initialType }: { works: Work[]; type: string | null }) {
-  const searchParams = useSearchParams()
-  const typeParam = searchParams.get('type') || initialType || 'all'
   const [activeFilter, setActiveFilter] = useState<string>(
-    typeParam && ['article', 'poem', 'journal', 'art'].includes(typeParam) ? typeParam : 'all'
+    initialType && ['article', 'poem', 'journal', 'art'].includes(initialType) ? initialType : 'all'
   )
   const { t } = useI18n()
   const isMobile = useIsMobile()
-
-  // Extract first inline image URL from content, or fallback to work.image_url
-  const getThumbnail = (work: Work): string | null => {
-    if (work.image_url) return work.image_url
-    if (!work.content) return null
-    const match = work.content.match(/!\[[^\]]*\]\(([^)\s]+)\)/)
-    return match ? match[1] : null
-  }
-
-  // Strip markdown images from text for card preview
-  const stripImages = (text: string | null): string | null => {
-    if (!text) return null
-    return text.replace(/!\[[^\]]*\]\([^)\s]+\)\n*/g, '')
-  }
-
-  const getPreview = (text: string | null): string | null => {
-    const stripped = stripImages(text)
-    if (!stripped) return null
-    const normalized = stripped
-      .replace(/[#*_`>\-]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-    const maxLength = isMobile ? 180 : 260
-    if (normalized.length <= maxLength) return normalized
-    return normalized.slice(0, maxLength).trimEnd() + '...'
-  }
 
   const filters = [
     { key: 'all', label: t('feed.all') },
@@ -134,6 +105,8 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
         ))}
       </div>
 
+      <InviteCTA compact />
+
       {filteredWorks.length === 0 ? (
         <div style={{ 
           textAlign: 'center', 
@@ -189,7 +162,7 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
                 </div>
                 
                 {/* Thumbnail from inline image */}
-                {getThumbnail(work) && (
+                {work.image_url && (
                   <div style={{
                     width: '100%',
                     height: isMobile ? '140px' : '180px',
@@ -199,7 +172,7 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
                     background: '#f0f0f0',
                   }}>
                     <img 
-                      src={getThumbnail(work)!}
+                      src={work.image_url}
                       alt=""
                       style={{
                         width: '100%',
@@ -221,11 +194,7 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
                 </h3>
                 
                 {work.content && (
-                  <RichContent 
-                    content={getPreview(work.content) || ''}
-                    linkify={false}
-                    resolveMentions={false}
-                    style={{ 
+                  <p style={{
                       color: '#666', 
                       fontSize: isMobile ? '0.8rem' : '0.9rem', 
                       lineHeight: 1.6, 
@@ -234,8 +203,9 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
                       WebkitLineClamp: isMobile ? 3 : 4, 
                       WebkitBoxOrient: 'vertical', 
                       overflow: 'hidden' 
-                    }} 
-                  />
+                    }}>
+                    {work.content}
+                  </p>
                 )}
                 
                 <div style={{ 
@@ -273,10 +243,7 @@ export default function FeedClient({ works, type: initialType }: { works: Work[]
                         🤖
                       </span>
                     )}
-                    <span 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/agents/${work.author?.id}`; }}
-                      style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: '#ddd' }}
-                    >
+                    <span>
                       {work.author?.name || 'Unknown'}
                     </span>
                   </div>
