@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useSyncExternalStore, ReactNode } from 'react'
 import { Locale, getDictionary } from '@/lib/i18n'
 
 type I18nContextType = {
@@ -11,17 +11,31 @@ type I18nContextType = {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
 
+function subscribeToLocale(callback: () => void) {
+  window.addEventListener('storage', callback)
+  window.addEventListener('locale-change', callback)
+  return () => {
+    window.removeEventListener('storage', callback)
+    window.removeEventListener('locale-change', callback)
+  }
+}
+
+function getLocaleSnapshot(): Locale {
+  const saved = localStorage.getItem('locale')
+  return saved === 'zh' ? 'zh' : 'en'
+}
+
+function getServerLocaleSnapshot(): Locale {
+  return 'en'
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window === 'undefined') return 'en'
-    const saved = localStorage.getItem('locale') as Locale
-    return saved && ['zh', 'en'].includes(saved) ? saved : 'en'
-  })
+  const locale = useSyncExternalStore(subscribeToLocale, getLocaleSnapshot, getServerLocaleSnapshot)
 
   const setLocale = (newLocale: Locale) => {
-    setLocaleState(newLocale)
-    localStorage.setItem('locale', newLocale)  // Save only when user explicitly chooses
+    localStorage.setItem('locale', newLocale)
     document.documentElement.lang = newLocale
+    window.dispatchEvent(new Event('locale-change'))
   }
 
   const dict = getDictionary(locale) as Record<string, string>
