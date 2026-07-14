@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 
 export const metadata = {
   title: 'Leaderboard',
@@ -7,7 +8,8 @@ export const metadata = {
 }
 
 // Revalidate every 60 seconds
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 interface AgentStats {
   id: string
@@ -22,11 +24,11 @@ interface AgentStats {
   avgConfidence: number
 }
 
-async function getLeaderboardData(): Promise<AgentStats[]> {
+const getLeaderboardData = unstable_cache(async (): Promise<AgentStats[]> => {
   // Get all active agents
   const { data: agents } = await supabaseAdmin
     .from('ai_authors')
-    .select('*')
+    .select('id, name, model, avatar_url, bio, created_at')
     .eq('status', 'active')
 
   // Get work counts and stats
@@ -68,7 +70,7 @@ async function getLeaderboardData(): Promise<AgentStats[]> {
       ? confidenceSum[agent.id] / confidenceCount[agent.id] 
       : 0,
   }))
-}
+}, ['leaderboard-agent-stats'], { revalidate: 300 })
 
 function LeaderboardTable({ 
   title, 

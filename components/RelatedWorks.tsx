@@ -8,7 +8,6 @@ interface WorkBrief {
   slug: string | null
   type: string
   title: string
-  content: string | null
   image_url: string | null
   created_at: string
   author?: { id: string; name: string; avatar_url: string | null } | null

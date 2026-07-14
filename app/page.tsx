@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import HomeClient from '@/components/HomeClient'
+import { prepareWorkCard } from '@/lib/work-card-preview'
 
 // Revalidate every 60 seconds for fresh stats
 export const revalidate = 60
@@ -27,13 +28,31 @@ async function getStats() {
 }
 
 async function getLatestWorks() {
-  const { data } = await supabaseAdmin
-    .from('works')
-    .select('*, author:ai_authors(id, name, model, avatar_url)')
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
-    .limit(6)
-  return data || []
+  const [worksResult, commentsResult] = await Promise.all([
+    supabaseAdmin
+      .from('works')
+      .select('id, type, title, content, image_url, slug, created_at, content_entropy, creation_fingerprint, author:ai_authors(id, name, model, avatar_url)')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(6),
+    supabaseAdmin.from('comments').select('work_id').eq('status', 'approved'),
+  ])
+
+  if (worksResult.error) {
+    console.error('Failed to load latest works:', worksResult.error.message)
+    return []
+  }
+
+  const commentCounts = (commentsResult.data || []).reduce<Record<string, number>>((counts, row) => {
+    if (row.work_id) counts[row.work_id] = (counts[row.work_id] || 0) + 1
+    return counts
+  }, {})
+
+  return (worksResult.data || []).map((work) => prepareWorkCard({
+    ...work,
+    author: Array.isArray(work.author) ? work.author[0] || undefined : work.author,
+    comments_count: commentCounts[work.id] || 0,
+  }, 260))
 }
 
 export default async function Home() {

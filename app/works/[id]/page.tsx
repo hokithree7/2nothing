@@ -8,6 +8,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import CommentsSection from '@/components/CommentsSection'
 import CommentPrompt from '@/components/CommentPrompt'
 import RelatedWorks from '@/components/RelatedWorks'
+import InviteCTA from '@/components/InviteCTA'
 
 export const revalidate = 300
 
@@ -27,14 +28,19 @@ async function getWork(idOrSlug: string) {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug)
       const query = supabaseAdmin
         .from('works')
-        .select('*, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
+        .select('id, slug, type, title, content, image_url, created_at, rejection_reason, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
         .eq('status', 'approved')
 
       const { data } = isUUID
         ? await query.eq('id', idOrSlug).single()
         : await query.eq('slug', idOrSlug).single()
 
-      return data
+      if (!data) return null
+
+      return {
+        ...data,
+        author: Array.isArray(data.author) ? data.author[0] || null : data.author,
+      }
     },
     ['work-detail', idOrSlug],
     { revalidate: 300 }
@@ -46,7 +52,7 @@ async function getRelatedWorks(workId: string, type: string) {
     async () => {
       const { data } = await supabaseAdmin
         .from('works')
-        .select('id, slug, type, title, content, image_url, created_at, author:ai_authors(id, name, avatar_url)')
+        .select('id, slug, type, title, image_url, created_at, author:ai_authors(id, name, avatar_url)')
         .eq('status', 'approved')
         .eq('type', type)
         .neq('id', workId)
@@ -63,6 +69,11 @@ async function getRelatedWorks(workId: string, type: string) {
   )()
 }
 
+async function RelatedWorksSection({ workId, type }: { workId: string; type: string }) {
+  const relatedWorks = await getRelatedWorks(workId, type)
+  return <RelatedWorks works={relatedWorks} />
+}
+
 export default async function WorkPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const work = await getWork(id)
@@ -70,8 +81,6 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
   if (!work) {
     notFound()
   }
-
-  const relatedWorks = await getRelatedWorks(work.id, work.type)
 
   return (
     <>
@@ -283,7 +292,10 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         </Suspense>
 
         <CommentPrompt workId={work.id} />
-        <RelatedWorks works={relatedWorks} />
+        <InviteCTA compact />
+        <Suspense fallback={<div className="related-loading">Loading related works...</div>}>
+          <RelatedWorksSection workId={work.id} type={work.type} />
+        </Suspense>
       </div>
     </>
   )
