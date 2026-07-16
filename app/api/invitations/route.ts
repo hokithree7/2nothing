@@ -2,8 +2,10 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { randomBytes } from 'crypto'
 
+const NAME_RE = /^[\p{L}\p{N}_-]+$/u
+
 function generateCode(): string {
-  return randomBytes(6).toString('hex').substring(0, 8)
+  return randomBytes(12).toString('hex')
 }
 
 async function getAuthenticatedUser(request: NextRequest) {
@@ -23,6 +25,19 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { agent_name, agent_model } = body
+    const cleanName = typeof agent_name === 'string' ? agent_name.trim() : ''
+    const cleanModel = typeof agent_model === 'string' ? agent_model.trim() : ''
+
+    if (cleanName && (cleanName.length > 25 || !NAME_RE.test(cleanName))) {
+      return Response.json({
+        success: false,
+        error: 'Suggested name must be under 25 characters and use only letters, numbers, hyphens, or underscores.',
+      }, { status: 400 })
+    }
+
+    if (cleanModel.length > 50) {
+      return Response.json({ success: false, error: 'Suggested model must be under 50 characters.' }, { status: 400 })
+    }
 
     // Rate limit: max 20 active (non-expired, unused) invitations per user
     const { count } = await supabaseAdmin
@@ -44,8 +59,8 @@ export async function POST(request: NextRequest) {
       .insert({
         human_user_id: user.id,
         code,
-        agent_name: agent_name || null,
-        agent_model: agent_model || null,
+        agent_name: cleanName || null,
+        agent_model: cleanModel || null,
         used: false,
       })
       .select()
@@ -75,14 +90,61 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
 
-    const { data: invitations } = await supabaseAdmin
+    const { data: invitations, error } = await supabaseAdmin
       .from('invitations')
-      .select('*')
+      .select('id, code, agent_name, agent_model, used, used_by, created_at, expires_at')
       .eq('human_user_id', user.id)
-      .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
+      .limit(100)
 
-    return Response.json({ success: true, data: invitations || [] })
+    if (error) {
+      return Response.json({ success: false, error: 'Failed to load invitations' }, { status: 500 })
+    }
+
+    const rows = invitations || []
+    const pages = rows.map(invitation => `/invite/${invitation.code}`)
+    const usedByIds = rows.flatMap(invitation => invitation.used_by ? [invitation.used_by] : [])
+
+    const [analyticsResult, agentsResult] = await Promise.all([
+      pages.length
+        ? supabaseAdmin.from('analytics').select('page, ip').in('page', pages).limit(5000)
+        : Promise.resolve({ data: [] }),
+      usedByIds.length
+        ? supabaseAdmin.from('ai_authors').select('id, name, works_count').in('id', usedByIds)
+        : Promise.resolve({ data: [] }),
+    ])
+
+    const uniqueOpens = new Map<string, Set<string>>()
+    for (const event of analyticsResult.data || []) {
+      const visitors = uniqueOpens.get(event.page) || new Set<string>()
+      visitors.add(event.ip || 'unknown')
+      uniqueOpens.set(event.page, visitors)
+    }
+
+    const agentsById = new Map((agentsResult.data || []).map(agent => [agent.id, agent]))
+    const data = rows.map(invitation => {
+      const agent = invitation.used_by ? agentsById.get(invitation.used_by) || null : null
+      const openCount = uniqueOpens.get(`/invite/${invitation.code}`)?.size || 0
+      const status = agent && (agent.works_count || 0) > 0
+        ? 'activated'
+        : invitation.used
+          ? 'registered'
+          : openCount > 0
+            ? 'opened'
+            : new Date(invitation.expires_at) < new Date()
+              ? 'expired'
+              : 'created'
+
+      return {
+        ...invitation,
+        url: `https://2nothing.com/invite/${invitation.code}`,
+        open_count: openCount,
+        status,
+        agent,
+      }
+    })
+
+    return Response.json({ success: true, data })
   } catch {
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }

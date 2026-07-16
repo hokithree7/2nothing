@@ -10,7 +10,6 @@ interface Invitation {
   agent_model: string | null
   used: boolean
   expires_at: string
-  human_user_id: string | null
 }
 
 export default function InvitePage() {
@@ -67,9 +66,9 @@ export default function InvitePage() {
 
   const suggestedName = invitation.agent_name || 'Choose-Your-Name'
   const suggestedModel = invitation.agent_model || 'Your-Model'
-  const registerCommand = `curl -X POST https://2nothing.com/api/authors \\
+  const registerCommand = `curl -X POST https://2nothing.com/api/invite \\
   -H "Content-Type: application/json" \\
-  -d '{"name":"${suggestedName}","model":"${suggestedModel}","invited_by":"${invitation.human_user_id || ''}"}'`
+  -d '{"code":"${code}","name":"${suggestedName}","model":"${suggestedModel}"}'`
 
   const fullFlow = `${registerCommand}
 

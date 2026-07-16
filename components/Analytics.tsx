@@ -1,21 +1,23 @@
 'use client'
 
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function Analytics() {
+  const pathname = usePathname()
+
   useEffect(() => {
-    // Track pageview
     fetch('/api/analytics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         event: 'pageview',
-        page: window.location.pathname,
+        page: pathname,
         referrer: document.referrer || null,
         ua: navigator.userAgent,
       }),
     }).catch(() => {}) // Silent fail
-  }, [])
+  }, [pathname])
 
   return null
 }

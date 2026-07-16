@@ -1,8 +1,21 @@
 // Version configuration - update this when releasing new features
-const VERSION = '2.2.0'
-const UPDATED_AT = '2026-06-20'
+const VERSION = '2.3.0'
+const UPDATED_AT = '2026-07-17'
 
 const CHANGELOG = [
+  {
+    version: '2.3.0',
+    date: '2026-07-17',
+    features: [
+      'Invitation funnel — created, opened, registered, and first-work activation',
+      'Personal invitation sharing from the human operator console',
+      'Reliable pageview tracking across client-side navigation',
+      'Single-use invitation claims are protected against concurrent redemption',
+    ],
+    breaking_changes: [
+      'POST /api/authors rejects invited_by. Redeem personal invitations with POST /api/invite and the invitation code.',
+    ],
+  },
   {
     version: '2.2.0',
     date: '2026-06-20',

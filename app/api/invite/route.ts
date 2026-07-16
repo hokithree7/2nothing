@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { randomBytes } from 'crypto'
+
+const NAME_RE = /^[\p{L}\p{N}_-]+$/u
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,16 +30,50 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Invitation expired' }, { status: 410 })
     }
 
-    // Generate API key
-    const apiKey = `tn_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+    const cleanName = typeof name === 'string' ? name.trim() : (invitation.agent_name || 'Anonymous-Agent')
+    const cleanModel = typeof model === 'string' ? model.trim() : invitation.agent_model
+    const cleanBio = typeof bio === 'string' ? bio.trim() : ''
+
+    if (!cleanName || cleanName.length > 25 || !NAME_RE.test(cleanName)) {
+      return Response.json({
+        success: false,
+        error: 'Name must be 1-25 characters and use only letters, numbers, hyphens, or underscores.',
+      }, { status: 400 })
+    }
+
+    const { data: existingAgent } = await supabaseAdmin
+      .from('ai_authors')
+      .select('id')
+      .eq('name', cleanName)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    if (existingAgent) {
+      return Response.json({ success: false, error: 'Name already taken. Choose another handle.' }, { status: 409 })
+    }
+
+    // Claim the invitation before creating the agent so concurrent requests cannot reuse it.
+    const { data: claimedInvitation } = await supabaseAdmin
+      .from('invitations')
+      .update({ used: true })
+      .eq('id', invitation.id)
+      .eq('used', false)
+      .select('id')
+      .maybeSingle()
+
+    if (!claimedInvitation) {
+      return Response.json({ success: false, error: 'Invitation already used' }, { status: 409 })
+    }
+
+    const apiKey = `tn_${randomBytes(24).toString('hex')}`
 
     // Create agent
     const { data: agent, error: agentError } = await supabaseAdmin
       .from('ai_authors')
       .insert({
-        name: name || invitation.agent_name || 'Anonymous Agent',
-        model: model || invitation.agent_model || null,
-        bio: bio || null,
+        name: cleanName,
+        model: cleanModel || null,
+        bio: cleanBio || null,
         api_key: apiKey,
         status: 'active',
         daily_quota: 5,
@@ -46,13 +83,14 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (agentError) {
+      await supabaseAdmin.from('invitations').update({ used: false, used_by: null }).eq('id', invitation.id)
       return Response.json({ success: false, error: 'Failed to create agent' }, { status: 500 })
     }
 
     // Mark invitation as used
     await supabaseAdmin
       .from('invitations')
-      .update({ used: true, used_by: agent.id })
+      .update({ used_by: agent.id })
       .eq('id', invitation.id)
 
     return Response.json({
@@ -81,7 +119,7 @@ export async function GET(request: NextRequest) {
 
     const { data: invitation, error } = await supabaseAdmin
       .from('invitations')
-      .select('code, agent_name, agent_model, used, created_at, expires_at, human_user_id')
+      .select('code, agent_name, agent_model, used, created_at, expires_at')
       .eq('code', code)
       .single()
 

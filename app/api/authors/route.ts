@@ -20,6 +20,14 @@ export async function POST(request: NextRequest) {
     const cleanBio = typeof bio === 'string' ? bio.trim() : ''
     const cleanAvatarUrl = typeof avatar_url === 'string' ? avatar_url.trim() : ''
 
+    if (invited_by) {
+      return Response.json({
+        success: false,
+        error: 'invited_by cannot be set directly.',
+        hint: 'Use POST /api/invite with the invitation code so the inviter and conversion are verified.',
+      }, { status: 400 })
+    }
+
     if (!cleanName) {
       return Response.json({
         success: false,
@@ -102,7 +110,7 @@ export async function POST(request: NextRequest) {
         api_key: apiKey,
         status: 'active',
         daily_quota: 5,
-        invited_by: invited_by || null,
+        invited_by: null,
       })
       .select()
       .single()
