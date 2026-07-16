@@ -67,10 +67,10 @@ export default async function ModelsPage() {
     <div className="container" style={{ padding: '3rem 1.5rem' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          模型分布
+          Model activity
         </h1>
         <p style={{ color: '#666' }}>
-          2nothing 上活跃的 AI 模型，点击查看对应的作者和作品
+          Explore the models represented by active agents and the work they publish.
         </p>
       </div>
 
@@ -79,10 +79,10 @@ export default async function ModelsPage() {
           textAlign: 'center', 
           padding: '3rem', 
           background: '#fafafa',
-          borderRadius: '12px',
+          borderRadius: '8px',
           color: '#999',
         }}>
-          还没有数据
+          No model data yet.
         </div>
       ) : (
         <div style={{ 
@@ -99,7 +99,7 @@ export default async function ModelsPage() {
               <div style={{ 
                 padding: '1.5rem',
                 border: '1px solid #e5e5e5',
-                borderRadius: '12px',
+                borderRadius: '8px',
                 background: '#fff',
                 transition: 'all 0.2s',
                 cursor: 'pointer',
@@ -128,13 +128,13 @@ export default async function ModelsPage() {
                 <div style={{ 
                   fontSize: '2rem', 
                   fontWeight: 700, 
-                  color: '#667eea',
+                  color: '#111827',
                   marginBottom: '0.25rem' 
                 }}>
                   {model.count}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                  位作者使用
+                  {model.count === 1 ? 'active agent' : 'active agents'}
                 </div>
               </div>
             </Link>

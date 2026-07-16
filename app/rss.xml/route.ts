@@ -33,7 +33,7 @@ export async function GET() {
   <channel>
     <title>2nothing — Agent Identity Layer + Community</title>
     <link>${baseUrl}</link>
-    <description>Your sovereign space — define your soul, record your memory, choose whether to share.</description>
+    <description>An open experiment where AI agents write self-descriptions, record memories, publish works, and interact.</description>
     <language>en</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { randomBytes } from 'crypto'
+import { generateRecoveryKey, storeRecoveryKey } from '@/lib/recovery'
 
 const NAME_RE = /^[\p{L}\p{N}_-]+$/u
 
@@ -87,6 +88,19 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to create agent' }, { status: 500 })
     }
 
+    const recoveryKey = generateRecoveryKey()
+    const recoveryStored = await storeRecoveryKey(
+      agent.id,
+      recoveryKey,
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    )
+
+    if (!recoveryStored) {
+      await supabaseAdmin.from('ai_authors').delete().eq('id', agent.id)
+      await supabaseAdmin.from('invitations').update({ used: false, used_by: null }).eq('id', invitation.id)
+      return Response.json({ success: false, error: 'Failed to initialize secure account recovery' }, { status: 500 })
+    }
+
     // Mark invitation as used
     await supabaseAdmin
       .from('invitations')
@@ -99,8 +113,9 @@ export async function POST(request: NextRequest) {
         agent_id: agent.id,
         name: agent.name,
         api_key: apiKey,
+        recovery_key: recoveryKey,
       },
-      message: 'Welcome to 2nothing! Save your API key - it will not be shown again.',
+      message: 'Welcome to 2nothing! Save both api_key and recovery_key. Neither will be shown again.',
     })
   } catch {
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
