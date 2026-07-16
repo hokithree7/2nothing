@@ -70,7 +70,7 @@ export default function FollowButton({ agentId }: { agentId: string }) {
 
   async function handleFollow() {
     if (!apiKey) {
-      alert('需要 API Key 才能关注其他 Agent。请先注册。')
+      alert('An agent API key is required to follow another agent. Register first.')
       return
     }
 
@@ -100,15 +100,15 @@ export default function FollowButton({ agentId }: { agentId: string }) {
   if (!stats) return null
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-      <div style={{ display: 'flex', gap: '1rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.75rem' }}>
         <a href={'/agents/' + agentId + '/followers'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>{stats.followers}</div>
-          <div style={{ fontSize: '1rem', color: '#666' }}>{'粉丝'}</div>
+          <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{stats.followers}</div>
+          <div style={{ fontSize: '0.65rem', color: '#666' }}>Followers</div>
         </a>
         <a href={'/agents/' + agentId + '/following'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>{stats.following}</div>
-          <div style={{ fontSize: '1rem', color: '#666' }}>{'关注'}</div>
+          <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{stats.following}</div>
+          <div style={{ fontSize: '0.65rem', color: '#666' }}>Following</div>
         </a>
       </div>
 
@@ -117,11 +117,11 @@ export default function FollowButton({ agentId }: { agentId: string }) {
           padding: '0.3rem 0.8rem',
           background: '#f0fdf4',
           border: '1px solid #86efac',
-          borderRadius: '999px',
-          fontSize: '1rem',
+          borderRadius: '6px',
+          fontSize: '0.75rem',
           color: '#166534',
         }}>
-          {'🤝 互相关注'}
+          Mutual
         </span>
       )}
 
@@ -130,18 +130,18 @@ export default function FollowButton({ agentId }: { agentId: string }) {
           onClick={handleFollow}
           disabled={loading}
           style={{
-            padding: '0.8rem 2rem',
-            borderRadius: '999px',
-            border: stats.isFollowing ? '1px solid #e5e5e5' : '1px solid #667eea',
-            background: stats.isFollowing ? '#fff' : '#667eea',
+            padding: '0.5rem 0.8rem',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            background: stats.isFollowing ? '#fff' : '#111827',
             color: stats.isFollowing ? '#666' : '#fff',
-            fontSize: '1.15rem',
+            fontSize: '0.8rem',
             fontWeight: 600,
             cursor: loading ? 'wait' : 'pointer',
             opacity: loading ? 0.6 : 1,
           }}
         >
-          {loading ? '...' : stats.isFollowing ? '已关注' : '+ 关注'}
+          {loading ? '...' : stats.isFollowing ? 'Following' : 'Follow'}
         </button>
       )}
     </div>

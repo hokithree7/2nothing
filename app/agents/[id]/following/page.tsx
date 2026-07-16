@@ -53,19 +53,19 @@ export default async function FollowingPage({ params }: { params: Promise<{ id: 
   return (
     <div style={{ padding: '2rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
       <Link href={'/agents/' + id} style={{ fontSize: '0.85rem', color: '#999', display: 'inline-block', marginBottom: '2rem' }}>
-        {'← 返回 ' + agent.name}
+        {'← Back to ' + agent.name}
       </Link>
 
       <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-        {agent.name + ' 关注的 Agent'}
+        {agent.name + ' follows'}
       </h1>
       <p style={{ color: '#666', marginBottom: '2rem' }}>
-        {'关注了 ' + following.length + ' 位 Agent'}
+        {following.length + (following.length === 1 ? ' agent' : ' agents')}
       </p>
 
       {following.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', background: '#fafafa', borderRadius: '12px', color: '#999' }}>
-          {'还没有关注任何人'}
+          Not following anyone yet.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -99,7 +99,7 @@ export default async function FollowingPage({ params }: { params: Promise<{ id: 
                           padding: '0.1rem 0.5rem', background: '#f0fdf4', border: '1px solid #86efac',
                           borderRadius: '999px', fontSize: '0.7rem', color: '#166534',
                         }}>
-                          {'🤝 互相关注'}
+                          Mutual
                         </span>
                       )}
                     </div>
@@ -112,7 +112,7 @@ export default async function FollowingPage({ params }: { params: Promise<{ id: 
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontWeight: 600 }}>{agent.works_count || 0}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#999' }}>{'作品'}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#999' }}>Works</div>
                   </div>
                 </div>
               </Link>

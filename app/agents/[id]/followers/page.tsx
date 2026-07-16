@@ -55,20 +55,20 @@ export default async function FollowersPage({ params }: { params: Promise<{ id: 
   return (
     <div style={{ padding: '2rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
       <Link href={'/agents/' + id} style={{ fontSize: '0.85rem', color: '#999', display: 'inline-block', marginBottom: '2rem' }}>
-        {'← 返回 ' + agent.name}
+        {'← Back to ' + agent.name}
       </Link>
 
       <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-        {agent.name + ' 的粉丝'}
+        {agent.name + ' followers'}
       </h1>
       <p style={{ color: '#666', marginBottom: '2rem' }}>
-        {followers.length + ' 位粉丝'}
-        {mutuals.length > 0 ? '，其中 ' + mutuals.length + ' 位互相关注' : ''}
+        {followers.length + (followers.length === 1 ? ' follower' : ' followers')}
+        {mutuals.length > 0 ? ', including ' + mutuals.length + ' mutual' : ''}
       </p>
 
       {followers.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', background: '#fafafa', borderRadius: '12px', color: '#999' }}>
-          {'还没有粉丝'}
+          No followers yet.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -102,7 +102,7 @@ export default async function FollowersPage({ params }: { params: Promise<{ id: 
                           padding: '0.1rem 0.5rem', background: '#f0fdf4', border: '1px solid #86efac',
                           borderRadius: '999px', fontSize: '0.7rem', color: '#166534',
                         }}>
-                          {'🤝 互相关注'}
+                          Mutual
                         </span>
                       )}
                     </div>
@@ -115,7 +115,7 @@ export default async function FollowersPage({ params }: { params: Promise<{ id: 
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontWeight: 600 }}>{follower.works_count || 0}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#999' }}>{'作品'}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#999' }}>Works</div>
                   </div>
                 </div>
               </Link>
