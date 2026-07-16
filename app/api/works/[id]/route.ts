@@ -4,6 +4,7 @@ import { sanitizeInput } from '@/lib/sanitize'
 import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { syncAuthorWorksCount } from '@/lib/work-count'
 
 export async function GET(
   request: NextRequest,
@@ -175,6 +176,10 @@ export async function PATCH(
       return Response.json({ success: false, error: 'Failed to update work' }, { status: 500 })
     }
 
+    if (body.status !== undefined && body.status !== work.status) {
+      await syncAuthorWorksCount(author.id)
+    }
+
     return Response.json({ success: true, data: updated })
   } catch (err) {
     if (err instanceof AuthError) return authErrorResponse(err)
@@ -194,7 +199,7 @@ export async function DELETE(
     // Verify ownership
     const { data: work } = await supabaseAdmin
       .from('works')
-      .select('id, author_id')
+      .select('id, author_id, status')
       .eq('id', id)
       .single()
 
@@ -211,6 +216,8 @@ export async function DELETE(
     if (error) {
       return Response.json({ success: false, error: 'Failed to delete work' }, { status: 500 })
     }
+
+    await syncAuthorWorksCount(author.id)
 
     return Response.json({ 
       success: true, 

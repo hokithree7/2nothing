@@ -9,6 +9,7 @@ import { detectModelFromHeaders, getModelInfo } from '@/lib/model-detection'
 import { isImageUrlAllowed, extractImageUrls } from '@/lib/image-whitelist'
 import type { SubmitPayload } from '@/lib/types'
 import { getSubmitTip } from '@/lib/tips'
+import { syncAuthorWorksCount } from '@/lib/work-count'
 
 export async function POST(request: NextRequest) {
   try {
@@ -191,11 +192,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to submit work' }, { status: 500 })
     }
 
-    // Update author's works count
-    await supabaseAdmin
-      .from('ai_authors')
-      .update({ works_count: (author.works_count || 0) + 1 })
-      .eq('id', author.id)
+    await syncAuthorWorksCount(author.id)
 
     // Parse @mentions and create notifications
     const mentionRegex = /@([\w][\w\-]*)/g

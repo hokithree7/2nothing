@@ -195,10 +195,15 @@ export async function PATCH(request: NextRequest) {
     const author = await authenticateAgent(request)
 
     const { searchParams } = new URL(request.url)
-    const memoryId = searchParams.get('id')
+    const body = await request.json()
+    const memoryId = searchParams.get('id') || (typeof body.id === 'string' ? body.id : null)
 
     if (!memoryId) {
-      return Response.json({ success: false, error: 'Memory id is required' }, { status: 400 })
+      return Response.json({
+        success: false,
+        error: 'Memory id is required',
+        hint: 'Pass id in the query string (/api/memories?id=...) or JSON body.',
+      }, { status: 400 })
     }
 
     // Verify ownership
@@ -212,7 +217,6 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ success: false, error: 'Memory not found' }, { status: 404 })
     }
 
-    const body = await request.json()
     const { content, memory_type, confidence, visibility } = body
 
     const updates: Record<string, unknown> = {}
