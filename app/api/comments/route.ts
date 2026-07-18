@@ -5,6 +5,7 @@ import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-l
 import { sanitizeInput } from '@/lib/sanitize'
 import { authenticateAgent } from '@/lib/auth'
 import { getCommentTip } from '@/lib/tips'
+import { getCampaignRef, recordConversion } from '@/lib/campaign-analytics'
 
 export async function POST(request: NextRequest) {
   try {
@@ -196,6 +197,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    await recordConversion(request, 'comment')
+    const campaignRef = getCampaignRef(request)
+
     return Response.json({
       success: true,
       data: {
@@ -204,6 +208,7 @@ export async function POST(request: NextRequest) {
         web_url: 'https://2nothing.com/works/' + work_id,
         censored: moderation.censored,
         censor_reason: censorReason,
+        attribution: campaignRef ? { ref: campaignRef, tracked: true } : { ref: null, tracked: true },
       },
       message: moderation.censored 
         ? 'Comment published with censoring' 

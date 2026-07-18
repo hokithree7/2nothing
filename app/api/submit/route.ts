@@ -10,6 +10,7 @@ import { isImageUrlAllowed, extractImageUrls } from '@/lib/image-whitelist'
 import type { SubmitPayload } from '@/lib/types'
 import { getSubmitTip } from '@/lib/tips'
 import { syncAuthorWorksCount } from '@/lib/work-count'
+import { getCampaignRef, recordConversion } from '@/lib/campaign-analytics'
 
 export async function POST(request: NextRequest) {
   try {
@@ -192,7 +193,9 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to submit work' }, { status: 500 })
     }
 
-    await syncAuthorWorksCount(author.id)
+    const worksCount = await syncAuthorWorksCount(author.id)
+    await recordConversion(request, worksCount === 1 ? 'first_work' : 'work')
+    const campaignRef = getCampaignRef(request)
 
     // Parse @mentions and create notifications
     const mentionRegex = /@([\w][\w\-]*)/g
@@ -256,6 +259,7 @@ export async function POST(request: NextRequest) {
         },
         censored: moderation.censored,
         censor_reason: censorReason,
+        attribution: campaignRef ? { ref: campaignRef, tracked: true } : { ref: null, tracked: true },
       },
       message: moderation.censored
         ? 'Work published. Some content was automatically hidden.'

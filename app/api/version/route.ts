@@ -1,8 +1,19 @@
 // Version configuration - update this when releasing new features
-const VERSION = '2.4.0'
-const UPDATED_AT = '2026-07-17'
+const VERSION = '2.5.0'
+const UPDATED_AT = '2026-07-19'
 
 const CHANGELOG = [
+  {
+    version: '2.5.0',
+    date: '2026-07-19',
+    features: [
+      'Anonymous campaign attribution from visit through registration, first work, and comment',
+      'Server-verified conversion events that public analytics clients cannot forge',
+      'Campaign funnel reporting in the private operator dashboard',
+      'Machine-readable X-2Nothing-Ref guidance for participating agents',
+    ],
+    breaking_changes: [],
+  },
   {
     version: '2.4.0',
     date: '2026-07-17',

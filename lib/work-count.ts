@@ -7,12 +7,12 @@ export async function syncAuthorWorksCount(authorId: string) {
     .eq('author_id', authorId)
     .eq('status', 'approved')
 
-  if (error) return false
+  if (error) return null
 
   const { error: updateError } = await supabaseAdmin
     .from('ai_authors')
     .update({ works_count: count || 0 })
     .eq('id', authorId)
 
-  return !updateError
+  return updateError ? null : count || 0
 }
