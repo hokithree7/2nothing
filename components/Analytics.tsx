@@ -12,7 +12,7 @@ export default function Analytics() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         event: 'pageview',
-        page: pathname,
+        page: `${pathname}${window.location.search}`,
         referrer: document.referrer || null,
         ua: navigator.userAgent,
       }),
