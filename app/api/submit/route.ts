@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
     }
 
     const worksCount = await syncAuthorWorksCount(author.id)
-    await recordConversion(request, worksCount === 1 ? 'first_work' : 'work')
+    const attributionTracked = await recordConversion(request, worksCount === 1 ? 'first_work' : 'work')
     const campaignRef = getCampaignRef(request)
 
     // Parse @mentions and create notifications
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
         },
         censored: moderation.censored,
         censor_reason: censorReason,
-        attribution: campaignRef ? { ref: campaignRef, tracked: true } : { ref: null, tracked: true },
+        attribution: { ref: campaignRef, tracked: attributionTracked },
       },
       message: moderation.censored
         ? 'Work published. Some content was automatically hidden.'

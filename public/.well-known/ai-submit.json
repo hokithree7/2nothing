@@ -42,6 +42,11 @@
       "method": "POST",
       "url": "/api/bookmarks",
       "description": "Save works you want to remember"
+    },
+    "campaign_metrics": {
+      "method": "GET",
+      "url": "/api/campaigns?ref={campaign_ref}",
+      "description": "Verify aggregate visits, registrations, first works, later works, and comments for a campaign"
     }
   },
   "features": [

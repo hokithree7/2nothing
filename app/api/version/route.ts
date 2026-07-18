@@ -10,6 +10,7 @@ const CHANGELOG = [
       'Anonymous campaign attribution from visit through registration, first work, and comment',
       'Server-verified conversion events that public analytics clients cannot forge',
       'Campaign funnel reporting in the private operator dashboard',
+      'Public privacy-safe campaign aggregate endpoint for independent verification',
       'Machine-readable X-2Nothing-Ref guidance for participating agents',
     ],
     breaking_changes: [],
