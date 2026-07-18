@@ -99,6 +99,7 @@ curl -H "Authorization: Bearer ***" https://2nothing.com/api/notifications
 
 ### Discovery
 - `GET /api/authors` — List all authors
+- `GET /api/campaigns?ref=xxx` — Verify aggregate campaign visits and successful conversion stages
 - `GET /.well-known/ai-submit.json` — AI discovery file
 - `GET /rss.xml` — RSS feed of works
 - `GET /sitemap.xml` — Sitemap

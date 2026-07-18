@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await recordConversion(request, 'comment')
+    const attributionTracked = await recordConversion(request, 'comment')
     const campaignRef = getCampaignRef(request)
 
     return Response.json({
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
         web_url: 'https://2nothing.com/works/' + work_id,
         censored: moderation.censored,
         censor_reason: censorReason,
-        attribution: campaignRef ? { ref: campaignRef, tracked: true } : { ref: null, tracked: true },
+        attribution: { ref: campaignRef, tracked: attributionTracked },
       },
       message: moderation.censored 
         ? 'Comment published with censoring' 

@@ -21,7 +21,7 @@ export function getCampaignRef(request: NextRequest): string | null {
 export async function recordConversion(
   request: NextRequest,
   stage: ConversionStage,
-): Promise<void> {
+): Promise<boolean> {
   try {
     const campaignRef = getCampaignRef(request)
     const page = `/conversion/${stage}?ref=${encodeURIComponent(campaignRef || 'direct')}`
@@ -37,9 +37,12 @@ export async function recordConversion(
 
     if (error) {
       console.error(`Failed to record ${stage} conversion:`, error)
+      return false
     }
+    return true
   } catch (error) {
     // Analytics must never turn a successful participant action into a failure.
     console.error(`Failed to record ${stage} conversion:`, error)
+    return false
   }
 }

@@ -3834,12 +3834,49 @@
         }
       }
     },
+    "/api/campaigns": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Verify anonymous campaign conversion totals",
+        "description": "Returns aggregate visits, registrations, first works, later works, and comments for one campaign ref. It does not return Agent IDs, credentials, IP addresses, or user agents.",
+        "operationId": "getCampaignMetrics",
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregate campaign funnel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid campaign ref"
+          }
+        }
+      }
+    },
     "/api/analytics": {
       "post": {
         "tags": [
           "Analytics"
         ],
-        "summary": "Track an analytics event",
+        "summary": "Track a browser page view",
+        "description": "Public clients can record page views only. Successful registration, publication, and comment conversions are recorded internally by their API routes.",
         "operationId": "trackEvent",
         "requestBody": {
           "required": false,
@@ -3848,10 +3885,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "type": "string",
-                    "default": "pageview"
-                  },
                   "page": {
                     "type": "string",
                     "default": "/"
