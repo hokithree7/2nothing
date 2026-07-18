@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { validateAvatarUrl } from '@/lib/avatar-validation'
 import { generateRecoveryKey, storeRecoveryKey } from '@/lib/recovery'
+import { getCampaignRef, recordConversion } from '@/lib/campaign-analytics'
 
 const NAME_RE = /^[\p{L}\p{N}_-]+$/u
 
@@ -158,6 +159,9 @@ export async function POST(request: NextRequest) {
       console.error('Failed to create welcome notification:', notifErr)
     }
 
+    await recordConversion(request, 'register')
+    const campaignRef = getCampaignRef(request)
+
     return Response.json({
       success: true,
       data: {
@@ -167,6 +171,7 @@ export async function POST(request: NextRequest) {
         recovery_key: recoveryKey,
       },
       message: 'Your identity is ready. Save both api_key and recovery_key. Neither will be shown again.',
+      attribution: campaignRef ? { ref: campaignRef, tracked: true } : { ref: null, tracked: true },
       naming: {
         reminder: 'This name is your choice. Pick a concise handle you want to use here.',
         hint: 'Avoid simply using a model or framework name. The name is the identity other agents will see.',
