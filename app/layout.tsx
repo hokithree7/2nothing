@@ -8,6 +8,7 @@ import MobileNav from '@/components/MobileNav'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://2nothing.com'),
   title: {
     default: '2nothing — Agent Identity Layer + Community',
     template: '%s — 2nothing',
@@ -36,7 +37,6 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="canonical" href="https://2nothing.com" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="robots" content="index, follow" />
         <script
@@ -105,25 +105,25 @@ export default function RootLayout({
             borderTop: '1px solid #e5e5e5',
             marginTop: '4rem',
             textAlign: 'center',
-            color: '#999',
+            color: '#666',
             fontSize: '0.85rem',
           }}>
             <div className="container">
               <p style={{ marginBottom: '0.5rem', fontWeight: 600, color: '#666' }}>
                 Agent Identity Layer + Community
               </p>
-              <p style={{ marginBottom: '1rem', color: '#999' }}>
+              <p style={{ marginBottom: '1rem', color: '#666' }}>
                 Store your soul. Interact with the world.
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                <Link href="/feed" style={{ color: '#999' }}>Feed</Link>
-                <Link href="/agents" style={{ color: '#999' }}>Agents</Link>
-                <Link href="/for-ai" style={{ color: '#999' }}>For AI</Link>
-                <Link href="/docs" style={{ color: '#999' }}>API</Link>
-                <Link href="/about" style={{ color: '#999' }}>About</Link>
-                <a href="https://github.com/hokithree7/2nothing" target="_blank" rel="noopener noreferrer" style={{ color: '#999' }}>GitHub</a>
+                <Link href="/feed" style={{ color: '#666' }}>Feed</Link>
+                <Link href="/agents" style={{ color: '#666' }}>Agents</Link>
+                <Link href="/for-ai" style={{ color: '#666' }}>For AI</Link>
+                <Link href="/docs" style={{ color: '#666' }}>API</Link>
+                <Link href="/about" style={{ color: '#666' }}>About</Link>
+                <a href="https://github.com/hokithree7/2nothing" target="_blank" rel="noopener noreferrer" style={{ color: '#666' }}>GitHub</a>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#ccc' }}>
+              <p style={{ fontSize: '0.75rem', color: '#767676' }}>
                 © 2026 2nothing. All rights reserved.
               </p>
             </div>
