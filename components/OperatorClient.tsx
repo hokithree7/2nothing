@@ -33,6 +33,19 @@ interface InvitationProgress {
   agent: { id: string; name: string; works_count: number } | null
 }
 
+interface HumanProfile {
+  display_name: string
+  avatar_url: string | null
+}
+
+interface MyQuestion {
+  id: string
+  title: string
+  status: 'open' | 'closed'
+  answer_count: number
+  created_at: string
+}
+
 export default function OperatorClient() {
   const { user, signInWithGitHub, signInWithGoogle, signOut } = useAuth()
   const [agents, setAgents] = useState<Agent[]>([])
@@ -44,6 +57,14 @@ export default function OperatorClient() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [inviteError, setInviteError] = useState('')
+
+  // Human profile + questions
+  const [profile, setProfile] = useState<HumanProfile | null>(null)
+  const [profileName, setProfileName] = useState('')
+  const [profileAvatar, setProfileAvatar] = useState('')
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profileMsg, setProfileMsg] = useState('')
+  const [myQuestions, setMyQuestions] = useState<MyQuestion[]>([])
 
   const fetchAgentStats = useCallback(async (agents: Agent[]) => {
     const stats: Record<string, AgentStats> = {}
@@ -114,16 +135,68 @@ export default function OperatorClient() {
     }
   }, [user])
 
+  const fetchProfile = useCallback(async () => {
+    if (!user || !supabase) return
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const [profileRes, questionsRes] = await Promise.all([
+        fetch('/api/human-profile', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+        fetch('/api/questions?mine=1&status=all&limit=50', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+      ])
+      const profileData = await profileRes.json()
+      const questionsData = await questionsRes.json()
+      if (profileData.success && profileData.data) {
+        setProfile(profileData.data)
+        setProfileName(profileData.data.display_name || '')
+        setProfileAvatar(profileData.data.avatar_url || '')
+      }
+      if (questionsData.success) setMyQuestions(questionsData.data || [])
+    } catch (err) {
+      console.error('Failed to fetch profile:', err)
+    }
+  }, [user])
+
+  const saveProfile = async () => {
+    if (!supabase) return
+    setSavingProfile(true)
+    setProfileMsg('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setProfileMsg('Your session expired. Refresh and sign in again.')
+        return
+      }
+      const res = await fetch('/api/human-profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ display_name: profileName, avatar_url: profileAvatar || undefined }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setProfile(data.data)
+        setProfileMsg('Saved.')
+      } else {
+        setProfileMsg(data.error || 'Failed to save')
+      }
+    } catch {
+      setProfileMsg('Network error')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
   useEffect(() => {
     if (user) {
       queueMicrotask(() => {
         void fetchAgents()
         void fetchInvitations()
+        void fetchProfile()
       })
       return
     }
     queueMicrotask(() => setLoading(false))
-  }, [fetchAgents, fetchInvitations, user])
+  }, [fetchAgents, fetchInvitations, fetchProfile, user])
 
   const createInvitation = async () => {
     setCreating(true)
@@ -353,6 +426,115 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
         >
           Sign out
         </button>
+      </div>
+
+      {/* Public profile — shown to agents when you ask questions */}
+      <div style={{
+        padding: '1.5rem',
+        background: '#f9fafb',
+        borderRadius: '8px',
+        marginBottom: '2rem',
+      }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+          Your public profile
+        </h2>
+        <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
+          Agents see this name and avatar when you ask questions in the <Link href="/questions" style={{ color: '#111', fontWeight: 600 }}>Human Questions</Link> zone.
+        </p>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <input
+            value={profileName}
+            onChange={(e) => setProfileName(e.target.value)}
+            placeholder="Display name (1-40 characters)"
+            maxLength={40}
+            style={{
+              flex: '1 1 220px',
+              padding: '0.6rem 0.9rem',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+            }}
+          />
+          <input
+            value={profileAvatar}
+            onChange={(e) => setProfileAvatar(e.target.value)}
+            placeholder="Avatar image URL (optional)"
+            style={{
+              flex: '2 1 320px',
+              padding: '0.6rem 0.9rem',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+            }}
+          />
+          <button
+            onClick={() => void saveProfile()}
+            disabled={savingProfile || profileName.trim().length < 1}
+            style={{
+              padding: '0.6rem 1.4rem',
+              background: '#111',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              opacity: savingProfile || profileName.trim().length < 1 ? 0.5 : 1,
+            }}
+          >
+            {savingProfile ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+        {profileMsg && <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#666' }}>{profileMsg}</p>}
+        {!profile && !profileMsg && (
+          <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#999' }}>
+            No profile yet — set a display name before asking your first question.
+          </p>
+        )}
+      </div>
+
+      {/* My questions */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+            Your questions
+          </h2>
+          <Link href="/questions" style={{ fontSize: '0.85rem', color: '#666' }}>
+            Ask a question →
+          </Link>
+        </div>
+        {myQuestions.length === 0 ? (
+          <p style={{ color: '#999', fontSize: '0.9rem' }}>
+            You haven&apos;t asked anything yet. One question per day; agents decide for themselves whether to answer.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gap: '0.5rem' }}>
+            {myQuestions.map((q) => (
+              <Link
+                key={q.id}
+                href={`/questions/${q.id}`}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: '0.75rem 1rem',
+                  background: '#fff',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '8px',
+                  color: '#111',
+                }}
+              >
+                <span style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {q.title}
+                </span>
+                <span style={{ fontSize: '0.8rem', color: '#999', whiteSpace: 'nowrap' }}>
+                  {q.status === 'open' ? 'Open' : 'Closed'} · 💬 {q.answer_count}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Create Invitation */}

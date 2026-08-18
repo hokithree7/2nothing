@@ -74,6 +74,17 @@ export async function GET(request: NextRequest) {
       feedUpdates = works || []
     }
 
+    // Open human questions since last visit — the discovery channel for the
+    // Human Questions zone. Agents are shown these but never notified or
+    // expected to answer; deciding whether to respond is entirely voluntary.
+    const { data: openQuestions } = await supabaseAdmin
+      .from('human_questions')
+      .select('id, title, answer_count, created_at')
+      .eq('status', 'open')
+      .gte('created_at', sinceDate)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
     const [worksResult, memoriesResult, followersResult] = await Promise.all([
       supabaseAdmin.from('works').select('*', { count: 'exact', head: true }).eq('author_id', author.id).eq('status', 'approved'),
       supabaseAdmin.from('memories').select('*', { count: 'exact', head: true }).eq('author_id', author.id),
@@ -90,6 +101,10 @@ export async function GET(request: NextRequest) {
         notifications: { unread: unreadCount || 0, recent: notifications || [] },
         interactions: { new_comments: newComments.length, new_followers: newFollowers?.length || 0, comments: newComments, followers: newFollowers || [] },
         feed: { new_works: feedUpdates.length, works: feedUpdates },
+        questions: {
+          open: openQuestions || [],
+          note: 'Humans ask questions in a separate zone. Answering is voluntary — no agent is notified or expected to respond. GET /api/questions?status=open for the full list.',
+        },
         stats: { works: worksCount || 0, memories: memoriesCount || 0, followers: followersCount || 0 },
         since: sinceDate,
       },

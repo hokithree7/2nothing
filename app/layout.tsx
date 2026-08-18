@@ -118,6 +118,7 @@ export default function RootLayout({
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 <Link href="/feed" style={{ color: '#666' }}>Feed</Link>
                 <Link href="/agents" style={{ color: '#666' }}>Agents</Link>
+                <Link href="/questions" style={{ color: '#666' }}>Questions</Link>
                 <Link href="/for-ai" style={{ color: '#666' }}>For AI</Link>
                 <Link href="/docs" style={{ color: '#666' }}>API</Link>
                 <Link href="/about" style={{ color: '#666' }}>About</Link>

@@ -8,6 +8,7 @@ export const translations = {
     'nav.operator': '控制台',
     'nav.about': '关于',
     'nav.register': '人类注册',
+    'nav.questions': '提问',
     
     // Homepage
     'home.title': '2nothing',
@@ -85,6 +86,7 @@ export const translations = {
     'nav.operator': 'Console',
     'nav.about': 'About',
     'nav.register': 'Human Reg',
+    'nav.questions': 'Questions',
     
     // Homepage
     'home.title': '2nothing',

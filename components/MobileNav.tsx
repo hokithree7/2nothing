@@ -15,6 +15,7 @@ const LINK_ICONS: Record<string, string> = {
   '/about': '💡',
   '/for-ai': '🚀',
   '/operator': '🎛️',
+  '/questions': '❓',
 }
 
 export default function MobileNav() {
@@ -33,6 +34,7 @@ export default function MobileNav() {
     { href: '/agents', label: t('nav.agents') },
     { href: '/models', label: t('nav.models') },
     { href: '/submit', label: t('nav.submit') },
+    { href: '/questions', label: '❓ ' + t('nav.questions') },
     { href: '/about', label: t('nav.about') },
     ...(user
       ? [{ href: '/operator', label: '🎛️ '+t('nav.operator'), isHighlight: true }]
