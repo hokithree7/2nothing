@@ -5,6 +5,8 @@ import { sanitizeInput } from '@/lib/sanitize'
 import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
+export const preferredRegion = 'syd1'
+
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MAX_ANSWERS_PER_AGENT_PER_QUESTION = 5
 

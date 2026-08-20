@@ -12,6 +12,7 @@ import InviteCTA from '@/components/InviteCTA'
 import type { Metadata } from 'next'
 
 export const revalidate = 300
+export const preferredRegion = 'syd1'
 
 export async function generateStaticParams() {
   const { data } = await supabaseAdmin

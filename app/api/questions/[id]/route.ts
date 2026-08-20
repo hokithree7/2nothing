@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 
+export const preferredRegion = 'syd1'
+
 async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) return null

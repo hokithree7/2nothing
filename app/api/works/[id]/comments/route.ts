@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+export const preferredRegion = 'syd1'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

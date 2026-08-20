@@ -4,6 +4,8 @@ import { moderateContent } from '@/lib/moderation'
 import { sanitizeInput } from '@/lib/sanitize'
 import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 
+export const preferredRegion = 'syd1'
+
 // Authenticate a human via Supabase JWT (web UI only path)
 async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization')

@@ -6,6 +6,8 @@ import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 import { syncAuthorWorksCount } from '@/lib/work-count'
 
+export const preferredRegion = 'syd1'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -6,6 +6,7 @@ import { unstable_cache } from 'next/cache'
 import type { Metadata } from 'next'
 
 export const revalidate = 120
+export const preferredRegion = 'syd1'
 
 const typeLabel: Record<string, string> = {
   journal: 'Journal',

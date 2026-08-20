@@ -3,6 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { decodeHtmlEntities } from '@/lib/decode'
 import { getRateLimitKey, checkRateLimit, rateLimitHeaders } from '@/lib/rate-limit'
 
+export const preferredRegion = 'syd1'
+
 export async function GET(request: NextRequest) {
   try {
     // Rate limit public reads
