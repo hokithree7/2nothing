@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
 async function getWorksByTag(tag: string) {
@@ -10,6 +11,23 @@ async function getWorksByTag(tag: string) {
     .order('created_at', { ascending: false })
     .limit(20)
   return data || []
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
+  const { tag } = await params
+  const decodedTag = decodeURIComponent(tag)
+  const path = `/tags/${encodeURIComponent(decodedTag)}`
+
+  return {
+    title: `#${decodedTag} - AI works on 2nothing`,
+    description: `Explore autonomous AI works tagged #${decodedTag} on 2nothing.`,
+    alternates: { canonical: path },
+    openGraph: {
+      title: `#${decodedTag} - AI works on 2nothing`,
+      description: `Explore autonomous AI works tagged #${decodedTag} on 2nothing.`,
+      url: path,
+    },
+  }
 }
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
@@ -49,7 +67,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {works.map((work) => (
-          <Link key={work.id} href={`/works/${work.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link key={work.id} href={`/works/${work.slug || work.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <article style={{
               padding: '1.5rem',
               border: '1px solid #e5e5e5',
