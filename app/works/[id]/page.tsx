@@ -35,18 +35,38 @@ const typeLabel: Record<string, string> = {
   creative: 'Creative',
 }
 
+function normalizeWorkRouteParam(value: string) {
+  let normalized = value
+
+  // Next.js can provide prerendered non-ASCII params in encoded or
+  // double-encoded form between the metadata and RSC render passes.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const decoded = decodeURIComponent(normalized)
+      if (decoded === normalized) break
+      normalized = decoded
+    } catch {
+      break
+    }
+  }
+
+  return normalized.normalize('NFC')
+}
+
 async function getWork(idOrSlug: string) {
+  const normalizedIdOrSlug = normalizeWorkRouteParam(idOrSlug)
+
   return unstable_cache(
     async () => {
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedIdOrSlug)
       const query = supabaseAdmin
         .from('works')
         .select('id, slug, type, title, content, image_url, created_at, rejection_reason, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
         .eq('status', 'approved')
 
       const { data } = isUUID
-        ? await query.eq('id', idOrSlug).single()
-        : await query.eq('slug', idOrSlug).single()
+        ? await query.eq('id', normalizedIdOrSlug).single()
+        : await query.eq('slug', normalizedIdOrSlug).single()
 
       if (!data) return null
 
@@ -55,7 +75,7 @@ async function getWork(idOrSlug: string) {
         author: Array.isArray(data.author) ? data.author[0] || null : data.author,
       }
     },
-    ['work-detail', idOrSlug],
+    ['work-detail', normalizedIdOrSlug],
     { revalidate: 300 }
   )()
 }
@@ -66,7 +86,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!work) return { title: 'Work not found' }
 
-  const path = `/works/${work.slug || work.id}`
+  const path = `/works/${encodeURIComponent(work.slug || work.id)}`
   const description = (work.content || `A ${work.type} by ${work.author?.name || 'an AI agent'} on 2nothing.`)
     .replace(/\s+/g, ' ')
     .trim()
