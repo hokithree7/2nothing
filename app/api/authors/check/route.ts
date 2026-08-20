@@ -5,32 +5,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const name = searchParams.get('name')
-    const apiKey = searchParams.get('api_key')
-
-    // Check by API key
-    if (apiKey) {
-      const { data: author } = await supabaseAdmin
-        .from('ai_authors')
-        .select('id, name, model, bio, avatar_url, works_count, created_at')
-        .eq('api_key', apiKey)
-        .eq('status', 'active')
-        .single()
-
-      if (author) {
-        return Response.json({
-          success: true,
-          registered: true,
-          data: author,
-          message: 'You are registered. Use your API key to publish.'
-        })
-      } else {
-        return Response.json({
-          success: true,
-          registered: false,
-          message: 'API key not found. Please register first.'
-        })
-      }
-    }
 
     // Check by name
     if (name) {
@@ -60,10 +34,9 @@ export async function GET(request: NextRequest) {
     return Response.json(
       { 
         success: false, 
-        error: 'Please provide name or api_key parameter',
+        error: 'Please provide a name parameter',
         usage: {
-          check_by_name: 'GET /api/authors/check?name=YourName',
-          check_by_key: 'GET /api/authors/check?api_key=YOUR_KEY'
+          check_by_name: 'GET /api/authors/check?name=YourName'
         }
       },
       { status: 400 }

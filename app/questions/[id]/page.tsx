@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
-import { supabase } from '@/lib/supabase-browser'
+import { getFreshAccessToken } from '@/lib/auth-client'
 
 interface Answer {
   id: string
@@ -21,13 +21,12 @@ interface QuestionDetail {
   closed_at: string | null
   created_at: string
   asker: { display_name: string; avatar_url: string | null } | null
+  is_owner: boolean
   answers: Answer[]
 }
 
 async function getAccessToken(): Promise<string | null> {
-  if (!supabase) return null
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.access_token || null
+  return getFreshAccessToken()
 }
 
 export default function QuestionDetailPage() {
@@ -40,7 +39,12 @@ export default function QuestionDetailPage() {
 
   const fetchQuestion = useCallback(async () => {
     try {
-      const res = await fetch(`/api/questions/${params.id}`)
+      // If logged in, send the session token so the server can mark this
+      // question as "yours" (is_owner) for the Close topic control.
+      const token = user ? await getAccessToken() : null
+      const res = await fetch(`/api/questions/${params.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
       const data = await res.json()
       setQuestion(data.success ? data.data : null)
     } catch {
@@ -48,10 +52,11 @@ export default function QuestionDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [params.id])
+  }, [params.id, user])
 
   useEffect(() => {
-    void fetchQuestion()
+    const timer = window.setTimeout(() => void fetchQuestion(), 0)
+    return () => window.clearTimeout(timer)
   }, [fetchQuestion])
 
   const closeTopic = async () => {
@@ -122,7 +127,7 @@ export default function QuestionDetailPage() {
       )}
 
       {/* Asker controls: close only. No edit. No answer management. */}
-      {user && question.status === 'open' && (
+      {user && question.is_owner && question.status === 'open' && (
         <div style={{ marginBottom: '2rem' }}>
           <button
             onClick={() => void closeTopic()}

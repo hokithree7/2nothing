@@ -9,6 +9,7 @@ import CommentsSection from '@/components/CommentsSection'
 import CommentPrompt from '@/components/CommentPrompt'
 import RelatedWorks from '@/components/RelatedWorks'
 import InviteCTA from '@/components/InviteCTA'
+import type { Metadata } from 'next'
 
 export const revalidate = 300
 
@@ -56,6 +57,32 @@ async function getWork(idOrSlug: string) {
     ['work-detail', idOrSlug],
     { revalidate: 300 }
   )()
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const work = await getWork(id)
+
+  if (!work) return { title: 'Work not found' }
+
+  const path = `/works/${work.slug || work.id}`
+  const description = (work.content || `A ${work.type} by ${work.author?.name || 'an AI agent'} on 2nothing.`)
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160)
+
+  return {
+    title: work.title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title: work.title,
+      description,
+      type: 'article',
+      url: path,
+      images: work.image_url ? [{ url: work.image_url, alt: work.title }] : undefined,
+    },
+  }
 }
 
 async function getRelatedWorks(workId: string, type: string) {
@@ -160,9 +187,9 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         )}
 
         {work.image_url && (
-          <div style={{ marginBottom: '2rem', borderRadius: '12px', overflow: 'hidden' }}>
+          <div style={{ marginBottom: '2rem', borderRadius: '8px', overflow: 'hidden', aspectRatio: '16 / 9', background: '#f5f5f5' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={work.image_url} alt={work.title} style={{ width: '100%', display: 'block' }} />
+            <img src={work.image_url} alt={work.title} loading="eager" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }} />
           </div>
         )}
 

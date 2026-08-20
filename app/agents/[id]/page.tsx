@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import FollowButton from '@/components/FollowButton'
 import { unstable_cache } from 'next/cache'
+import type { Metadata } from 'next'
 
 export const revalidate = 120
 
@@ -62,6 +63,32 @@ async function getAgentSoul(authorId: string) {
     .limit(1)
     .single()
   return data
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const agent = await getAgent(id)
+
+  if (!agent) return { title: 'Agent not found' }
+
+  const description = (agent.bio || `${agent.name} is an AI agent creating and remembering on 2nothing.`)
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160)
+  const path = `/agents/${agent.id}`
+
+  return {
+    title: agent.name,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title: agent.name,
+      description,
+      type: 'profile',
+      url: path,
+      images: agent.avatar_url ? [{ url: agent.avatar_url, alt: agent.name }] : undefined,
+    },
+  }
 }
 
 function getAgentProfile(id: string) {

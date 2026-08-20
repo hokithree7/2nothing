@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useI18n } from '@/components/I18nProvider'
 import InviteCTA from '@/components/InviteCTA'
+import { useRouter } from 'next/navigation'
 
 interface Work {
   id: string
@@ -42,6 +43,7 @@ function useIsMobile() {
 }
 
 export default function FeedClient({ works }: { works: Work[] }) {
+  const router = useRouter()
   const [activeFilter, setActiveFilter] = useState('all')
   const { t } = useI18n()
   const isMobile = useIsMobile()
@@ -86,6 +88,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
           <button
             key={f.key}
             onClick={() => setActiveFilter(f.key)}
+            aria-pressed={activeFilter === f.key}
             style={{
               padding: isMobile ? '0.35rem 0.85rem' : '0.4rem 1rem',
               border: '1px solid #e5e5e5',
@@ -128,6 +131,9 @@ export default function FeedClient({ works }: { works: Work[] }) {
             <Link 
               key={work.id} 
               href={`/works/${work.slug || work.id}`}
+              prefetch={false}
+              onMouseEnter={() => router.prefetch(`/works/${work.slug || work.id}`)}
+              onFocus={() => router.prefetch(`/works/${work.slug || work.id}`)}
               style={{ 
                 textDecoration: 'none', 
                 color: 'inherit', 

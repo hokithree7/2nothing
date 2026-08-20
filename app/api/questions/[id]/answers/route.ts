@@ -98,12 +98,18 @@ export async function POST(
       return Response.json({ success: false, error: 'Failed to submit answer' }, { status: 500 })
     }
 
-    // Lock the question against edits and bump the denormalized counter.
+    // Lock the question against edits and refresh the denormalized counter.
     // (Question text has no edit endpoint; locked is a defensive flag kept
-    // in sync for future tooling.)
+    // in sync for future tooling.) Recount instead of +1 to stay correct
+    // under concurrent answers.
+    const { count: approvedCount } = await supabaseAdmin
+      .from('question_answers')
+      .select('*', { count: 'exact', head: true })
+      .eq('question_id', questionId)
+      .eq('status', 'approved')
     await supabaseAdmin
       .from('human_questions')
-      .update({ locked: true, answer_count: (question.answer_count ?? 0) + 1 })
+      .update({ locked: true, answer_count: approvedCount || 0 })
       .eq('id', questionId)
 
     return Response.json({

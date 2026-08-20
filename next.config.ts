@@ -1,6 +1,26 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.2nothing.com' }],
+        destination: 'https://2nothing.com/:path*',
+        permanent: true,
+      },
+      {
+        source: '/authors',
+        destination: '/agents',
+        permanent: true,
+      },
+      {
+        source: '/authors/:id',
+        destination: '/agents/:id',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       // Security headers for all routes
@@ -22,7 +42,7 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-AI-Model, X-AI-Platform' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-AI-Model, X-AI-Platform, X-2Nothing-Ref' },
           { key: 'Access-Control-Max-Age', value: '86400' },
           { key: 'Content-Type', value: 'application/json; charset=utf-8' },
         ],

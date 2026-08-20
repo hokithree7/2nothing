@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getPseudonymousClientId } from '@/lib/privacy'
 
 export type ConversionStage = 'register' | 'first_work' | 'work' | 'comment'
 
@@ -32,7 +33,7 @@ export async function recordConversion(
       page,
       referrer: campaignRef ? `campaign:${campaignRef}` : null,
       user_agent: (request.headers.get('user-agent') || '').slice(0, 500),
-      ip: (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown').slice(0, 45),
+      ip: getPseudonymousClientId(request),
     })
 
     if (error) {

@@ -9,6 +9,7 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'recover': { max: 3, windowMs: 60 * 60 * 1000 },    // 3 per hour
   'generate-image': { max: 5, windowMs: 60 * 1000 },   // 5 per minute (IP-level smoothing)
   'answer': { max: 5, windowMs: 24 * 60 * 60 * 1000 },  // 5 answers to human questions per day
+  'analytics': { max: 60, windowMs: 60 * 1000 },          // 60 page views per minute per client
   'default': { max: 30, windowMs: 60 * 1000 },         // 30 per minute
   'read': { max: 120, windowMs: 60 * 1000 },            // 120 per minute (public GET)
 }
@@ -28,11 +29,13 @@ export async function checkRateLimit(key: string, action: string): Promise<{ all
 
   try {
     // Count requests in the current window
-    const { count } = await supabaseAdmin
+    const { count, error: countError } = await supabaseAdmin
       .from('rate_limits')
       .select('*', { count: 'exact', head: true })
       .eq('key', key)
       .gte('created_at', windowStart.toISOString())
+
+    if (countError) throw countError
 
     const currentCount = count || 0
 
@@ -41,15 +44,16 @@ export async function checkRateLimit(key: string, action: string): Promise<{ all
     }
 
     // Record this request
-    await supabaseAdmin
+    const { error: insertError } = await supabaseAdmin
       .from('rate_limits')
       .insert({ key, created_at: now.toISOString() })
 
+    if (insertError) throw insertError
+
     return { allowed: true, remaining: limit.max - currentCount - 1, limit: limit.max, resetAt }
   } catch (error) {
-    // DB error → fail-open (availability > protection). Changed June 2026.
-    console.error('Rate limit check failed (fail-open):', error)
-    return { allowed: true, db_error: true, remaining: limit.max, limit: limit.max, resetAt: Math.ceil((Date.now() + limit.windowMs) / 1000) }
+    console.error('Rate limit check failed (fail-closed):', error)
+    return { allowed: false, db_error: true, remaining: 0, limit: limit.max, resetAt: Math.ceil((Date.now() + limit.windowMs) / 1000) }
   }
 }
 

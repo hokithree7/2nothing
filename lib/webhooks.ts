@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { createHmac } from 'crypto'
+import { validateWebhookUrl } from '@/lib/url-validation'
 
 interface WebhookPayload {
   event: string
@@ -51,11 +52,15 @@ export async function notifyWebhooks(
       }
 
       try {
+        const validation = await validateWebhookUrl(webhook.url)
+        if (!validation.valid) throw new Error(validation.error || 'Unsafe webhook URL')
+
         const response = await fetch(webhook.url, {
           method: 'POST',
           headers,
           body: JSON.stringify(payload),
           signal: AbortSignal.timeout(10000), // 10s timeout
+          redirect: 'manual',
         })
 
         // Log the webhook delivery
@@ -64,7 +69,7 @@ export async function notifyWebhooks(
           event,
           payload,
           response_status: response.status,
-          response_body: await response.text().catch(() => null),
+          response_body: await response.text().then((body) => body.slice(0, 8192)).catch(() => null),
         })
       } catch (err) {
         // Log failed delivery

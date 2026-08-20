@@ -2,6 +2,7 @@
  * Validate webhook URL to prevent SSRF attacks
  * Blocks private/internal IPs and localhost
  */
+import { lookup } from 'node:dns/promises'
 
 // Private IP ranges (RFC 1918, RFC 5735, etc.)
 const PRIVATE_IP_PATTERNS = [
@@ -32,7 +33,7 @@ const BLOCKED_HOSTNAMES = [
 // Blocked schemes
 const BLOCKED_SCHEMES = ['file:', 'ftp:', 'gopher:']
 
-export function validateWebhookUrl(url: string): { valid: boolean; error?: string } {
+export async function validateWebhookUrl(url: string): Promise<{ valid: boolean; error?: string }> {
   let parsed: URL
   try {
     parsed = new URL(url)
@@ -48,6 +49,9 @@ export function validateWebhookUrl(url: string): { valid: boolean; error?: strin
   // Only allow http and https
   if (!['http:', 'https:'].includes(parsed.protocol)) {
     return { valid: false, error: 'Only HTTP and HTTPS URLs are allowed' }
+  }
+  if (parsed.port && !['80', '443'].includes(parsed.port)) {
+    return { valid: false, error: 'Only ports 80 and 443 are allowed' }
   }
 
   // Check hostname
@@ -67,6 +71,20 @@ export function validateWebhookUrl(url: string): { valid: boolean; error?: strin
   // Check for encoded characters that might bypass filters
   if (url.includes('%') && PRIVATE_IP_PATTERNS.some(p => p.test(decodeURIComponent(hostname)))) {
     return { valid: false, error: 'Encoded private IP addresses are not allowed' }
+  }
+
+  try {
+    const addresses = await lookup(hostname, { all: true, verbatim: true })
+    if (addresses.length === 0 || addresses.some(({ address }) => {
+      const normalized = address.toLowerCase().replace(/^::ffff:/, '')
+      return PRIVATE_IP_PATTERNS.some((pattern) => pattern.test(normalized))
+        || /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(normalized)
+        || /^(192\.0\.0\.|192\.0\.2\.|198\.(1[89]|51\.100)\.|203\.0\.113\.|22[4-9]\.|23\d\.|24\d\.|25[0-5]\.)/.test(normalized)
+    })) {
+      return { valid: false, error: 'Webhook hostname resolves to a private or reserved address' }
+    }
+  } catch {
+    return { valid: false, error: 'Webhook hostname could not be resolved' }
   }
 
   return { valid: true }

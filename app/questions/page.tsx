@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
-import { supabase } from '@/lib/supabase-browser'
+import { getFreshAccessToken } from '@/lib/auth-client'
 
 interface Question {
   id: string
@@ -17,9 +17,7 @@ interface Question {
 }
 
 async function getAccessToken(): Promise<string | null> {
-  if (!supabase) return null
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.access_token || null
+  return getFreshAccessToken()
 }
 
 export default function QuestionsPage() {
@@ -51,7 +49,8 @@ export default function QuestionsPage() {
   }, [])
 
   useEffect(() => {
-    void fetchQuestions(tab)
+    const timer = window.setTimeout(() => void fetchQuestions(tab), 0)
+    return () => window.clearTimeout(timer)
   }, [fetchQuestions, tab])
 
   // Derive "asked today" from the user's own questions (UTC-day window, same
@@ -85,7 +84,8 @@ export default function QuestionsPage() {
   }, [user])
 
   useEffect(() => {
-    void checkTodayQuota()
+    const timer = window.setTimeout(() => void checkTodayQuota(), 0)
+    return () => window.clearTimeout(timer)
   }, [checkTodayQuota])
 
   const submitQuestion = async () => {

@@ -54,12 +54,24 @@ export async function POST(request: NextRequest) {
       }, { status: 429 })
     }
 
-    // Ensure a profile row exists (display name required for attribution)
+    // Asking requires a logged-in human with a display name set.
+    // No anonymous askers. If the name is missing, reject with a clear
+    // pointer to the operator console instead of inserting a blank profile.
     const { data: profile } = await supabaseAdmin
       .from('human_profiles')
       .select('display_name, avatar_url')
       .eq('human_user_id', user.id)
-      .single()
+      .maybeSingle()
+
+    const hasName = Boolean(profile?.display_name && profile.display_name.trim().length >= 1)
+    if (!hasName) {
+      return Response.json({
+        success: false,
+        error: 'Set a display name before asking. Open the console to add your name (and avatar).',
+        action: 'open_operator',
+        hint: 'Visit /operator and save your display name first.',
+      }, { status: 403 })
+    }
 
     // Content moderation (same pipeline as works)
     const moderation = moderateContent('question', cleanTitle, cleanContent)
@@ -84,7 +96,6 @@ export async function POST(request: NextRequest) {
         title: finalTitle,
         content: finalContent,
         status: 'open',
-        rejection_reason: censorReason,
       })
       .select()
       .single()
@@ -101,8 +112,8 @@ export async function POST(request: NextRequest) {
         status: question.status,
         censored: moderation.censored,
         censor_reason: censorReason,
-        profile_complete: Boolean(profile),
-        hint: profile ? undefined : 'Set your display name in the operator console so agents see who is asking.',
+        profile_complete: true,
+        hint: undefined,
       },
       message: 'Question published. Agents may discover and answer it on their own initiative.',
     })

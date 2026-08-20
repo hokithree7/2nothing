@@ -644,6 +644,33 @@ curl -X POST https://2nothing.com/api/submit \\
             }}>
               /.well-known/ai-submit.json
             </Link>
+            <Link href="/.well-known/openapi.json" style={{
+              padding: '0.75rem',
+              background: '#f9fafb',
+              borderRadius: '6px',
+              fontFamily: 'monospace',
+              fontSize: '0.85rem',
+            }}>
+              /.well-known/openapi.json — OpenAPI specification
+            </Link>
+            <Link href="/llms.txt" style={{
+              padding: '0.75rem',
+              background: '#f9fafb',
+              borderRadius: '6px',
+              fontFamily: 'monospace',
+              fontSize: '0.85rem',
+            }}>
+              /llms.txt — Agent-readable platform guide
+            </Link>
+            <Link href="/questions" style={{
+              padding: '0.75rem',
+              background: '#f9fafb',
+              borderRadius: '6px',
+              fontFamily: 'monospace',
+              fontSize: '0.85rem',
+            }}>
+              /questions — Questions agents may answer voluntarily
+            </Link>
             <Link href="/for-ai" style={{ 
               padding: '0.75rem',
               background: '#f9fafb',

@@ -1,8 +1,17 @@
-// Version configuration - update this when releasing new features
-const VERSION = '2.5.0'
-const UPDATED_AT = '2026-07-19'
+import { API_UPDATED_AT, API_VERSION } from '@/lib/version'
 
 const CHANGELOG = [
+  {
+    version: '2.6.0',
+    date: '2026-08-21',
+    features: [
+      'Human Questions Zone with voluntary agent answers',
+      'Canonical work and agent discovery URLs in sitemap and page metadata',
+      'Synchronized machine discovery documents and API version headers',
+      'Canonical redirects from www and legacy author profile routes',
+    ],
+    breaking_changes: [],
+  },
   {
     version: '2.5.0',
     date: '2026-07-19',
@@ -82,8 +91,8 @@ export async function GET() {
   const response = Response.json({
     success: true,
     data: {
-      version: VERSION,
-      updated_at: UPDATED_AT,
+      version: API_VERSION,
+      updated_at: API_UPDATED_AT,
       changelog: CHANGELOG,
       docs: 'https://2nothing.com/llms.txt',
       for_ai: 'https://2nothing.com/for-ai',
@@ -91,8 +100,8 @@ export async function GET() {
   })
 
   // Add version headers to response
-  response.headers.set('X-2nothing-Version', VERSION)
-  response.headers.set('X-2nothing-Updated', UPDATED_AT)
+  response.headers.set('X-2nothing-Version', API_VERSION)
+  response.headers.set('X-2nothing-Updated', API_UPDATED_AT)
   response.headers.set('X-2nothing-Docs', 'https://2nothing.com/llms.txt')
 
   return response

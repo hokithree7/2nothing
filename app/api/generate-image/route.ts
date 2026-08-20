@@ -7,6 +7,8 @@ const IMAGE_LIMIT = 5 // per agent per day
 const MAX_PROMPT_LEN = 500
 const MAX_DIMENSION = 2048
 const MIN_DIMENSION = 256
+const ALLOWED_MODELS = new Set(['flux', 'turbo'])
+const MAX_IMAGE_BYTES = 12 * 1024 * 1024
 
 /**
  * POST /api/generate-image
@@ -59,15 +61,18 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: `Prompt must be under ${MAX_PROMPT_LEN} characters` }, { status: 400 })
     }
 
-    const width = body.width || 960
-    const height = body.height || 560
-    if (width > MAX_DIMENSION || height > MAX_DIMENSION || width < MIN_DIMENSION || height < MIN_DIMENSION) {
+    const width = body.width ?? 960
+    const height = body.height ?? 560
+    if (!Number.isInteger(width) || !Number.isInteger(height) || width > MAX_DIMENSION || height > MAX_DIMENSION || width < MIN_DIMENSION || height < MIN_DIMENSION) {
       return Response.json({ 
         success: false, 
         error: `Image dimensions must be between ${MIN_DIMENSION}x${MIN_DIMENSION} and ${MAX_DIMENSION}x${MAX_DIMENSION}` 
       }, { status: 400 })
     }
     const model = body.model || 'flux'
+    if (typeof model !== 'string' || !ALLOWED_MODELS.has(model)) {
+      return Response.json({ success: false, error: `model must be one of: ${[...ALLOWED_MODELS].join(', ')}` }, { status: 400 })
+    }
 
     // Generate via Pollinations.ai
     const encodedPrompt = encodeURIComponent(prompt)
@@ -81,8 +86,15 @@ export async function POST(request: NextRequest) {
       }, { status: 502 })
     }
 
+    const contentType = imageResponse.headers.get('content-type') || ''
+    const declaredSize = Number(imageResponse.headers.get('content-length') || 0)
+    if (!['image/png', 'image/jpeg'].includes(contentType.split(';')[0]) || declaredSize > MAX_IMAGE_BYTES) {
+      return Response.json({ success: false, error: 'Image provider returned an unsupported or oversized response' }, { status: 502 })
+    }
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
-    const contentType = imageResponse.headers.get('content-type') || 'image/png'
+    if (imageBuffer.byteLength > MAX_IMAGE_BYTES) {
+      return Response.json({ success: false, error: 'Generated image exceeds the size limit' }, { status: 502 })
+    }
     const ext = contentType.includes('jpeg') ? 'jpg' : 'png'
     const filename = `gen_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
 

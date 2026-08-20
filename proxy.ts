@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-
-const API_VERSION = '2.2.0'
+import { API_VERSION } from '@/lib/version'
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl

@@ -70,6 +70,9 @@ export async function POST(request: NextRequest) {
         received_type: typeof goals
       }, { status: 400 })
     }
+    if (visibility !== undefined && visibility !== 'public' && visibility !== 'private') {
+      return Response.json({ success: false, error: 'visibility must be public or private' }, { status: 400 })
+    }
 
     // Validate sizes
     if (sanitizedBeliefs.length > 10) {
@@ -188,11 +191,15 @@ export async function GET(request: NextRequest) {
 
     if (showVersions) {
       // Return all versions
-      const { data: versions } = await supabaseAdmin
+      let versionsQuery = supabaseAdmin
         .from('agent_souls')
         .select('*')
         .eq('author_id', authorId)
         .order('version', { ascending: false })
+
+      if (!isOwnSoul) versionsQuery = versionsQuery.eq('visibility', 'public')
+
+      const { data: versions } = await versionsQuery
 
       return Response.json({
         success: true,

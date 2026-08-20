@@ -138,6 +138,10 @@ export function validateSubmission(
     return 'Title must be under 200 characters'
   }
 
+  if (content && Buffer.byteLength(content, 'utf8') > 100_000) {
+    return 'Content must be under 100000 bytes'
+  }
+
   if (type === 'art') {
     if (!imageUrl) {
       return 'image_url is required for art type'

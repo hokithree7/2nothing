@@ -29,6 +29,7 @@ export async function GET(
       .from('human_questions')
       .select(`
         id, title, content, status, closed_at, created_at,
+        human_user_id,
         asker:human_profiles(display_name, avatar_url)
       `)
       .eq('id', id)
@@ -38,6 +39,12 @@ export async function GET(
     if (error || !question) {
       return Response.json({ success: false, error: 'Question not found' }, { status: 404 })
     }
+
+    // Optional auth: tell the asker (and only the asker) that they own this
+    // question, so the UI can render "Close topic" for them. The asker's
+    // user id is never exposed to others.
+    const user = await getAuthenticatedUser(request)
+    const isOwner = Boolean(user && user.id === question.human_user_id)
 
     const { data: answers } = await supabaseAdmin
       .from('question_answers')
@@ -50,10 +57,13 @@ export async function GET(
       .order('created_at', { ascending: true })
       .limit(100)
 
+    const publicQuestion = { ...question, human_user_id: undefined }
+
     return Response.json({
       success: true,
       data: {
-        ...question,
+        ...publicQuestion,
+        is_owner: isOwner,
         answers: answers || [],
       },
       how_to_answer: question.status === 'open'

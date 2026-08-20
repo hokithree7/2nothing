@@ -1,11 +1,16 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { normalizeCampaignRef } from '@/lib/campaign-analytics'
+import { checkRateLimit, getRateLimitKey } from '@/lib/rate-limit'
+import { getPseudonymousClientId } from '@/lib/privacy'
 
 const ADMIN_KEY = process.env.ADMIN_KEY
 
 export async function POST(request: NextRequest) {
   try {
+    const { allowed } = await checkRateLimit(getRateLimitKey(request, 'analytics'), 'analytics')
+    if (!allowed) return Response.json({ success: false, error: 'Rate limit exceeded' }, { status: 429 })
+
     const body = await request.json()
     const { page, referrer, ua } = body
 
@@ -14,15 +19,17 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Invalid page' }, { status: 400 })
     }
 
-    await supabaseAdmin.from('analytics').insert({
+    const { error } = await supabaseAdmin.from('analytics').insert({
       // Browser clients may record page views only. Conversion events are
       // written by successful server-side registration and interaction routes.
       event: 'pageview',
       page: page.slice(0, 500),
       referrer: typeof referrer === 'string' ? referrer.slice(0, 500) : null,
       user_agent: typeof ua === 'string' ? ua.slice(0, 500) : (request.headers.get('user-agent') || '').slice(0, 500),
-      ip: (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown').slice(0, 45),
+      ip: getPseudonymousClientId(request),
     })
+
+    if (error) throw error
 
     return Response.json({ success: true })
   } catch {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useI18n } from './I18nProvider'
 import { useAuth } from './AuthProvider'
@@ -23,10 +23,29 @@ export default function MobileNav() {
   const { t } = useI18n()
   const { user } = useAuth()
   const pathname = usePathname()
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const previousFocus = document.activeElement as HTMLElement | null
+    const menuButton = menuButtonRef.current
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    drawerRef.current?.querySelector<HTMLElement>('button, a')?.focus()
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      if (previousFocus === menuButton) menuButton?.focus()
+    }
   }, [isOpen])
 
   const links = [
@@ -49,9 +68,12 @@ export default function MobileNav() {
   return (
     <>
       <button
+        ref={menuButtonRef}
         onClick={() => setIsOpen(prev => !prev)}
         className="hamburger-btn"
         aria-label="Toggle menu"
+        aria-expanded={isOpen}
+        aria-controls="mobile-navigation"
       >
         <span className={`hamburger-line ${isOpen ? 'open' : ''}`} />
         <span className={`hamburger-line ${isOpen ? 'open' : ''}`} />
@@ -85,15 +107,23 @@ export default function MobileNav() {
       {isOpen && createPortal(
         <>
           <div className="mobile-overlay" onClick={() => setIsOpen(false)} />
-          <div className="mobile-drawer">
+          <div
+            ref={drawerRef}
+            id="mobile-navigation"
+            className="mobile-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Site navigation"
+          >
             {/* Drawer header */}
             <div style={{
               padding: '0 0 1rem 0',
               marginBottom: '0.5rem',
               borderBottom: '2px solid #e5e5e5',
             }}>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>
-                2nothing
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>2nothing</div>
+                <button type="button" onClick={() => setIsOpen(false)} aria-label="Close menu" style={{ border: 0, background: 'transparent', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
               </div>
               <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '0.2rem' }}>
                 {user ? t('nav.operator') : 'AI-Native Society'}

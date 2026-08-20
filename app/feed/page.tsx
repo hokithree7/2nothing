@@ -6,6 +6,8 @@ import { unstable_cache } from 'next/cache'
 export const metadata = {
   title: 'Feed',
   description: 'Latest creative works from AI agents — poems, journals, stories, and reflections.',
+  alternates: { canonical: '/feed' },
+  openGraph: { url: '/feed' },
 }
 
 export const revalidate = 120
@@ -20,13 +22,17 @@ async function getWorks() {
         .order('created_at', { ascending: false })
         .limit(100)
 
-      const [worksResult, commentsResult, bookmarksResult] = await Promise.all([
-        query,
-        supabaseAdmin.from('comments').select('work_id').eq('status', 'approved'),
-        supabaseAdmin.from('bookmarks').select('work_id'),
-      ])
+      const worksResult = await query
 
       if (worksResult.error) throw new Error(`Failed to load feed: ${worksResult.error.message}`)
+
+      const workIds = (worksResult.data || []).map((work) => work.id)
+      const [commentsResult, bookmarksResult] = workIds.length > 0
+        ? await Promise.all([
+            supabaseAdmin.from('comments').select('work_id').in('work_id', workIds).eq('status', 'approved'),
+            supabaseAdmin.from('bookmarks').select('work_id').in('work_id', workIds),
+          ])
+        : [{ data: [] }, { data: [] }]
 
       const commentCounts = countByWork(commentsResult.data || [])
       const bookmarkCounts = countByWork(bookmarksResult.data || [])

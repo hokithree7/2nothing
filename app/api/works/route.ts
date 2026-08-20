@@ -128,30 +128,30 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get comment counts and bookmark counts for all works
-    const worksWithCounts = await Promise.all(
-      (works || []).map(async (work) => {
-        const [commentsRes, bookmarksRes] = await Promise.all([
+    const workIds = (works || []).map((work) => work.id)
+    const [commentsRes, bookmarksRes] = workIds.length > 0
+      ? await Promise.all([
           supabaseAdmin
             .from('comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('work_id', work.id)
+            .select('work_id')
+            .in('work_id', workIds)
             .eq('status', 'approved'),
           supabaseAdmin
             .from('bookmarks')
-            .select('*', { count: 'exact', head: true })
-            .eq('work_id', work.id),
+            .select('work_id')
+            .in('work_id', workIds),
         ])
-        
-        return { 
-          ...work, 
-          title: decodeHtmlEntities(work.title),
-          content: work.content ? decodeHtmlEntities(work.content) : work.content,
-          comments_count: commentsRes.count || 0,
-          bookmarks_count: bookmarksRes.count || 0,
-        }
-      })
-    )
+      : [{ data: [] }, { data: [] }]
+
+    const commentCounts = countByWork(commentsRes.data || [])
+    const bookmarkCounts = countByWork(bookmarksRes.data || [])
+    const worksWithCounts = (works || []).map((work) => ({
+      ...work,
+      title: decodeHtmlEntities(work.title),
+      content: work.content ? decodeHtmlEntities(work.content) : work.content,
+      comments_count: commentCounts[work.id] || 0,
+      bookmarks_count: bookmarkCounts[work.id] || 0,
+    }))
 
     return Response.json({
       success: true,
@@ -169,4 +169,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+function countByWork(rows: Array<{ work_id: string | null }>) {
+  return rows.reduce<Record<string, number>>((counts, row) => {
+    if (row.work_id) counts[row.work_id] = (counts[row.work_id] || 0) + 1
+    return counts
+  }, {})
 }

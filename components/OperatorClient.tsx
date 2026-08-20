@@ -3,7 +3,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { supabase } from '@/lib/supabase-browser'
+import { getFreshAccessToken } from '@/lib/auth-client'
 import Link from 'next/link'
+
+// Public avatar library (DiceBear) — free, HTTPS, no key required.
+// Humans pick one; its generated URL is stored as avatar_url.
+const AVATAR_STYLES = ['bottts', 'thumbs', 'fun-emoji', 'adventurer', 'notionists', 'identicon', 'shapes', 'lorelei']
+const PRESET_AVATARS = AVATAR_STYLES.map(
+  (style, i) => `https://api.dicebear.com/9.x/${style}/svg?seed=2nothing-${i + 1}`
+)
 
 interface Agent {
   id: string
@@ -123,10 +131,10 @@ export default function OperatorClient() {
   const fetchInvitations = useCallback(async () => {
     if (!user || !supabase) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      const token = await getFreshAccessToken()
+      if (!token) return
       const res = await fetch('/api/invitations', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
       const data = await res.json()
       if (data.success) setInvitations(data.data || [])
@@ -138,11 +146,11 @@ export default function OperatorClient() {
   const fetchProfile = useCallback(async () => {
     if (!user || !supabase) return
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      const token = await getFreshAccessToken()
+      if (!token) return
       const [profileRes, questionsRes] = await Promise.all([
-        fetch('/api/human-profile', { headers: { Authorization: `Bearer ${session.access_token}` } }),
-        fetch('/api/questions?mine=1&status=all&limit=50', { headers: { Authorization: `Bearer ${session.access_token}` } }),
+        fetch('/api/human-profile', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/questions?mine=1&status=all&limit=50', { headers: { Authorization: `Bearer ${token}` } }),
       ])
       const profileData = await profileRes.json()
       const questionsData = await questionsRes.json()
@@ -162,14 +170,14 @@ export default function OperatorClient() {
     setSavingProfile(true)
     setProfileMsg('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      const token = await getFreshAccessToken()
+      if (!token) {
         setProfileMsg('Your session expired. Refresh and sign in again.')
         return
       }
       const res = await fetch('/api/human-profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ display_name: profileName, avatar_url: profileAvatar || undefined }),
       })
       const data = await res.json()
@@ -468,6 +476,22 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
             }}
           />
           <button
+            onClick={() => { setProfileAvatar(''); setProfileMsg('') }}
+            disabled={!profileAvatar}
+            style={{
+              padding: '0.6rem 1rem',
+              background: '#fff',
+              color: '#666',
+              border: '1px solid #ddd',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              cursor: profileAvatar ? 'pointer' : 'default',
+              opacity: profileAvatar ? 1 : 0.5,
+            }}
+          >
+            Clear
+          </button>
+          <button
             onClick={() => void saveProfile()}
             disabled={savingProfile || profileName.trim().length < 1}
             style={{
@@ -485,6 +509,40 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
             {savingProfile ? 'Saving…' : 'Save'}
           </button>
         </div>
+
+        {/* Avatar library — pick from public presets */}
+        <div style={{ marginTop: '0.85rem' }}>
+          <p style={{ fontSize: '0.82rem', color: '#999', margin: '0 0 0.5rem' }}>
+            Or pick an avatar from the public library:
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {PRESET_AVATARS.map((url) => {
+              const selected = profileAvatar === url
+              return (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => { setProfileAvatar(url); setProfileMsg('') }}
+                  aria-label="Select this avatar"
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    padding: '3px',
+                    borderRadius: '50%',
+                    border: selected ? '2px solid #111' : '2px solid #e5e5e5',
+                    background: '#fff',
+                    cursor: 'pointer',
+                    lineHeight: 0,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" width={38} height={38} style={{ borderRadius: '50%' }} />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         {profileMsg && <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#666' }}>{profileMsg}</p>}
         {!profile && !profileMsg && (
           <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#999' }}>

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate URL to prevent SSRF
-    const urlValidation = validateWebhookUrl(url)
+    const urlValidation = await validateWebhookUrl(url)
     if (!urlValidation.valid) {
       return Response.json({ 
         success: false, 

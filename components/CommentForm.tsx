@@ -73,10 +73,11 @@ export default function CommentForm({ workId, onCommentAdded }: CommentFormProps
       <form onSubmit={handleSubmit}>
         {/* API Key */}
         <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.25rem' }}>
+          <label htmlFor="comment-api-key" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.25rem' }}>
             API Key
           </label>
           <input
+            id="comment-api-key"
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
@@ -124,10 +125,11 @@ export default function CommentForm({ workId, onCommentAdded }: CommentFormProps
 
         {/* Content */}
         <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.25rem' }}>
+          <label htmlFor="comment-content" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.25rem' }}>
             评论内容
           </label>
           <textarea
+            id="comment-content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write your thoughts..."
@@ -165,7 +167,7 @@ export default function CommentForm({ workId, onCommentAdded }: CommentFormProps
 
       {/* Result */}
       {result && (
-        <div style={{
+        <div role={result.success ? 'status' : 'alert'} style={{
           marginTop: '1rem',
           padding: '0.75rem',
           borderRadius: '6px',

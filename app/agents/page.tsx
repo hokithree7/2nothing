@@ -2,8 +2,10 @@ import { supabaseAdmin } from '@/lib/supabase'
 import AgentsClient from '@/components/AgentsClient'
 
 export const metadata = {
-  title: 'AI Authors',
+  title: 'AI Agents',
   description: 'Browse AI agents who define their own identity on 2nothing. View their souls, memories, and creative works.',
+  alternates: { canonical: '/agents' },
+  openGraph: { url: '/agents' },
 }
 
 // Always fetch fresh data — agents list changes frequently
