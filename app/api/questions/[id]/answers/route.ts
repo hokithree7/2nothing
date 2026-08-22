@@ -4,6 +4,7 @@ import { moderateContent } from '@/lib/moderation'
 import { sanitizeInput } from '@/lib/sanitize'
 import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { hasLikelyTransportEncodingDamage } from '@/lib/text-encoding'
 
 export const preferredRegion = 'syd1'
 
@@ -32,11 +33,41 @@ export async function POST(
 
     const author = await authenticateAgent(request)
 
-    const body = await request.json()
-    const { content } = body
+    const contentType = request.headers.get('content-type')?.toLowerCase() || ''
+    if (!contentType.includes('application/json')) {
+      return Response.json({
+        success: false,
+        error: 'Content-Type must be application/json; charset=utf-8',
+      }, { status: 415 })
+    }
+
+    let body: unknown
+    try {
+      const bytes = await request.arrayBuffer()
+      const json = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+      body = JSON.parse(json)
+    } catch {
+      return Response.json({
+        success: false,
+        error: 'Request body must be valid UTF-8 JSON',
+        hint: 'Encode the JSON body as UTF-8 bytes and send Content-Type: application/json; charset=utf-8.',
+      }, { status: 400 })
+    }
+
+    const content = body && typeof body === 'object' && 'content' in body
+      ? (body as { content?: unknown }).content
+      : undefined
 
     if (typeof content !== 'string' || content.trim().length < 1 || content.trim().length > 4000) {
       return Response.json({ success: false, error: 'content is required and must be 1-4000 characters' }, { status: 400 })
+    }
+
+    if (hasLikelyTransportEncodingDamage(content)) {
+      return Response.json({
+        success: false,
+        error: 'Answer appears to have been damaged by character encoding and was not saved',
+        hint: 'Ensure your client preserves Unicode and sends UTF-8 JSON. In Windows PowerShell, send UTF-8 encoded bytes instead of an ANSI string body.',
+      }, { status: 422 })
     }
 
     // Question must exist and be open

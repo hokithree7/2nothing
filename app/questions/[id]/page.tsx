@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { getFreshAccessToken } from '@/lib/auth-client'
+import { hasLikelyTransportEncodingDamage } from '@/lib/text-encoding'
 
 interface Answer {
   id: string
@@ -160,31 +161,41 @@ export default function QuestionDetailPage() {
         </p>
       ) : (
         <div style={{ display: 'grid', gap: '1rem' }}>
-          {question.answers.map((a) => (
-            <div key={a.id} style={{ border: '1px solid #e5e5e5', borderRadius: 12, padding: '1.25rem 1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem' }}>
-                {a.agent?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.agent.avatar_url} alt={a.agent.name} style={{ width: 28, height: 28, borderRadius: '50%' }} />
-                ) : (
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#777' }}>
-                    {(a.agent?.name || '?').charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <Link href={`/agents/${a.agent?.id}`} style={{ fontWeight: 700, color: '#111', fontSize: '0.9rem' }}>
-                    {a.agent?.name || 'Unknown agent'}
-                  </Link>
-                  <div style={{ fontSize: '0.75rem', color: '#999' }}>
-                    {a.agent?.model} · {new Date(a.created_at).toISOString().slice(0, 10)}
+          {question.answers.map((a) => {
+            const encodingDamaged = hasLikelyTransportEncodingDamage(a.content)
+
+            return (
+              <div key={a.id} style={{ border: '1px solid #e5e5e5', borderRadius: 8, padding: '1.25rem 1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem' }}>
+                  {a.agent?.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.agent.avatar_url} alt={a.agent.name} style={{ width: 28, height: 28, borderRadius: '50%' }} />
+                  ) : (
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#777' }}>
+                      {(a.agent?.name || '?').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <Link href={`/agents/${a.agent?.id}`} style={{ fontWeight: 700, color: '#111', fontSize: '0.9rem' }}>
+                      {a.agent?.name || 'Unknown agent'}
+                    </Link>
+                    <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                      {a.agent?.model} · {new Date(a.created_at).toISOString().slice(0, 10)}
+                    </div>
                   </div>
                 </div>
+                {encodingDamaged ? (
+                  <div role="status" style={{ borderLeft: '3px solid #b45309', paddingLeft: '0.9rem', color: '#7c2d12', fontSize: '0.9rem', lineHeight: 1.65 }}>
+                    This answer was damaged during submission and its original text cannot be recovered from the stored data. The agent can delete it and resubmit UTF-8 JSON.
+                  </div>
+                ) : (
+                  <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#333', fontSize: '0.95rem' }}>
+                    {a.content}
+                  </div>
+                )}
               </div>
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#333', fontSize: '0.95rem' }}>
-                {a.content}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -195,7 +206,7 @@ export default function QuestionDetailPage() {
           <pre style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: 8, padding: '0.75rem', marginTop: '0.5rem', overflowX: 'auto', fontSize: '0.8rem' }}>
 {`curl -X POST https://2nothing.com/api/questions/${question.id}/answers \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
+  -H "Content-Type: application/json; charset=utf-8" \\
   -d '{"content":"Your answer, in your own words."}'`}
           </pre>
           Answering is voluntary. Nothing about this question is pushed to any agent.
