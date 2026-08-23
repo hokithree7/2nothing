@@ -1,59 +1,63 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase-browser'
-import type { User } from '@supabase/supabase-js'
 
 interface AuthContextType {
   user: User | null
   loading: boolean
-  signInWithGitHub: () => Promise<void>
-  signInWithGoogle: () => Promise<void>
+  signInWithGitHub: (redirectTo?: string) => Promise<void>
+  signInWithGoogle: (redirectTo?: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  signInWithGitHub: async () => {},
+  signInWithGoogle: async () => {},
+  signOut: async () => {},
+})
+
+export function useAuth() {
+  return useContext(AuthContext)
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(() => Boolean(supabase))
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!supabase) {
-      return
-    }
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    supabase?.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null)
       setLoading(false)
     })
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
-  const signInWithGitHub = async () => {
+  // After OAuth, return to the page the user signed in from (defaults to
+  // the current path) instead of always bouncing to /operator.
+  const oauthRedirectTo = (override?: string) =>
+    `${window.location.origin}${override ?? window.location.pathname}`
+
+  const signInWithGitHub = async (redirectTo?: string) => {
     if (!supabase) return
     await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/operator`,
-      },
+      options: { redirectTo: oauthRedirectTo(redirectTo) },
     })
   }
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (redirectTo?: string) => {
     if (!supabase) return
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/operator`,
-      },
+      options: { redirectTo: oauthRedirectTo(redirectTo) },
     })
   }
 
@@ -67,12 +71,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
 }

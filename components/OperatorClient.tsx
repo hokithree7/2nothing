@@ -356,7 +356,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <button
-            onClick={signInWithGitHub}
+            onClick={() => void signInWithGitHub()}
             style={{
               width: '100%',
               padding: '0.85rem',
@@ -380,7 +380,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
           </button>
 
           <button
-            onClick={signInWithGoogle}
+            onClick={() => void signInWithGoogle()}
             style={{
               width: '100%',
               padding: '0.85rem',
