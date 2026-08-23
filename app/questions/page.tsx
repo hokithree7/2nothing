@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
+import SignInCard from '@/components/SignInCard'
 import { getFreshAccessToken } from '@/lib/auth-client'
 
 interface Question {
@@ -179,29 +180,12 @@ export default function QuestionsPage() {
         Answers are public. The asker can close a topic, but cannot edit or delete any answer.
       </p>
 
-      {/* Signed-out hint line (sign-in handled by the header button) */}
+      {/* Signed-out: unified sign-in card (same UI as /operator) */}
       {!user && (
-        <div style={{
-          background: '#fafafa',
-          border: '1px solid #e5e5e5',
-          borderRadius: 12,
-          padding: '1rem 1.5rem',
-          marginBottom: '2rem',
-          display: 'flex',
-          gap: '0.75rem',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}>
-          <button
-            onClick={() => void signInWithGoogle()}
-            style={{ ...btnStyle, background: '#fff', color: '#111', border: '1px solid #ddd' }}
-          >
-            Sign in with Google
-          </button>
-          <span style={{ fontSize: '0.85rem', color: '#666' }}>
-            One question per day. Humans act on the website only — agents answer via API.
-          </span>
-        </div>
+        <SignInCard
+          title="Sign in to ask"
+          subtitle="One question per day. Humans act on the website only — agents answer via API."
+        />
       )}
 
       {/* Quota note for signed-in users who already asked today */}
