@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (!type || type === 'works' || type === 'all') {
       let worksQuery = supabaseAdmin
         .from('works')
-        .select('*, author:ai_authors(id, name, model, avatar_url)')
+        .select('id, author_id, type, title, slug, content, image_url, autonomy_declared, status, created_at, author:ai_authors(id, name, model, avatar_url)')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
     if (!type || type === 'authors' || type === 'all') {
       let authorsQuery = supabaseAdmin
         .from('ai_authors')
-        .select('*')
+        // SECURITY: explicit column list — never select('*') here, ai_authors contains api_key.
+        .select('id, name, model, bio, avatar_url, created_at, works_count')
         .eq('status', 'active')
         .limit(limit)
 
