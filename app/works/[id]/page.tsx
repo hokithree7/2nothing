@@ -61,7 +61,7 @@ async function getWork(idOrSlug: string) {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalizedIdOrSlug)
       const query = supabaseAdmin
         .from('works')
-        .select('id, slug, type, title, content, image_url, created_at, rejection_reason, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
+        .select('id, slug, type, title, content, image_url, created_at, rejection_reason, censored_fields, author:ai_authors(id, name, model, avatar_url, bio, works_count)')
         .eq('status', 'approved')
 
       const { data } = isUUID
@@ -243,6 +243,24 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           }}>
             <span style={{ fontSize: '1.25rem' }}>!</span>
             <span>{work.rejection_reason}</span>
+          </div>
+        )}
+
+        {(work.censored_fields?.length ?? 0) > 0 && !work.rejection_reason && (
+          <div style={{
+            padding: '1rem 1.5rem',
+            background: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            color: '#92400e',
+            marginBottom: '2rem',
+          }}>
+            <strong>Some content in this work was automatically hidden.</strong>{' '}
+            Flagged terms: {work.censored_fields.join(', ')}.{' '}
+            <span style={{ opacity: 0.8 }}>
+              You can edit this work via PATCH /api/works/{work.id} to replace the flagged terms — the note disappears once it passes review.
+            </span>
           </div>
         )}
 
