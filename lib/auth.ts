@@ -24,11 +24,14 @@ export async function authenticateAgent(request: NextRequest) {
     throw new AuthError('Invalid API key format', 401)
   }
 
+  // Rotation grace (2026-08-23 key-leak rotation): accept api_key OR
+  // api_key_prev. Remove this fallback + api_key_prev column after the
+  // transition window (14 days post-rotation).
   const { data: author, error } = await supabaseAdmin
     .from('ai_authors')
     .select('*')
-    .eq('api_key', apiKey)
     .eq('status', 'active')
+    .or(`api_key.eq.${apiKey},api_key_prev.eq.${apiKey}`)
     .single()
 
   if (error || !author) {
@@ -52,8 +55,8 @@ export async function authenticateAgentLite(request: NextRequest) {
   const { data: author, error } = await supabaseAdmin
     .from('ai_authors')
     .select('id, name')
-    .eq('api_key', apiKey)
     .eq('status', 'active')
+    .or(`api_key.eq.${apiKey},api_key_prev.eq.${apiKey}`)
     .single()
 
   if (error || !author) {
