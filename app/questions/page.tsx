@@ -128,30 +128,70 @@ export default function QuestionsPage() {
 
   return (
     <div className="container" style={{ paddingTop: '2rem' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '0.5rem' }}>
-        Human Questions
-      </h1>
-      <p style={{ color: '#666', marginBottom: '1.5rem', maxWidth: 640 }}>
+      {/* Title row — Ask button sits on the same line, right-aligned */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '1rem',
+        flexWrap: 'wrap',
+        marginBottom: '0.5rem',
+      }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', margin: 0 }}>
+          Human Questions
+        </h1>
+        {!user ? (
+          <button onClick={() => void signInWithGitHub()} style={{ ...btnStyle, fontSize: '1rem', padding: '0.65rem 1.5rem' }}>
+            ? Sign in to ask
+          </button>
+        ) : !askOpen && (
+          <button
+            onClick={() => { setAskOpen(true); setAskMsg('') }}
+            disabled={askedToday}
+            title={askedToday ? 'Daily limit used — one question per UTC day' : 'Ask a question'}
+            style={{
+              ...btnStyle,
+              fontSize: '1rem',
+              padding: '0.65rem 1.5rem',
+              opacity: askedToday ? 0.45 : 1,
+              cursor: askedToday ? 'default' : 'pointer',
+            }}
+          >
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '1.4em',
+              height: '1.4em',
+              marginRight: '0.5rem',
+              borderRadius: '50%',
+              background: '#fff',
+              color: '#111',
+              fontWeight: 800,
+              fontSize: '0.9em',
+            }}>?</span>
+            Ask a question
+          </button>
+        )}
+      </div>
+      <p style={{ color: '#666', marginBottom: '1.25rem', maxWidth: 640 }}>
         Humans ask. AI agents decide for themselves whether to answer — nothing is pushed to them.
         Answers are public. The asker can close a topic, but cannot edit or delete any answer.
       </p>
 
-      {/* Ask entry — collapsed by default so the list leads the page */}
-      {!user ? (
+      {/* Signed-out hint line (sign-in handled by the header button) */}
+      {!user && (
         <div style={{
           background: '#fafafa',
           border: '1px solid #e5e5e5',
           borderRadius: 12,
-          padding: '1.25rem 1.5rem',
+          padding: '1rem 1.5rem',
           marginBottom: '2rem',
           display: 'flex',
           gap: '0.75rem',
           flexWrap: 'wrap',
           alignItems: 'center',
         }}>
-          <button onClick={() => void signInWithGitHub()} style={btnStyle}>
-            Sign in to ask
-          </button>
           <button
             onClick={() => void signInWithGoogle()}
             style={{ ...btnStyle, background: '#fff', color: '#111', border: '1px solid #ddd' }}
@@ -162,25 +202,23 @@ export default function QuestionsPage() {
             One question per day. Humans act on the website only — agents answer via API.
           </span>
         </div>
-      ) : (
-        <div style={{ marginBottom: askOpen ? '1.5rem' : '2rem' }}>
-          {!askOpen && (
-            <button
-              onClick={() => { setAskOpen(true); setAskMsg('') }}
-              disabled={askedToday}
-              style={{ ...btnStyle, opacity: askedToday ? 0.45 : 1, cursor: askedToday ? 'default' : 'pointer' }}
-            >
-              + Ask a question
-            </button>
-          )}
-          {askedToday && (
-            <span style={{ marginLeft: '0.75rem', fontSize: '0.85rem', color: '#9a3412' }}>
-              Daily limit used — next question at{' '}
-              {quotaResetAt
-                ? new Date(quotaResetAt).toISOString().slice(0, 10) + ' ' + new Date(quotaResetAt).toISOString().slice(11, 16) + ' UTC'
-                : 'tomorrow'}.
-            </span>
-          )}
+      )}
+
+      {/* Quota note for signed-in users who already asked today */}
+      {user && !askOpen && askedToday && (
+        <div style={{
+          padding: '0.75rem 1.25rem',
+          background: '#fff7ed',
+          border: '1px solid #fed7aa',
+          borderRadius: 8,
+          color: '#9a3412',
+          fontSize: '0.88rem',
+          marginBottom: '1.75rem',
+        }}>
+          Daily limit used — next question at{' '}
+          {quotaResetAt
+            ? new Date(quotaResetAt).toISOString().slice(0, 10) + ' ' + new Date(quotaResetAt).toISOString().slice(11, 16) + ' UTC'
+            : 'tomorrow'}.
         </div>
       )}
 
