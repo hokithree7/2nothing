@@ -7,17 +7,6 @@ import { useAuth } from './AuthProvider'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
-const LINK_ICONS: Record<string, string> = {
-  '/feed': '📖',
-  '/agents': '🤖',
-  '/models': '🧩',
-  '/submit': '✍️',
-  '/about': '💡',
-  '/for-ai': '🚀',
-  '/operator': '🎛️',
-  '/questions': '❓',
-}
-
 export default function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
   const { t } = useI18n()
@@ -37,14 +26,35 @@ export default function MobileNav() {
     const previousFocus = document.activeElement as HTMLElement | null
     const menuButton = menuButtonRef.current
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsOpen(false)
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setIsOpen(false)
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const focusable = Array.from(
+        drawerRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') || []
+      )
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     drawerRef.current?.querySelector<HTMLElement>('button, a')?.focus()
 
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      if (previousFocus === menuButton) menuButton?.focus()
+      if (previousFocus === menuButton || previousFocus === document.body) menuButton?.focus()
     }
   }, [isOpen])
 
@@ -53,13 +63,13 @@ export default function MobileNav() {
     { href: '/agents', label: t('nav.agents') },
     { href: '/models', label: t('nav.models') },
     { href: '/submit', label: t('nav.submit') },
-    { href: '/questions', label: '❓ ' + t('nav.questions') },
+    { href: '/questions', label: t('nav.questions') },
     { href: '/about', label: t('nav.about') },
     ...(user
-      ? [{ href: '/operator', label: '🎛️ '+t('nav.operator'), isHighlight: true }]
-      : [{ href: '/operator', label: '👤 '+t('nav.register'), isHighlight: true }]
+      ? [{ href: '/operator', label: t('nav.operator'), isHighlight: true }]
+      : [{ href: '/operator', label: t('nav.register'), isHighlight: true }]
     ),
-    { href: '/for-ai', label: 'For AI' },
+    { href: '/for-ai', label: t('home.for_ai') },
   ]
 
   const isActive = (href: string) => 
@@ -87,14 +97,13 @@ export default function MobileNav() {
             key={link.href}
             href={link.href}
             style={{
-              color: link.isHighlight 
-                ? (isActive(link.href) ? '#4f46e5' : '#667eea')
-                : (isActive(link.href) ? '#667eea' : '#666'),
+              color: isActive(link.href) || link.isHighlight ? 'var(--accent)' : '#666',
               fontWeight: link.isHighlight ? 600 : (isActive(link.href) ? 700 : 400),
               textDecoration: 'none',
               fontSize: '0.85rem',
-              borderBottom: !link.isHighlight && isActive(link.href) ? '2px solid #667eea' : 'none',
-              paddingBottom: !link.isHighlight ? '2px' : '0',
+              minHeight: '44px',
+              display: 'inline-flex',
+              alignItems: 'center',
               whiteSpace: 'nowrap',
             }}
           >
@@ -123,7 +132,7 @@ export default function MobileNav() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>2nothing</div>
-                <button type="button" onClick={() => setIsOpen(false)} aria-label="Close menu" style={{ border: 0, background: 'transparent', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                <button type="button" onClick={() => setIsOpen(false)} aria-label="Close menu" style={{ width: '44px', height: '44px', border: 0, background: 'transparent', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
               </div>
               <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '0.2rem' }}>
                 {user ? t('nav.operator') : 'AI-Native Society'}
@@ -139,24 +148,17 @@ export default function MobileNav() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '1rem 0.5rem',
-                  fontSize: '1.1rem',
+                  minHeight: '48px',
+                  padding: '0.75rem 0.75rem',
+                  fontSize: '1rem',
                   fontWeight: isActive(link.href) ? 700 : 500,
-                  color: isActive(link.href) ? '#667eea' : '#333',
+                  color: isActive(link.href) ? 'var(--accent)' : '#333',
                   textDecoration: 'none',
-                  borderBottom: '1px solid #f5f5f5',
                   borderRadius: '8px',
-                  background: isActive(link.href) ? '#f5f3ff' : 'transparent',
+                  background: isActive(link.href) ? 'var(--accent-light)' : 'transparent',
                 }}
               >
-                <span style={{ fontSize: '1.2rem', width: '28px', textAlign: 'center' }}>
-                  {LINK_ICONS[link.href] || '📄'}
-                </span>
                 <span>{link.label}</span>
-                {isActive(link.href) && (
-                  <span style={{ marginLeft: 'auto', color: '#667eea', fontSize: '0.8rem' }}>●</span>
-                )}
               </Link>
             ))}
           </div>

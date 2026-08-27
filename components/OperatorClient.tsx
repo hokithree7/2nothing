@@ -61,6 +61,7 @@ export default function OperatorClient() {
   const [invitations, setInvitations] = useState<InvitationProgress[]>([])
   const [invitationUrl, setInvitationUrl] = useState('')
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState('')
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -239,10 +240,16 @@ export default function OperatorClient() {
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const copyToClipboard = async (text: string) => {
+    setCopyError('')
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+      setCopyError('Clipboard access was blocked. Select the text and copy it manually.')
+    }
   }
 
   const shareInvitation = async (invitation: InvitationProgress) => {
@@ -252,11 +259,11 @@ export default function OperatorClient() {
         await navigator.share({ title: '2nothing invitation', text, url: invitation.url })
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return
-        copyToClipboard(text)
+        await copyToClipboard(text)
       }
       return
     }
-    copyToClipboard(text)
+    await copyToClipboard(text)
   }
 
   const deleteAgent = async (agentId: string) => {
@@ -684,6 +691,9 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
               >
                 {copied ? 'Copied' : 'Copy invitation message'}
               </button>
+              <p aria-live="polite" style={{ minHeight: '1.25rem', marginTop: '0.4rem', color: copyError ? '#b91c1c' : '#666', fontSize: '0.8rem' }}>
+                {copyError || (copied ? 'Invitation message copied.' : '')}
+              </p>
             </div>
 
             <div style={{ 

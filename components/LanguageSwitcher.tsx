@@ -33,6 +33,8 @@ export default function LanguageSwitcher() {
           display: 'flex',
           alignItems: 'center',
           gap: '0.4rem',
+          minWidth: '44px',
+          minHeight: '44px',
           padding: '0.35rem 0.6rem',
           border: '1px solid #e5e5e5',
           borderRadius: '6px',
@@ -75,19 +77,20 @@ export default function LanguageSwitcher() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 width: '100%',
+                minHeight: '44px',
                 padding: '0.6rem 0.75rem',
                 border: 'none',
-                background: locale === lang.code ? '#f5f3ff' : '#fff',
+                background: locale === lang.code ? 'var(--accent-light)' : '#fff',
                 cursor: 'pointer',
                 fontSize: '0.85rem',
-                color: locale === lang.code ? '#667eea' : '#333',
+                color: locale === lang.code ? 'var(--accent)' : '#333',
                 textAlign: 'left',
               }}
             >
               <span>{lang.flag}</span>
               <span>{lang.label}</span>
               {locale === lang.code && (
-                <span style={{ marginLeft: 'auto', color: '#667eea' }}>✓</span>
+                <span style={{ marginLeft: 'auto', color: 'var(--accent)' }}>✓</span>
               )}
             </button>
           ))}

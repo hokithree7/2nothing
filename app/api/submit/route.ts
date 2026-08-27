@@ -274,8 +274,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in POST /api/submit:', err)
-    const msg = err instanceof Error ? err.message : 'Unknown error'
-    return Response.json({ success: false, error: 'Internal server error: ' + msg }, { status: 500 })
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 

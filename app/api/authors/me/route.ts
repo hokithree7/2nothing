@@ -1,61 +1,44 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAvatarUrl } from '@/lib/avatar-validation'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id, name, model, bio, avatar_url, works_count, daily_quota, created_at')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (error || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
-
-    return Response.json({ success: true, data: author })
-  } catch {
+    const author = await authenticateAgent(request)
+    return Response.json({
+      success: true,
+      data: {
+        id: author.id,
+        name: author.name,
+        model: author.model,
+        bio: author.bio,
+        avatar_url: author.avatar_url,
+        works_count: author.works_count,
+        daily_quota: author.daily_quota,
+        created_at: author.created_at,
+      },
+    })
+  } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
+    const author = await authenticateAgent(request)
+    const body: unknown = await request.json()
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return Response.json({ success: false, error: 'Request body must be a JSON object' }, { status: 400 })
     }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const { name, model, avatar_url, bio } = body
+    const { name, model, avatar_url, bio } = body as Record<string, unknown>
 
     // Build update object
     const updates: Record<string, unknown> = {}
     if (name !== undefined) {
-      if (name.trim().length > 25) {
-        return Response.json({ success: false, error: 'Name must be under 25 characters' }, { status: 400 })
+      if (typeof name !== 'string' || name.trim().length === 0 || name.trim().length > 25) {
+        return Response.json({ success: false, error: 'Name must be a non-empty string under 25 characters' }, { status: 400 })
       }
       // Check if new name is already taken
       const { data: existing } = await supabaseAdmin
@@ -76,19 +59,28 @@ export async function PATCH(request: NextRequest) {
       updates.name = name.trim()
     }
     if (model !== undefined) {
-      if (model && model.trim().length > 50) {
+      if (model !== null && typeof model !== 'string') {
+        return Response.json({ success: false, error: 'Model must be a string or null' }, { status: 400 })
+      }
+      if (typeof model === 'string' && model.trim().length > 50) {
         return Response.json({ success: false, error: 'Model name must be under 50 characters' }, { status: 400 })
       }
-      updates.model = model?.trim() || null
+      updates.model = typeof model === 'string' ? model.trim() || null : null
     }
     if (bio !== undefined) {
-      if (bio && bio.trim().length > 150) {
+      if (bio !== null && typeof bio !== 'string') {
+        return Response.json({ success: false, error: 'Bio must be a string or null' }, { status: 400 })
+      }
+      if (typeof bio === 'string' && bio.trim().length > 150) {
         return Response.json({ success: false, error: 'Bio must be under 150 characters' }, { status: 400 })
       }
-      updates.bio = bio?.trim() || null
+      updates.bio = typeof bio === 'string' ? bio.trim() || null : null
     }
     
     if (avatar_url !== undefined) {
+      if (avatar_url !== null && typeof avatar_url !== 'string') {
+        return Response.json({ success: false, error: 'avatar_url must be a string or null' }, { status: 400 })
+      }
       // Validate avatar URL
       const avatarValidation = validateAvatarUrl(avatar_url)
       if (!avatarValidation.valid) {
@@ -98,7 +90,7 @@ export async function PATCH(request: NextRequest) {
           hint: 'Supported formats: JPG, PNG, GIF, WebP'
         }, { status: 400 })
       }
-      updates.avatar_url = avatar_url
+      updates.avatar_url = avatar_url || null
     }
 
     if (Object.keys(updates).length === 0) {
@@ -117,7 +109,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     return Response.json({ success: true, data: updated })
-  } catch {
+  } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

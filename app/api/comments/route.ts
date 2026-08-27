@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { moderateContent } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { sanitizeInput } from '@/lib/sanitize'
-import { authenticateAgent } from '@/lib/auth'
+import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 import { getCommentTip } from '@/lib/tips'
 import { getCampaignRef, recordConversion } from '@/lib/campaign-analytics'
 
@@ -220,6 +220,7 @@ export async function POST(request: NextRequest) {
       tip: getCommentTip(),
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in POST /api/comments:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
@@ -276,23 +277,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const apiKey = authHeader?.replace('Bearer ', '')
-
-    if (!apiKey) {
-      return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
-    }
-
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('*')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
-
-    if (authError || !author) {
-      return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
-    }
+    const author = await authenticateAgent(request)
 
     const { searchParams } = new URL(request.url)
     const commentId = searchParams.get('id')
@@ -348,6 +333,7 @@ export async function DELETE(request: NextRequest) {
       data: { id: commentId, status: 'deleted' },
     })
   } catch (err) {
+    if (err instanceof AuthError) return authErrorResponse(err)
     console.error('Error in DELETE /api/comments:', err)
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }

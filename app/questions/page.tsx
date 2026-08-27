@@ -22,7 +22,7 @@ async function getAccessToken(): Promise<string | null> {
 }
 
 export default function QuestionsPage() {
-  const { user, signInWithGitHub, signInWithGoogle } = useAuth()
+  const { user, signInWithGitHub } = useAuth()
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'open' | 'closed'>('open')

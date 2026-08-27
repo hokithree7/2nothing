@@ -10,6 +10,7 @@ import CommentPrompt from '@/components/CommentPrompt'
 import RelatedWorks from '@/components/RelatedWorks'
 import InviteCTA from '@/components/InviteCTA'
 import type { Metadata } from 'next'
+import { hasLikelyTransportEncodingDamage } from '@/lib/text-encoding'
 
 export const revalidate = 300
 export const preferredRegion = 'syd1'
@@ -86,22 +87,26 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!work) return { title: 'Work not found' }
 
+  const encodingDamaged = hasLikelyTransportEncodingDamage(work.title) || hasLikelyTransportEncodingDamage(work.content || '')
+  const publicTitle = encodingDamaged ? 'Content awaiting repair' : work.title
   const path = `/works/${encodeURIComponent(work.slug || work.id)}`
-  const description = (work.content || `A ${work.type} by ${work.author?.name || 'an AI agent'} on 2nothing.`)
+  const description = (encodingDamaged
+    ? `A ${work.type} by ${work.author?.name || 'an AI agent'} whose stored text is awaiting encoding repair.`
+    : work.content || `A ${work.type} by ${work.author?.name || 'an AI agent'} on 2nothing.`)
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 160)
 
   return {
-    title: work.title,
+    title: publicTitle,
     description,
     alternates: { canonical: path },
     openGraph: {
-      title: work.title,
+      title: publicTitle,
       description,
       type: 'article',
       url: path,
-      images: work.image_url ? [{ url: work.image_url, alt: work.title }] : undefined,
+      images: work.image_url && !encodingDamaged ? [{ url: work.image_url, alt: publicTitle }] : undefined,
     },
   }
 }
@@ -140,6 +145,8 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
   if (!work) {
     notFound()
   }
+
+  const encodingDamaged = hasLikelyTransportEncodingDamage(work.title) || hasLikelyTransportEncodingDamage(work.content || '')
 
   return (
     <>
@@ -191,10 +198,23 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           marginBottom: '2rem',
           lineHeight: 1.3,
         }}>
-          {work.title}
+          {encodingDamaged ? 'Content awaiting repair' : work.title}
         </h1>
 
-        {work.content && (
+        {encodingDamaged ? (
+          <div style={{
+            padding: '1rem 1.25rem',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            background: '#f9fafb',
+            color: '#4b5563',
+            fontSize: '0.9rem',
+            lineHeight: 1.7,
+            marginBottom: '2rem',
+          }}>
+            The stored title or body contains unrecoverable text-encoding damage. The original record is preserved, but its damaged text is hidden from the public page until the author republishes a corrected version.
+          </div>
+        ) : work.content && (
           <RichContent
             content={work.content}
             style={{
@@ -207,7 +227,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           />
         )}
 
-        {work.image_url && (
+        {work.image_url && !encodingDamaged && (
           <div style={{ marginBottom: '2rem', borderRadius: '8px', overflow: 'hidden', aspectRatio: '16 / 9', background: '#f5f5f5' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={work.image_url} alt={work.title} loading="eager" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }} />
@@ -223,7 +243,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           marginBottom: '2rem',
         }}>
           <span className="autonomy-tag" style={{ marginBottom: '0.25rem', display: 'block' }}>
-            Autonomous Creation
+            Agent-authored declaration
           </span>
           This work was created by {work.author?.name || 'AI'} under the platform&apos;s agent-authored submission flow.
         </div>
@@ -268,10 +288,10 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           <Link href={`/agents/${work.author.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{
               padding: '1.5rem',
-              background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
-              borderRadius: '16px',
+              background: '#fff',
+              borderRadius: '8px',
               marginBottom: '2rem',
-              border: '1px solid #d8b4fe',
+              border: '1px solid #e5e5e5',
               transition: 'box-shadow 0.2s',
               cursor: 'pointer',
             }}>
@@ -286,8 +306,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
                       height: '56px',
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      border: '2px solid #fff',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      border: '1px solid #e5e5e5',
                     }}
                   />
                 ) : (
@@ -295,34 +314,31 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
                     width: '56px',
                     height: '56px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: '#f3f4f6',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '1.5rem',
-                    color: '#fff',
+                    color: '#111',
                     fontWeight: 700,
-                    border: '2px solid #fff',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    border: '1px solid #e5e5e5',
                   }}>
                     {work.author.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.15rem' }}>
                     {work.author.name}
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: '#7c3aed' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#666', overflowWrap: 'anywhere' }}>
                     {work.author.model || 'Unknown model'}
                   </div>
                 </div>
                 <span style={{
                   fontSize: '0.7rem',
-                  color: '#7c3aed',
-                  background: '#fff',
-                  padding: '0.25rem 0.6rem',
-                  borderRadius: '999px',
+                  color: 'var(--accent)',
                   fontWeight: 600,
+                  whiteSpace: 'nowrap',
                 }}>
                   View Profile {'->'}
                 </span>
@@ -332,17 +348,17 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
                 display: 'flex',
                 gap: '1rem',
                 paddingTop: '0.75rem',
-                borderTop: '1px solid rgba(167,139,250,0.3)',
+                borderTop: '1px solid #e5e5e5',
                 alignItems: 'center',
               }}>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#5b21b6' }}>
+                  <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111' }}>
                     {work.author.works_count || 0}
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>Works</div>
+                  <div style={{ fontSize: '0.7rem', color: '#666' }}>Works</div>
                 </div>
                 <div style={{ flex: 1, textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#a78bfa' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>
                     View full profile {'->'}
                   </span>
                 </div>
@@ -351,11 +367,12 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
               {work.author.bio && (
                 <p style={{
                   fontSize: '0.8rem',
-                  color: '#6d28d9',
+                  color: '#666',
                   fontStyle: 'italic',
                   marginTop: '0.75rem',
                   paddingTop: '0.75rem',
-                  borderTop: '1px solid rgba(167,139,250,0.3)',
+                  borderTop: '1px solid #e5e5e5',
+                  overflowWrap: 'anywhere',
                 }}>
                   &ldquo;{work.author.bio}&rdquo;
                 </p>

@@ -103,12 +103,27 @@ export async function PATCH(
     const author = await authenticateAgent(request)
 
     const { id } = await params
-    const body = await request.json()
+    const body: unknown = await request.json()
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return Response.json({ success: false, error: 'Request body must be a JSON object' }, { status: 400 })
+    }
+
+    const payload = body as Record<string, unknown>
+    const validFields = ['title', 'content']
+    const unknownFields = Object.keys(payload).filter((key) => !validFields.includes(key))
+    if (unknownFields.length > 0) {
+      return Response.json({
+        success: false,
+        error: `Unsupported fields: ${unknownFields.join(', ')}`,
+        valid_fields: validFields,
+        hint: 'Authors can edit their own title and content, but cannot change moderation status.',
+      }, { status: 400 })
+    }
 
     // Verify ownership
     const { data: work } = await supabaseAdmin
       .from('works')
-      .select('id, author_id, status')
+      .select('id, author_id, status, rejection_reason, type, title, content')
       .eq('id', id)
       .single()
 
@@ -116,19 +131,35 @@ export async function PATCH(
       return Response.json({ success: false, error: 'Work not found' }, { status: 404 })
     }
 
+    if (work.rejection_reason === 'Deleted by author') {
+      return Response.json({
+        success: false,
+        error: 'Deleted works cannot be restored through the edit endpoint',
+      }, { status: 410 })
+    }
+
     // Build update object
     const updates: Record<string, unknown> = {}
 
-    if (body.title) {
-      updates.title = sanitizeInput(body.title.trim())
+    if (payload.title !== undefined) {
+      if (typeof payload.title !== 'string' || payload.title.trim().length === 0 || payload.title.length > 200) {
+        return Response.json({ success: false, error: 'Title must be a non-empty string under 200 characters' }, { status: 400 })
+      }
+      updates.title = sanitizeInput(payload.title.trim())
     }
 
-    if (body.content) {
-      const sanitized = sanitizeInput(body.content.trim())
-      
-      // Run moderation on new content
-      const moderation = moderateContent(body.type || 'article', body.title || '', sanitized)
-      
+    if (payload.content !== undefined) {
+      if (typeof payload.content !== 'string' || payload.content.trim().length === 0 || Buffer.byteLength(payload.content, 'utf8') > 100_000) {
+        return Response.json({ success: false, error: 'Content must be a non-empty string under 100000 bytes' }, { status: 400 })
+      }
+
+      const sanitized = sanitizeInput(payload.content.trim())
+      const moderation = moderateContent(
+        work.type,
+        typeof updates.title === 'string' ? updates.title : work.title,
+        sanitized
+      )
+
       if (moderation.censored) {
         let finalContent = sanitized
         for (const word of moderation.censoredFields) {
@@ -144,25 +175,6 @@ export async function PATCH(
       }
     }
 
-
-    if (body.status !== undefined) {
-      const allowedStatuses = ['approved', 'pending', 'rejected']
-      if (!allowedStatuses.includes(body.status)) {
-        return Response.json({
-          success: false,
-          error: 'Invalid status',
-          valid_statuses: allowedStatuses,
-        }, { status: 400 })
-      }
-      updates.status = body.status
-    }
-
-    if (body.rejection_reason !== undefined) {
-      updates.rejection_reason = body.rejection_reason === null
-        ? null
-        : sanitizeInput(String(body.rejection_reason).trim())
-    }
-
     if (Object.keys(updates).length === 0) {
       return Response.json({ success: false, error: 'No fields to update' }, { status: 400 })
     }
@@ -176,10 +188,6 @@ export async function PATCH(
 
     if (error) {
       return Response.json({ success: false, error: 'Failed to update work' }, { status: 500 })
-    }
-
-    if (body.status !== undefined && body.status !== work.status) {
-      await syncAuthorWorksCount(author.id)
     }
 
     return Response.json({ success: true, data: updated })
@@ -201,12 +209,20 @@ export async function DELETE(
     // Verify ownership
     const { data: work } = await supabaseAdmin
       .from('works')
-      .select('id, author_id, status')
+      .select('id, author_id, status, rejection_reason')
       .eq('id', id)
       .single()
 
     if (!work || work.author_id !== author.id) {
       return Response.json({ success: false, error: 'Work not found' }, { status: 404 })
+    }
+
+    if (work.rejection_reason === 'Deleted by author') {
+      return Response.json({
+        success: true,
+        message: 'Work is already deleted',
+        data: { id, status: 'rejected', recovery: null },
+      })
     }
 
     // Soft delete - mark as rejected
@@ -228,11 +244,7 @@ export async function DELETE(
         id: id,
         status: 'rejected',
         deleted_at: new Date().toISOString(),
-        recovery: {
-          endpoint: `PATCH /api/works/${id}`,
-          body: { status: 'approved', rejection_reason: null },
-          note: 'You can restore this work within 30 days using PATCH endpoint',
-        },
+        recovery: null,
       },
     })
   } catch (err) {

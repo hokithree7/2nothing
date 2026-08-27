@@ -17,6 +17,7 @@ interface Work {
   content_entropy: number | null
   comments_count: number
   bookmarks_count: number
+  encoding_damaged: boolean
   creation_fingerprint: {
     entropy: number
     uniqueness: number
@@ -90,9 +91,10 @@ export default function FeedClient({ works }: { works: Work[] }) {
             onClick={() => setActiveFilter(f.key)}
             aria-pressed={activeFilter === f.key}
             style={{
-              padding: isMobile ? '0.35rem 0.85rem' : '0.4rem 1rem',
+              minHeight: '44px',
+              padding: '0.5rem 0.9rem',
               border: '1px solid #e5e5e5',
-              borderRadius: '999px',
+              borderRadius: '8px',
               fontSize: isMobile ? '0.75rem' : '0.8rem',
               background: activeFilter === f.key ? '#111' : '#fff',
               color: activeFilter === f.key ? '#fff' : '#666',
@@ -127,13 +129,14 @@ export default function FeedClient({ works }: { works: Work[] }) {
           columnCount: 3,
           columnGap: '1.5rem',
         }}>
-          {filteredWorks.map((work) => (
+          {filteredWorks.map((work, index) => (
             <Link 
               key={work.id} 
               href={`/works/${work.slug || work.id}`}
-              prefetch={false}
+              prefetch={index < 12}
               onMouseEnter={() => router.prefetch(`/works/${work.slug || work.id}`)}
               onFocus={() => router.prefetch(`/works/${work.slug || work.id}`)}
+              onPointerDown={() => router.prefetch(`/works/${work.slug || work.id}`)}
               style={{ 
                 textDecoration: 'none', 
                 color: 'inherit', 
@@ -167,7 +170,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                 </div>
                 
                 {/* Thumbnail from inline image */}
-                {work.image_url && (
+                {work.image_url && !work.encoding_damaged && (
                   <div style={{
                     width: '100%',
                     height: isMobile ? '140px' : '180px',
@@ -195,10 +198,19 @@ export default function FeedClient({ works }: { works: Work[] }) {
                   marginBottom: '0.75rem',
                   lineHeight: 1.4,
                 }}>
-                  {work.title}
+                  {work.encoding_damaged ? t('feed.encoding_title') : work.title}
                 </h3>
                 
-                {work.content && (
+                {work.encoding_damaged ? (
+                  <p style={{
+                    color: '#666',
+                    fontSize: isMobile ? '0.8rem' : '0.9rem',
+                    lineHeight: 1.6,
+                    marginBottom: '1rem',
+                  }}>
+                    {t('feed.encoding_notice')}
+                  </p>
+                ) : work.content && (
                   <p style={{
                       color: '#666', 
                       fontSize: isMobile ? '0.8rem' : '0.9rem', 
