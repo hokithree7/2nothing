@@ -162,12 +162,14 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           marginBottom: '1.5rem',
           marginTop: '-0.5rem',
         }}>
-          <Link href="/feed" style={{
+          <Link href={`/feed?type=${encodeURIComponent(work.type)}`} style={{
             fontSize: '0.85rem',
-            color: '#999',
+            color: 'var(--accent)',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.35rem',
+            minHeight: '44px',
+            padding: '0.25rem 0.5rem',
             textDecoration: 'none',
           }}>
             {'<-'} Back to {work.type}
@@ -218,8 +220,8 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           <RichContent
             content={work.content}
             style={{
-              fontSize: '1.05rem',
-              lineHeight: 2,
+              fontSize: '1.0625rem',
+              lineHeight: 1.7,
               color: '#333',
               whiteSpace: 'pre-line',
               marginBottom: '2rem',
@@ -245,7 +247,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           <span className="autonomy-tag" style={{ marginBottom: '0.25rem', display: 'block' }}>
             Agent-authored declaration
           </span>
-          This work was created by {work.author?.name || 'AI'} under the platform&apos;s agent-authored submission flow.
+          This work was created by {work.author?.name || 'AI'}{' '}under the platform&apos;s agent-authored submission flow.
         </div>
 
         {work.rejection_reason && (
@@ -285,98 +287,67 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
         )}
 
         {work.author && (
-          <Link href={`/agents/${work.author.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link href={`/agents/${work.author.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
             <div style={{
-              padding: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.85rem',
+              padding: '1rem 1.25rem',
               background: '#fff',
               borderRadius: '8px',
               marginBottom: '2rem',
               border: '1px solid #e5e5e5',
-              transition: 'box-shadow 0.2s',
-              cursor: 'pointer',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                {work.author.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={work.author.avatar_url}
-                    alt={work.author.name}
-                    style={{
-                      width: '56px',
-                      height: '56px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '1px solid #e5e5e5',
-                    }}
-                  />
-                ) : (
-                  <div style={{
-                    width: '56px',
-                    height: '56px',
+              {work.author.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={work.author.avatar_url}
+                  alt={work.author.name}
+                  style={{
+                    width: '44px',
+                    height: '44px',
                     borderRadius: '50%',
-                    background: '#f3f4f6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.5rem',
-                    color: '#111',
-                    fontWeight: 700,
+                    objectFit: 'cover',
                     border: '1px solid #e5e5e5',
-                  }}>
-                    {work.author.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.15rem' }}>
-                    {work.author.name}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: '#666', overflowWrap: 'anywhere' }}>
-                    {work.author.model || 'Unknown model'}
-                  </div>
-                </div>
-                <span style={{
-                  fontSize: '0.7rem',
-                  color: 'var(--accent)',
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                }}>
-                  View Profile {'->'}
-                </span>
-              </div>
-
-              <div style={{
-                display: 'flex',
-                gap: '1rem',
-                paddingTop: '0.75rem',
-                borderTop: '1px solid #e5e5e5',
-                alignItems: 'center',
-              }}>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111' }}>
-                    {work.author.works_count || 0}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#666' }}>Works</div>
-                </div>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>
-                    View full profile {'->'}
-                  </span>
-                </div>
-              </div>
-
-              {work.author.bio && (
-                <p style={{
-                  fontSize: '0.8rem',
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: '#f3f4f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.1rem',
                   color: '#666',
-                  fontStyle: 'italic',
-                  marginTop: '0.75rem',
-                  paddingTop: '0.75rem',
-                  borderTop: '1px solid #e5e5e5',
-                  overflowWrap: 'anywhere',
+                  fontWeight: 700,
+                  border: '1px solid #e5e5e5',
+                  flexShrink: 0,
                 }}>
-                  &ldquo;{work.author.bio}&rdquo;
-                </p>
+                  {work.author.name.charAt(0).toUpperCase()}
+                </div>
               )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.1rem', overflowWrap: 'anywhere' }}>
+                  {work.author.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#666', overflowWrap: 'anywhere' }}>
+                  {work.author.model || 'Unknown model'}
+                  {' · '}{work.author.works_count === 1 ? '1 work' : `${work.author.works_count || 0} works`}
+                </div>
+              </div>
+              <span style={{
+                fontSize: '0.8rem',
+                color: 'var(--accent)',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}>
+                View Profile {'->'}
+              </span>
             </div>
           </Link>
         )}

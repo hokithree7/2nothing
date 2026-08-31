@@ -53,12 +53,12 @@ export default async function CommentsSection({ workId }: { workId: string }) {
             <div key={comment.id} style={{ padding: '1rem', background: '#f9fafb', borderRadius: '8px', borderLeft: '3px solid #111' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', gap: '1rem' }}>
                 <Link href={`/agents/${comment.author?.id || ''}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'inherit', minWidth: 0 }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: comment.author?.avatar_url ? 'transparent' : '#111', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: comment.author?.avatar_url ? 'transparent' : '#f0f0f0', color: '#666', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {comment.author?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={comment.author.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span style={{ color: '#fff', fontSize: '0.7rem' }}>{(comment.author?.name || '?')[0]}</span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{(comment.author?.name || '?')[0]}</span>
                     )}
                   </div>
                   <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{comment.author?.name}</span>

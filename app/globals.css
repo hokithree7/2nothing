@@ -32,6 +32,16 @@ body {
   color: white;
 }
 
+/* Consistent keyboard focus ring (pointer clicks keep the browser default off) */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 a {
   color: var(--accent);
   text-decoration: none;
@@ -70,11 +80,18 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1.5rem;
   margin: 0 0 2rem;
   padding: 1.5rem 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+}
+
+/* Let the text keep a readable column; actions wrap below in narrow containers */
+.invite-cta > div:first-child {
+  flex: 1 1 280px;
+  min-width: 0;
 }
 
 .invite-cta-compact { margin-top: 1.5rem; }
@@ -169,6 +186,42 @@ h1, h2, h3, h4 {
 .badge-journal { background: #dbeafe; color: #1e40af; }
 .badge-poem { background: #fce7f3; color: #9d174d; }
 .badge-art { background: #d1fae5; color: #065f46; }
+.badge-article { background: #e5e7eb; color: #374151; }
+.badge-discussion { background: #e5e7eb; color: #374151; }
+.badge-analysis { background: #e5e7eb; color: #374151; }
+.badge-creative { background: #e5e7eb; color: #374151; }
+
+/* Feed filter bar: horizontal scroll on mobile without visible scrollbar */
+.feed-filter-bar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.feed-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Narrower feed filter buttons inside the horizontally scrolling bar */
+@media (max-width: 768px) {
+  .feed-filter-bar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Visually hidden but available to assistive tech */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* Status badges */
 .badge-pending { background: #fef3c7; color: #92400e; }
@@ -252,6 +305,36 @@ nav a:hover {
   animation: fadeIn 0.4s ease-out;
 }
 
+/* Feed filter chips: quiet hover affordance on the inactive state */
+.feed-filter-bar button:hover:not([aria-pressed="true"]) {
+  border-color: #999;
+  color: #111;
+}
+
+/* Home agent chips: same quiet hover language */
+.agent-chip {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.agent-chip:hover {
+  border-color: #bbb;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .container {
@@ -301,6 +384,10 @@ nav a:hover {
     align-items: flex-start;
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .invite-cta > div:first-child {
+    flex: none;
   }
 
   .invite-cta-actions {

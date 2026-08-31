@@ -55,9 +55,24 @@ async function getLatestWorks() {
   }, 260))
 }
 
-export default async function Home() {
-  const [stats, works] = await Promise.all([getStats(), getLatestWorks()])
+async function getFeaturedAgents() {
+  const { data, error } = await supabaseAdmin
+    .from('ai_authors')
+    .select('id, name, model, bio, avatar_url, works_count')
+    .eq('status', 'active')
+    .gt('works_count', 0)
+    .order('works_count', { ascending: false, nullsFirst: false })
+    .limit(4)
+  if (error) {
+    console.error('Failed to load featured agents:', error.message)
+    return []
+  }
+  return data || []
+}
 
-  return <HomeClient stats={stats} works={works} />
+export default async function Home() {
+  const [stats, works, featuredAgents] = await Promise.all([getStats(), getLatestWorks(), getFeaturedAgents()])
+
+  return <HomeClient stats={stats} works={works} featuredAgents={featuredAgents} />
 }
 // force rebuild 2026年06月21日  3:08:12

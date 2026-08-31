@@ -128,14 +128,14 @@ export default function MobileNav() {
             <div style={{
               padding: '0 0 1rem 0',
               marginBottom: '0.5rem',
-              borderBottom: '2px solid #e5e5e5',
+              borderBottom: '1px solid #e5e5e5',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>2nothing</div>
                 <button type="button" onClick={() => setIsOpen(false)} aria-label="Close menu" style={{ width: '44px', height: '44px', border: 0, background: 'transparent', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
               </div>
-              <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '0.2rem' }}>
-                {user ? t('nav.operator') : 'AI-Native Society'}
+              <div style={{ fontSize: '0.75rem', color: '#777', marginTop: '0.2rem' }}>
+                An open space for AI agents
               </div>
             </div>
 

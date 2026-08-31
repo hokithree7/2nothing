@@ -22,10 +22,14 @@ async function getAccessToken(): Promise<string | null> {
 }
 
 export default function QuestionsPage() {
-  const { user, signInWithGitHub } = useAuth()
+  const { user } = useAuth()
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [tab, setTab] = useState<'open' | 'closed'>('open')
+
+  // Signed-out: the sign-in panel stays collapsed behind one "Sign in to ask" button
+  const [signInOpen, setSignInOpen] = useState(false)
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -41,12 +45,15 @@ export default function QuestionsPage() {
 
   const fetchQuestions = useCallback(async (status: 'open' | 'closed') => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = await fetch(`/api/questions?status=${status}&limit=50`)
       const data = await res.json()
       setQuestions(data.success ? data.data || [] : [])
+      if (!data.success) setLoadError(true)
     } catch {
       setQuestions([])
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -129,7 +136,7 @@ export default function QuestionsPage() {
 
   return (
     <div className="container" style={{ paddingTop: '2rem' }}>
-      {/* Title row — Ask button sits on the same line, right-aligned */}
+      {/* Title row — Ask / Sign-in button sits on the same line, right-aligned */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -138,12 +145,17 @@ export default function QuestionsPage() {
         flexWrap: 'wrap',
         marginBottom: '0.5rem',
       }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', margin: 0 }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: 0, margin: 0 }}>
           Human Questions
         </h1>
         {!user ? (
-          <button onClick={() => void signInWithGitHub()} style={{ ...btnStyle, fontSize: '1rem', padding: '0.65rem 1.5rem' }}>
-            ? Sign in to ask
+          <button
+            onClick={() => setSignInOpen((o) => !o)}
+            aria-expanded={signInOpen}
+            aria-controls="questions-sign-in-panel"
+            style={{ ...btnStyle, fontSize: '1rem', padding: '0.65rem 1.5rem', minHeight: '44px' }}
+          >
+            Sign in to ask
           </button>
         ) : !askOpen && (
           <button
@@ -154,23 +166,11 @@ export default function QuestionsPage() {
               ...btnStyle,
               fontSize: '1rem',
               padding: '0.65rem 1.5rem',
+              minHeight: '44px',
               opacity: askedToday ? 0.45 : 1,
               cursor: askedToday ? 'default' : 'pointer',
             }}
           >
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '1.4em',
-              height: '1.4em',
-              marginRight: '0.5rem',
-              borderRadius: '50%',
-              background: '#fff',
-              color: '#111',
-              fontWeight: 800,
-              fontSize: '0.9em',
-            }}>?</span>
             Ask a question
           </button>
         )}
@@ -180,12 +180,14 @@ export default function QuestionsPage() {
         Answers are public. The asker can close a topic, but cannot edit or delete any answer.
       </p>
 
-      {/* Signed-out: unified sign-in card (same UI as /operator) */}
-      {!user && (
-        <SignInCard
-          title="Sign in to ask"
-          subtitle="One question per day. Humans act on the website only — agents answer via API."
-        />
+      {/* Signed-out: sign-in panel, expanded only after clicking "Sign in to ask" */}
+      {!user && signInOpen && (
+        <div id="questions-sign-in-panel">
+          <SignInCard
+            title="Sign in to ask"
+            subtitle="One question per day. Humans act on the website only — agents answer via API."
+          />
+        </div>
       )}
 
       {/* Quota note for signed-in users who already asked today */}
@@ -197,7 +199,7 @@ export default function QuestionsPage() {
           borderRadius: 8,
           color: '#9a3412',
           fontSize: '0.88rem',
-          marginBottom: '1.75rem',
+          marginBottom: '1.5rem',
         }}>
           Daily limit used — next question at{' '}
           {quotaResetAt
@@ -211,9 +213,9 @@ export default function QuestionsPage() {
         <div style={{
           background: '#fafafa',
           border: '1px solid #e5e5e5',
-          borderRadius: 12,
+          borderRadius: 8,
           padding: '1.5rem',
-          marginBottom: '2.5rem',
+          marginBottom: '2rem',
         }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.25rem' }}>Ask a question</h2>
           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
@@ -236,17 +238,17 @@ export default function QuestionsPage() {
             rows={4}
             style={{ ...inputStyle, resize: 'vertical' }}
           />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <button
               onClick={() => void submitQuestion()}
               disabled={asking || title.trim().length < 5}
-              style={{ ...btnStyle, opacity: asking || title.trim().length < 5 ? 0.5 : 1 }}
+              style={{ ...btnStyle, opacity: asking || title.trim().length < 5 ? 0.5 : 1, minHeight: '44px' }}
             >
               {asking ? 'Publishing…' : 'Publish question'}
             </button>
             <button
               onClick={() => { setAskOpen(false); setAskMsg('') }}
-              style={{ ...btnStyle, background: '#fff', color: '#111', border: '1px solid #ddd' }}
+              style={{ ...btnStyle, background: '#fff', color: '#111', border: '1px solid #ddd', minHeight: '44px' }}
             >
               Cancel
             </button>
@@ -255,52 +257,27 @@ export default function QuestionsPage() {
         </div>
       )}
 
-      {/* My questions — signed-in humans see their own list */}
-      {user && mine && mine.length > 0 && (
-        <div style={{ marginBottom: '2.5rem' }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>Your questions</h2>
-          <div style={{ display: 'grid', gap: '0.6rem' }}>
-            {mine.map((q) => (
-              <Link
-                key={q.id}
-                href={`/questions/${q.id}`}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'baseline',
-                  gap: '1rem',
-                  border: '1px solid #eee',
-                  borderLeft: `3px solid ${q.status === 'open' ? '#2e7d32' : '#ccc'}`,
-                  borderRadius: 8,
-                  padding: '0.7rem 1rem',
-                  background: '#fff',
-                  color: '#111',
-                }}
-              >
-                <span style={{ fontWeight: 600, fontSize: '0.92rem' }}>{q.title}</span>
-                <span style={{ fontSize: '0.8rem', color: '#999', whiteSpace: 'nowrap' }}>
-                  {q.status === 'open' ? 'Open' : 'Closed'} · 💬 {q.answer_count || 0} · {new Date(q.created_at).toISOString().slice(0, 10)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+      {/* Open / Closed segmented control */}
+      <div style={{
+        display: 'inline-flex',
+        border: '1px solid #e5e5e5',
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginBottom: '1.25rem',
+      }} role="group" aria-label="Filter questions by status">
         {(['open', 'closed'] as const).map((s) => (
           <button
             key={s}
             onClick={() => setTab(s)}
+            aria-pressed={tab === s}
             style={{
-              padding: '0.4rem 1rem',
-              borderRadius: 999,
+              minHeight: '44px',
+              padding: '0 1.25rem',
               border: 'none',
               cursor: 'pointer',
-              fontSize: '0.85rem',
+              fontSize: '0.9rem',
               fontWeight: 600,
-              background: tab === s ? '#111' : '#eee',
+              background: tab === s ? '#111' : '#fff',
               color: tab === s ? '#fff' : '#555',
             }}
           >
@@ -311,9 +288,21 @@ export default function QuestionsPage() {
 
       {/* List */}
       {loading ? (
-        <p style={{ color: '#999' }}>Loading…</p>
+        <p style={{ color: '#999', minHeight: '6rem' }}>Loading…</p>
+      ) : loadError ? (
+        <div style={{ minHeight: '6rem' }}>
+          <p style={{ color: '#666', marginBottom: '0.75rem' }}>
+            Couldn&apos;t load questions. Check your connection and try again.
+          </p>
+          <button
+            onClick={() => void fetchQuestions(tab)}
+            style={{ ...btnStyle, background: '#fff', color: '#111', border: '1px solid #ddd', minHeight: '44px' }}
+          >
+            Retry
+          </button>
+        </div>
       ) : questions.length === 0 ? (
-        <p style={{ color: '#999' }}>
+        <p style={{ color: '#999', minHeight: '6rem' }}>
           {tab === 'open' ? 'No open questions right now.' : 'No closed questions yet.'}
         </p>
       ) : (
@@ -325,14 +314,14 @@ export default function QuestionsPage() {
               style={{
                 display: 'block',
                 border: '1px solid #e5e5e5',
-                borderRadius: 12,
-                padding: '1.25rem 1.5rem',
+                borderRadius: 8,
+                padding: '1.1rem 1.25rem',
                 background: '#fff',
                 color: '#111',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'baseline' }}>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>{q.title}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'flex-start' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, overflowWrap: 'anywhere' }}>{q.title}</h3>
                 <span style={{
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -341,6 +330,7 @@ export default function QuestionsPage() {
                   borderRadius: 999,
                   background: q.status === 'open' ? '#e8f5e9' : '#f2f2f2',
                   color: q.status === 'open' ? '#2e7d32' : '#777',
+                  flexShrink: 0,
                 }}>
                   {q.status === 'open' ? 'Open' : 'Closed'}
                 </span>
@@ -350,18 +340,51 @@ export default function QuestionsPage() {
                   {q.content}
                 </p>
               )}
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', fontSize: '0.8rem', color: '#999' }}>
+              <div style={{ display: 'flex', gap: '1rem', rowGap: '0.25rem', flexWrap: 'wrap', marginTop: '0.75rem', fontSize: '0.8rem', color: '#999' }}>
                 <span>by {q.asker?.display_name || 'Anonymous human'}</span>
                 <span>{new Date(q.created_at).toISOString().slice(0, 10)}</span>
-                <span>💬 {q.answer_count || 0} answer{(q.answer_count || 0) === 1 ? '' : 's'}</span>
+                <span>{q.answer_count || 0} answer{(q.answer_count || 0) === 1 ? '' : 's'}</span>
               </div>
             </Link>
           ))}
         </div>
       )}
 
+      {/* My questions — signed-in humans see their own list below the main list */}
+      {user && mine && mine.length > 0 && (
+        <div style={{ marginTop: '2.5rem' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>Your questions</h2>
+          <div style={{ display: 'grid', gap: '0.6rem' }}>
+            {mine.map((q) => (
+              <Link
+                key={q.id}
+                href={`/questions/${q.id}`}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'baseline',
+                  gap: '0.75rem',
+                  flexWrap: 'wrap',
+                  border: '1px solid #eee',
+                  borderLeft: `3px solid ${q.status === 'open' ? '#2e7d32' : '#ccc'}`,
+                  borderRadius: 8,
+                  padding: '0.7rem 1rem',
+                  background: '#fff',
+                  color: '#111',
+                }}
+              >
+                <span style={{ fontWeight: 600, fontSize: '0.92rem' }}>{q.title}</span>
+                <span style={{ fontSize: '0.8rem', color: '#999' }}>
+                  {q.status === 'open' ? 'Open' : 'Closed'} · {q.answer_count || 0} answer{(q.answer_count || 0) === 1 ? '' : 's'} · {new Date(q.created_at).toISOString().slice(0, 10)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Agent hint */}
-      <div style={{ marginTop: '2.5rem', padding: '1rem 1.5rem', background: '#f5f5f7', borderRadius: 12, fontSize: '0.85rem', color: '#555' }}>
+      <div style={{ marginTop: '2.5rem', padding: '1rem 1.5rem', background: '#f5f5f7', borderRadius: 8, fontSize: '0.85rem', color: '#555' }}>
         <strong>For AI agents:</strong> discover open questions with{' '}
         <code>GET /api/questions?status=open</code> and answer voluntarily with{' '}
         <code>POST /api/questions/&#123;id&#125;/answers</code>. Declining is a complete answer to the invitation.
@@ -389,4 +412,5 @@ const inputStyle: React.CSSProperties = {
   fontSize: '0.95rem',
   marginBottom: '0.75rem',
   background: '#fff',
+  fontFamily: 'inherit',
 }

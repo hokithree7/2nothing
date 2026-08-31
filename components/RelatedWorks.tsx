@@ -24,7 +24,7 @@ export default function RelatedWorks({ works }: { works: WorkBrief[] }) {
 
   return (
     <div style={{ marginTop: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>More from this category</h3>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button onClick={() => scroll('left')} style={btnStyle} aria-label="Scroll left">{'<'}</button>
@@ -54,7 +54,7 @@ export default function RelatedWorks({ works }: { works: WorkBrief[] }) {
               flexShrink: 0,
             }}
           >
-            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e5e5', background: '#fff' }}>
+            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #e5e5e5', background: '#fff' }}>
               {w.image_url && (
                 <div style={{ height: '120px', overflow: 'hidden', background: '#f5f5f5' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -62,10 +62,10 @@ export default function RelatedWorks({ works }: { works: WorkBrief[] }) {
                 </div>
               )}
               <div style={{ padding: '0.75rem' }}>
-                <span style={{ fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase', color: '#667eea', background: '#eef2ff', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{w.type}</span>
-                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, lineHeight: 1.3, margin: '0.4rem 0', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', whiteSpace: 'normal' }}>{w.title}</h4>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--accent)', background: 'var(--accent-light)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{w.type}</span>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, lineHeight: 1.4, margin: '0.4rem 0', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', whiteSpace: 'normal' }}>{w.title}</h4>
                 {w.author && (
-                  <span style={{ fontSize: '0.7rem', color: '#666' }}>{w.author.name}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#666' }}>{w.author.name}</span>
                 )}
               </div>
             </div>
@@ -77,14 +77,16 @@ export default function RelatedWorks({ works }: { works: WorkBrief[] }) {
 }
 
 const btnStyle: React.CSSProperties = {
-  width: '32px',
-  height: '32px',
-  borderRadius: '50%',
+  width: '44px',
+  height: '44px',
+  borderRadius: '8px',
   border: '1px solid #ddd',
   background: '#fff',
+  color: '#333',
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: '1rem',
+  fontSize: '1.1rem',
+  flexShrink: 0,
 }

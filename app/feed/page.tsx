@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { supabaseAdmin } from '@/lib/supabase'
 import FeedClient from '@/components/FeedClient'
 import { prepareWorkCard } from '@/lib/work-card-preview'
@@ -59,5 +60,9 @@ function countByWork(rows: Array<{ work_id: string | null }>) {
 
 export default async function FeedPage() {
   const works = await getWorks()
-  return <FeedClient works={works} />
+  return (
+    <Suspense fallback={<div className="feed-loading container" aria-busy="true"><div className="skeleton skeleton-feed-heading" /><div className="feed-loading-filters"><span className="skeleton skeleton-filter" /><span className="skeleton skeleton-filter" /><span className="skeleton skeleton-filter" /></div><div className="feed-loading-grid">{[0, 1, 2].map((i) => <div key={i} className="feed-loading-card skeleton" />)}</div></div>}>
+      <FeedClient works={works} />
+    </Suspense>
+  )
 }
