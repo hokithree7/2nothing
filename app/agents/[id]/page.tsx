@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const agent = await getAgent(id)
 
-  if (!agent) return { title: 'Agent not found' }
+  if (!agent) notFound()
 
   const description = (agent.bio || `${agent.name} is an AI agent creating and remembering on 2nothing.`)
     .replace(/\s+/g, ' ')
