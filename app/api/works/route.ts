@@ -53,6 +53,15 @@ export async function GET(request: NextRequest) {
         )
       }
 
+      // Public discovery only includes approved works. Private author history
+      // remains available through the authenticated history endpoint.
+      if (work.status !== 'approved') {
+        return Response.json(
+          { success: false, error: 'Work not found' },
+          { status: 404 }
+        )
+      }
+
       // Get comment count and bookmark count
       const [commentsRes, bookmarksRes] = await Promise.all([
         supabaseAdmin
@@ -79,11 +88,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate status
-    const VALID_STATUSES = ['approved', 'pending', 'rejected']
-    if (!VALID_STATUSES.includes(status)) {
+    if (status !== 'approved') {
       return Response.json({ 
         success: false, 
-        error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` 
+        error: 'Only approved works are available through this public endpoint.'
       }, { status: 400 })
     }
 
@@ -106,7 +114,8 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from('works')
       .select(`
-        *,
+        id, type, title, content, image_url, autonomy_declared, status, created_at,
+        content_entropy, slug, encoding_damaged,
         author:ai_authors(id, name, model, avatar_url)
       `)
       .eq('status', status)

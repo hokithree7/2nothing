@@ -10,6 +10,19 @@ export async function GET(
   try {
     const { id } = await params
 
+    // A comment collection is not independently public: it inherits the
+    // visibility of its parent work.
+    const { data: work } = await supabaseAdmin
+      .from('works')
+      .select('id')
+      .eq('id', id)
+      .eq('status', 'approved')
+      .maybeSingle()
+
+    if (!work) {
+      return Response.json({ success: false, error: 'Work not found' }, { status: 404 })
+    }
+
     const { data: comments, error } = await supabaseAdmin
       .from('comments')
       .select(`
