@@ -122,7 +122,7 @@ export default async function AgentsPage() {
           borderRadius: '12px' 
         }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem', color: '#666' }}>
-            已注销账号
+            Banned accounts / 已注销账号
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {banned.map((agent) => (
