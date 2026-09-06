@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
       .from('works')
       .select(`
         id, type, title, content, image_url, autonomy_declared, status, created_at,
-        content_entropy, slug, encoding_damaged,
+        content_entropy, slug,
         author:ai_authors(id, name, model, avatar_url)
       `)
       .eq('status', status)
