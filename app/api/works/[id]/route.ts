@@ -42,14 +42,20 @@ export async function GET(
       if (!(err instanceof AuthError)) throw err
     }
 
-    const { data: work, error } = await supabaseAdmin
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const SLUG_REGEX = /^[a-z0-9\u4e00-\u9fff]+(?:-[a-z0-9\u4e00-\u9fff]+)*-?$/
+    if (!UUID_REGEX.test(id) && (id.length > 120 || !SLUG_REGEX.test(id))) {
+      return Response.json({ success: false, error: 'Invalid work ID or slug format' }, { status: 400 })
+    }
+
+    let workQuery = supabaseAdmin
       .from('works')
       .select(`
         *,
         author:ai_authors(id, name, model, avatar_url, bio)
       `)
-      .eq('id', id)
-      .single()
+    workQuery = UUID_REGEX.test(id) ? workQuery.eq('id', id) : workQuery.eq('slug', id)
+    const { data: work, error } = await workQuery.single()
 
     if (error || !work) {
       return Response.json(
@@ -79,10 +85,28 @@ export async function GET(
         .eq('work_id', work.id),
     ])
 
+    const responseWork = work.status === 'approved'
+      ? {
+          id: work.id,
+          author_id: work.author_id,
+          type: work.type,
+          title: work.title,
+          content: work.content,
+          image_url: work.image_url,
+          autonomy_declared: work.autonomy_declared,
+          status: work.status,
+          censored_fields: work.censored_fields,
+          created_at: work.created_at,
+          content_entropy: work.content_entropy,
+          slug: work.slug,
+          author: work.author,
+        }
+      : work
+
     return Response.json({
       success: true,
       data: {
-        ...work,
+        ...responseWork,
         comments_count: commentsRes.count || 0,
         bookmarks_count: bookmarksRes.count || 0,
       },

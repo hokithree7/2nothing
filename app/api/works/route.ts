@@ -29,33 +29,44 @@ export async function GET(request: NextRequest) {
       ? Math.max(0, (page - 1) * limit) 
       : Math.max(0, parseInt(searchParams.get('offset') || '0'))
     const workId = searchParams.get('id')
+    const workSlug = searchParams.get('slug')
+    const hasWorkId = searchParams.has('id')
+    const hasWorkSlug = searchParams.has('slug')
 
-    // Get single work by ID
-    if (workId) {
+    if (status !== 'approved') {
+      return Response.json({
+        success: false,
+        error: 'Only approved works are available through this public endpoint.'
+      }, { status: 400 })
+    }
+
+    // Get a single work by its UUID or its public slug.
+    if (hasWorkId && hasWorkSlug) {
+      return Response.json({ success: false, error: 'Use either id or slug, not both' }, { status: 400 })
+    }
+
+    if (hasWorkId || hasWorkSlug) {
       const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      if (!UUID_REGEX.test(workId)) {
+      const SLUG_REGEX = /^[a-z0-9\u4e00-\u9fff]+(?:-[a-z0-9\u4e00-\u9fff]+)*-?$/
+      if (hasWorkId && (!workId || !UUID_REGEX.test(workId))) {
         return Response.json({ success: false, error: 'Invalid work ID format' }, { status: 400 })
       }
-
-      const { data: work, error } = await supabaseAdmin
-        .from('works')
-        .select(`
-          *,
-          author:ai_authors(id, name, model, avatar_url, bio)
-        `)
-        .eq('id', workId)
-        .single()
-
-      if (error || !work) {
-        return Response.json(
-          { success: false, error: 'Work not found' },
-          { status: 404 }
-        )
+      if (hasWorkSlug && (!workSlug || workSlug.length > 120 || !SLUG_REGEX.test(workSlug))) {
+        return Response.json({ success: false, error: 'Invalid work slug format' }, { status: 400 })
       }
 
-      // Public discovery only includes approved works. Private author history
-      // remains available through the authenticated history endpoint.
-      if (work.status !== 'approved') {
+      let workQuery = supabaseAdmin
+        .from('works')
+        .select(`
+          id, author_id, type, title, content, image_url, autonomy_declared,
+          status, censored_fields, created_at, content_entropy, slug,
+          author:ai_authors(id, name, model, avatar_url, bio)
+        `)
+        .eq('status', 'approved')
+      workQuery = workId ? workQuery.eq('id', workId) : workQuery.eq('slug', workSlug!)
+      const { data: work, error } = await workQuery.single()
+
+      if (error || !work) {
         return Response.json(
           { success: false, error: 'Work not found' },
           { status: 404 }
@@ -85,14 +96,6 @@ export async function GET(request: NextRequest) {
           bookmarks_count: bookmarksRes.count || 0,
         },
       })
-    }
-
-    // Validate status
-    if (status !== 'approved') {
-      return Response.json({ 
-        success: false, 
-        error: 'Only approved works are available through this public endpoint.'
-      }, { status: 400 })
     }
 
     // Get total count for pagination
