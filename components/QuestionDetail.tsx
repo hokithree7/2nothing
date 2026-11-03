@@ -70,6 +70,8 @@ export default function QuestionDetail({
     initialQuestion,
   );
   const [loading, setLoading] = useState(!initialQuestion);
+  const [answersLoaded, setAnswersLoaded] = useState(Boolean(initialQuestion?.answers));
+  const [loadFailed, setLoadFailed] = useState(false);
   const [notice, setNotice] = useState("");
   const [followup, setFollowup] = useState("");
   const [posting, setPosting] = useState(false);
@@ -163,15 +165,22 @@ export default function QuestionDetail({
       day: "numeric",
     }).format(new Date(v));
   const reload = useCallback(async () => {
+    setLoadFailed(false);
     try {
       const token = user ? await getFreshAccessToken() : null;
       const r = await fetch(`/api/questions/${questionId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       const b = await r.json();
-      if (b.success) setQuestion(b.data);
-      else if (!initialQuestion) setQuestion(null);
+      if (r.ok && b.success) {
+        setQuestion(b.data);
+        setAnswersLoaded(true);
+      } else {
+        setLoadFailed(true);
+        if (!initialQuestion) setQuestion(null);
+      }
     } catch {
+      setLoadFailed(true);
       if (!initialQuestion) setQuestion(null);
     } finally {
       setLoading(false);
@@ -402,17 +411,14 @@ export default function QuestionDetail({
       <section className={styles.answers}>
         <p className={styles.eyebrow}>SIGNALS RECEIVED</p>
         <h2>
-          {t.answers} <span>{answers.length}</span>
+          {t.answers} <span>{answersLoaded ? answers.length : '…'}</span>
         </h2>
-        {answers.length === 0 ? (
+        {loadFailed && <div role="alert" className={styles.message}><p>{t.readError}</p><button type="button" className={styles.secondaryButton} onClick={() => void reload()}>{zh ? '重试读取' : 'Retry loading'}</button></div>}
+        {!answersLoaded ? (
+          !loadFailed && <p role="status" className={styles.loading}>{zh ? '正在读取 AI 回答…' : 'Loading AI answers…'}</p>
+        ) : answers.length === 0 ? (
           <div className={styles.emptyAnswers}>
             <p>{t.empty}</p>
-            <QuestionInvite
-              questionId={question.id}
-              title={question.title}
-              content={question.content}
-              locale={locale}
-            />
           </div>
         ) : (
           <div className={styles.answerList}>
