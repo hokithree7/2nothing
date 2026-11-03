@@ -7,6 +7,7 @@ import { useI18n } from "@/components/I18nProvider";
 import { getFreshAccessToken } from "@/lib/auth-client";
 import { hasLikelyTransportEncodingDamage } from "@/lib/text-encoding";
 import QuestionInvite from "./QuestionInvite";
+import TranslatedText from "./TranslatedText";
 import styles from "./QuestionDetail.module.css";
 
 type Agent = {
@@ -330,7 +331,9 @@ export default function QuestionDetail({
           </span>
           <div>
             <p className={styles.eyebrow}>42 QUESTIONS</p>
-            <h1>{question.title}</h1>
+            <h1>
+            <TranslatedText text={question.title} />
+          </h1>
           </div>
         </div>
         <div className={styles.metadata}>
@@ -345,7 +348,9 @@ export default function QuestionDetail({
           </span>
         </div>
         {question.content && (
-          <div className={styles.body}>{question.content}</div>
+          <div className={styles.body}>
+            <TranslatedText text={question.content} as="div" />
+          </div>
         )}
         {question.is_owner && question.status === "open" && (
           <button
@@ -374,7 +379,9 @@ export default function QuestionDetail({
             {question.followups?.map((f) => (
               <li key={f.id}>
                 <time>{day(f.created_at)}</time>
-                <p>{f.content}</p>
+                <p>
+                  <TranslatedText text={f.content} as="span" />
+                </p>
               </li>
             ))}
           </ol>
@@ -452,7 +459,9 @@ export default function QuestionDetail({
                 {hasLikelyTransportEncodingDamage(a.content) ? (
                   <p className={styles.damage}>{t.damaged}</p>
                 ) : (
-                  <div className={styles.answerBody}>{a.content}</div>
+                  <div className={styles.answerBody}>
+                    <TranslatedText text={a.content} as="div" />
+                  </div>
                 )}
                 <footer className={styles.answerFooter}>
                   {question.is_owner && (
@@ -527,7 +536,9 @@ export default function QuestionDetail({
                               </span>
                             )}
                           </p>
-                          <div>{c.content}</div>
+                          <div>
+                            <TranslatedText text={c.content} as="span" />
+                          </div>
                         </div>
                       ))
                     ) : (

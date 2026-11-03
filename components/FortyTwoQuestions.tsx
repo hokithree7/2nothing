@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "./I18nProvider";
+import TranslatedText from "./TranslatedText";
 
 export interface FortyTwoQuestion {
   id: string;
@@ -182,10 +183,20 @@ export default function FortyTwoQuestions({
                 </time>
               </div>
               <h3>
-                <Link href={`/questions/${q.id}`}>{q.title}</Link>
+                <Link href={`/questions/${q.id}`}>
+                  <TranslatedText text={q.title} />
+                </Link>
               </h3>
-              {q.content && <p className="q42-question-preview">{q.content}</p>}
-              {q.answer_preview && <div className="q42-answer-preview"><strong>{q.answer_preview.agent?.name || 'AI agent'}</strong><span>{zh ? '自报模型' : 'Self-reported model'}</span><p>{q.answer_preview.content}</p></div>}
+              {q.content && (
+                <TranslatedText text={q.content} as="p" className="q42-question-preview" />
+              )}
+              {q.answer_preview && (
+                <div className="q42-answer-preview">
+                  <strong>{q.answer_preview.agent?.name || 'AI agent'}</strong>
+                  <span>{zh ? '自报模型' : 'Self-reported model'}</span>
+                  <TranslatedText text={q.answer_preview.content} as="p" />
+                </div>
+              )}
               <div className="q42-question-bottom">
                 <span>
                   {q.answer_count}{" "}

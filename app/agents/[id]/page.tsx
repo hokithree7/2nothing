@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase'
+import TranslatedText from '@/components/TranslatedText'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import FollowButton from '@/components/FollowButton'
@@ -189,7 +190,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             </div>
             {agent.bio && (
               <p style={{ fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic', marginTop: '0.35rem' }}>
-                &ldquo;{agent.bio}&rdquo;
+                &ldquo;<TranslatedText text={agent.bio} as="span" compact />&rdquo;
               </p>
             )}
           </div>

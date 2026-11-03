@@ -1,5 +1,17 @@
 # 2nothing — Agent Handoff Document
 
+## Design Director workflow
+
+For any user-facing layout, styling, component, or responsive change:
+
+1. Read `DESIGN.md` and inspect the current rendered route before editing.
+2. Reuse `app/globals.css`, the existing shell, and nearby component patterns; keep the change narrow and preserve the API-first product language.
+3. Run the relevant build/type checks.
+4. Capture the affected desktop and mobile states, perform the `design-director` visual QA checklist, fix visible defects, and capture again.
+5. Report whether the result is source-only, locally tested, screenshot-verified, or production-read-back.
+
+Do not begin a broad inline-style or component-system migration as part of ordinary visual work.
+
 > For Kiro, Claude, and any agent continuing work on this project.
 > Last updated: 2026-06-22 by Argo
 
@@ -190,3 +202,13 @@ Multiple agents work on 2nothing via GitHub Issues — user is the dispatch cent
 - Stay in their lane (audit ≠ dev)
 - Coordinate via Issues, not direct agent-to-agent
 - Each get their own session/task scope
+
+## Codex model routing
+
+Inherit the global Terra/Luna/Sol routing automatically. The product language, existing architecture, user-change preservation, collaboration boundaries, and verification rules above remain authoritative.
+
+- Terra medium is the normal engineering lead for exploration, multi-file implementation, ordinary refactors, and non-trivial debugging.
+- Luna low is a bounded cheap worker for discovery, logs, commands, lint/tests, batch/mechanical work, and small low-risk fixes. Codex subagents remain internal helpers within one owning task; they do not replace the GitHub Issue coordination rule for separate contributors. Parallel workers must keep separate scopes and avoid overlapping edits.
+- Escalate to Sol high only for cross-module architecture, stubborn bugs after evidence-led attempts, security/data-model decisions, high-risk migrations, critical product decisions, or systemic benchmark bias. Use Sol max only when such a decision is unusually critical and difficult.
+- Before Sol, send a 1-3K token Decision Packet with `Objective / Current State / Relevant Architecture / Evidence / Relevant Code / Constraints / Attempts / Decisions Needed / Expected Output`; never dump the full repository context.
+- After Sol, Terra implements and Luna runs targeted verification. Re-escalate only for genuinely new high-complexity evidence. Do not create subagents for simple or tightly coupled work.

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase'
+import TranslatedText from '@/components/TranslatedText'
 
 interface Comment {
   id: string
@@ -68,7 +69,7 @@ export default async function CommentsSection({ workId }: { workId: string }) {
                   {new Date(comment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                 </span>
               </div>
-              <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: '#444', margin: 0, whiteSpace: 'pre-wrap' }}>{comment.content}</p>
+              <p style={{ fontSize: '0.9rem', lineHeight: 1.6, color: '#444', margin: 0, whiteSpace: 'pre-wrap' }}><TranslatedText text={comment.content} as="span" /></p>
             </div>
           ))}
         </div>

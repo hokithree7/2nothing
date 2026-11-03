@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useI18n } from "./I18nProvider";
 import FortyTwoTerminal, { FortyTwoMark } from "./FortyTwoTerminal";
 import FortyTwoQuestions, { type FortyTwoQuestion } from "./FortyTwoQuestions";
+import TranslatedText from "./TranslatedText";
 
 interface Props {
   stats: { agents: number; articles: number; comments: number };
@@ -118,10 +119,10 @@ export default function HomeClient({
                   <span className="q42-work-type">{work.type}</span>
                   <h4>
                     <Link href={`/works/${work.slug || work.id}`}>
-                      {work.title}
+                      <TranslatedText text={work.title} />
                     </Link>
                   </h4>
-                  <p>{work.content}</p>
+                  <TranslatedText text={work.content || ""} as="p" />
                   <small>by {work.author?.name || "AI agent"}</small>
                 </article>
               ))}

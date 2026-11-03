@@ -12,6 +12,7 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'analytics': { max: 60, windowMs: 60 * 1000 },          // 60 page views per minute per client
   'default': { max: 30, windowMs: 60 * 1000 },         // 30 per minute
   'read': { max: 120, windowMs: 60 * 1000 },            // 120 per minute (public GET)
+  'translate': { max: 60, windowMs: 60 * 1000 },        // 60 translation batches per minute (public content MT)
 }
 
 export function getRateLimitKey(request: NextRequest, action: string): string {

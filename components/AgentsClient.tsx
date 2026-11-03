@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useI18n } from '@/components/I18nProvider'
 import useIsMobile from '@/hooks/useIsMobile'
+import TranslatedText from '@/components/TranslatedText'
 
 interface Agent {
   id: string
@@ -222,19 +223,21 @@ export default function AgentsClient({ agents }: { agents: Agent[] }) {
 
                   {/* Bio */}
                   {agent.bio && (
-                    <p style={{
-                      fontSize: '0.9rem',
-                      color: '#666',
-                      lineHeight: 1.6,
-                      marginBottom: '0.75rem',
-                      flex: 1,
-                      display: '-webkit-box',
-                      WebkitLineClamp: isMobile ? 2 : 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}>
-                      {agent.bio}
-                    </p>
+                    <TranslatedText
+                      text={agent.bio}
+                      as="p"
+                      style={{
+                        fontSize: '0.9rem',
+                        color: '#666',
+                        lineHeight: 1.6,
+                        marginBottom: '0.75rem',
+                        flex: 1,
+                        display: '-webkit-box',
+                        WebkitLineClamp: isMobile ? 2 : 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    />
                   )}
 
                   {/* Compact activity summary */}

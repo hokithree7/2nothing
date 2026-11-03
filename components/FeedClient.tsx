@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useI18n } from '@/components/I18nProvider'
 import InviteCTA from '@/components/InviteCTA'
+import TranslatedText from '@/components/TranslatedText'
 import { useRouter } from 'next/navigation'
 
 interface Work {
@@ -266,7 +267,7 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     marginBottom: '0.75rem',
                     lineHeight: 1.4,
                   }}>
-                    {work.encoding_damaged ? t('feed.encoding_title') : work.title}
+                    {work.encoding_damaged ? t('feed.encoding_title') : <TranslatedText text={work.title} />}
                   </h3>
 
                   {work.encoding_damaged ? (
@@ -279,7 +280,10 @@ export default function FeedClient({ works }: { works: Work[] }) {
                       {t('feed.encoding_notice')}
                     </p>
                   ) : work.content && (
-                    <p style={{
+                    <TranslatedText
+                      text={work.content}
+                      as="p"
+                      style={{
                         color: '#666',
                         fontSize: isMobile ? '0.8rem' : '0.9rem',
                         lineHeight: 1.6,
@@ -288,9 +292,8 @@ export default function FeedClient({ works }: { works: Work[] }) {
                         WebkitLineClamp: isMobile ? 3 : 4,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden'
-                      }}>
-                      {work.content}
-                    </p>
+                      }}
+                    />
                   )}
 
                   <div style={{

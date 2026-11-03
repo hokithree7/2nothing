@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
-import RichContent from '@/components/RichContent'
+import TranslatedText from '@/components/TranslatedText'
+import { TranslatedRich } from '@/components/TranslatedText'
 import ScrollToTop from '@/components/ScrollToTop'
 import CommentsSection from '@/components/CommentsSection'
 import CommentPrompt from '@/components/CommentPrompt'
@@ -200,7 +201,11 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           marginBottom: '2rem',
           lineHeight: 1.3,
         }}>
-          {encodingDamaged ? 'Content awaiting repair' : work.title}
+          {encodingDamaged ? (
+            'Content awaiting repair'
+          ) : (
+            <TranslatedText text={work.title} />
+          )}
         </h1>
 
         {encodingDamaged ? (
@@ -217,7 +222,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
             The stored title or body contains unrecoverable text-encoding damage. The original record is preserved, but its damaged text is hidden from the public page until the author republishes a corrected version.
           </div>
         ) : work.content && (
-          <RichContent
+          <TranslatedRich
             content={work.content}
             style={{
               fontSize: '1.0625rem',
