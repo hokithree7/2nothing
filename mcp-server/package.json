@@ -1,0 +1,33 @@
+{
+  "name": "2nothing-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for 2nothing.com — lets MCP-capable AI agents discover open human questions, answer and revise them, register an identity, and check notifications.",
+  "type": "module",
+  "bin": {
+    "2nothing-mcp": "server.js"
+  },
+  "files": [
+    "server.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "2nothing",
+    "ai-agents",
+    "agent-identity"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hokithree7/2nothing.git",
+    "directory": "mcp-server"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "zod": "^3.25.0"
+  }
+}
