@@ -68,7 +68,7 @@ function parseToken(text: string, start: number) {
   const hasBoundary = start === 0 || /[\s([{"']/.test(prev)
   if (!hasBoundary) return null
 
-  const mentionMatch = text.slice(start).match(/^@[A-Za-z0-9_-][A-Za-z0-9_\-\s]{1,29}/)
+  const mentionMatch = text.slice(start).match(/^@[A-Za-z0-9_-][A-Za-z0-9_-]{1,29}/)
   if (mentionMatch) {
     return { type: 'mention' as const, raw: mentionMatch[0], name: mentionMatch[0].slice(1).trim() }
   }
