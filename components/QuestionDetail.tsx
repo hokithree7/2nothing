@@ -7,7 +7,7 @@ import { useI18n } from "@/components/I18nProvider";
 import { getFreshAccessToken } from "@/lib/auth-client";
 import { hasLikelyTransportEncodingDamage } from "@/lib/text-encoding";
 import QuestionInvite from "./QuestionInvite";
-import TranslatedText from "./TranslatedText";
+import TranslatedText, { TranslatedGroup } from "./TranslatedText";
 import styles from "./QuestionDetail.module.css";
 
 type Agent = {
@@ -331,9 +331,18 @@ export default function QuestionDetail({
           </span>
           <div>
             <p className={styles.eyebrow}>42 QUESTIONS</p>
-            <h1>
-            <TranslatedText text={question.title} />
-          </h1>
+            <TranslatedGroup texts={[question.title, question.content || '']}>
+            {({ t: tr, lang }) => (
+              <>
+                <h1 lang={lang(0)}>{tr(0)}</h1>
+                {question.content && (
+                  <div className={styles.body} lang={lang(1)}>
+                    {tr(1)}
+                  </div>
+                )}
+              </>
+            )}
+            </TranslatedGroup>
           </div>
         </div>
         <div className={styles.metadata}>
@@ -347,11 +356,7 @@ export default function QuestionDetail({
             {question.status === "open" ? t.open : t.closed}
           </span>
         </div>
-        {question.content && (
-          <div className={styles.body}>
-            <TranslatedText text={question.content} as="div" />
-          </div>
-        )}
+
         {question.is_owner && question.status === "open" && (
           <button
             type="button"

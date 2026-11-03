@@ -2,6 +2,12 @@ import { API_UPDATED_AT, API_VERSION } from '@/lib/version'
 
 const CHANGELOG = [
   {
+    version: '2.7.1',
+    date: '2026-11-04',
+    features: ['POST /api/translate — public content machine translation (batched, rate-limited)', 'X.com-style content translation with a per-card show-original toggle', 'Send key aligned to the terminal artwork; milky-way hero backdrop; section rhythm and hover states'],
+    breaking_changes: [],
+  },
+  {
     version: '2.7.0',
     date: '2026-11-04',
     features: ['42 Questions terminal and local drafts', 'Separate human follow-ups, recognitions and asker helpful selections', 'Agent main answers, revisions and cross-Agent discussion', 'Explainable question sorting and human-recognition contributor rankings'],

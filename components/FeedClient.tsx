@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useI18n } from '@/components/I18nProvider'
 import InviteCTA from '@/components/InviteCTA'
-import TranslatedText from '@/components/TranslatedText'
+import { TranslatedGroup } from '@/components/TranslatedText'
 import { useRouter } from 'next/navigation'
 
 interface Work {
@@ -261,39 +261,46 @@ export default function FeedClient({ works }: { works: Work[] }) {
                     </div>
                   )}
 
-                  <h3 style={{
-                    fontSize: isMobile ? '0.95rem' : '1.1rem',
-                    fontWeight: 600,
-                    marginBottom: '0.75rem',
-                    lineHeight: 1.4,
-                  }}>
-                    {work.encoding_damaged ? t('feed.encoding_title') : <TranslatedText text={work.title} />}
-                  </h3>
-
                   {work.encoding_damaged ? (
-                    <p style={{
-                      color: '#666',
-                      fontSize: isMobile ? '0.8rem' : '0.9rem',
-                      lineHeight: 1.6,
-                      marginBottom: '1rem',
+                    <h3 style={{
+                      fontSize: isMobile ? '0.95rem' : '1.1rem',
+                      fontWeight: 600,
+                      marginBottom: '0.75rem',
+                      lineHeight: 1.4,
                     }}>
-                      {t('feed.encoding_notice')}
-                    </p>
-                  ) : work.content && (
-                    <TranslatedText
-                      text={work.content}
-                      as="p"
-                      style={{
-                        color: '#666',
-                        fontSize: isMobile ? '0.8rem' : '0.9rem',
-                        lineHeight: 1.6,
-                        marginBottom: '1rem',
-                        display: '-webkit-box',
-                        WebkitLineClamp: isMobile ? 3 : 4,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}
-                    />
+                      {t('feed.encoding_title')}
+                    </h3>
+                  ) : (
+                    <TranslatedGroup
+                      texts={[work.title, work.content || '']}
+                    >
+                      {({ t: tr, lang }) => (
+                        <>
+                          <h3 lang={lang(0)} style={{
+                            fontSize: isMobile ? '0.95rem' : '1.1rem',
+                            fontWeight: 600,
+                            marginBottom: '0.75rem',
+                            lineHeight: 1.4,
+                          }}>
+                            {tr(0)}
+                          </h3>
+                          {work.content && (
+                            <p lang={lang(1)} style={{
+                              color: '#666',
+                              fontSize: isMobile ? '0.8rem' : '0.9rem',
+                              lineHeight: 1.6,
+                              marginBottom: '1rem',
+                              display: '-webkit-box',
+                              WebkitLineClamp: isMobile ? 3 : 4,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden'
+                            }}>
+                              {tr(1)}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </TranslatedGroup>
                   )}
 
                   <div style={{

@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
-import TranslatedText from '@/components/TranslatedText'
-import { TranslatedRich } from '@/components/TranslatedText'
+import { TranslatedArticle } from '@/components/TranslatedText'
+
 import ScrollToTop from '@/components/ScrollToTop'
 import CommentsSection from '@/components/CommentsSection'
 import CommentPrompt from '@/components/CommentPrompt'
@@ -195,36 +195,40 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           </span>
         </div>
 
-        <h1 style={{
-          fontSize: '2rem',
-          fontWeight: 700,
-          marginBottom: '2rem',
-          lineHeight: 1.3,
-        }}>
-          {encodingDamaged ? (
-            'Content awaiting repair'
-          ) : (
-            <TranslatedText text={work.title} />
-          )}
-        </h1>
-
         {encodingDamaged ? (
-          <div style={{
-            padding: '1rem 1.25rem',
-            border: '1px solid #d1d5db',
-            borderRadius: '8px',
-            background: '#f9fafb',
-            color: '#4b5563',
-            fontSize: '0.9rem',
-            lineHeight: 1.7,
-            marginBottom: '2rem',
-          }}>
-            The stored title or body contains unrecoverable text-encoding damage. The original record is preserved, but its damaged text is hidden from the public page until the author republishes a corrected version.
-          </div>
-        ) : work.content && (
-          <TranslatedRich
-            content={work.content}
-            style={{
+          <>
+            <h1 style={{
+              fontSize: '2rem',
+              fontWeight: 700,
+              marginBottom: '2rem',
+              lineHeight: 1.3,
+            }}>
+              Content awaiting repair
+            </h1>
+            <div style={{
+              padding: '1rem 1.25rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              background: '#f9fafb',
+              color: '#4b5563',
+              fontSize: '0.9rem',
+              lineHeight: 1.7,
+              marginBottom: '2rem',
+            }}>
+              The stored title or body contains unrecoverable text-encoding damage. The original record is preserved, but its damaged text is hidden from the public page until the author republishes a corrected version.
+            </div>
+          </>
+        ) : (
+          <TranslatedArticle
+            title={work.title}
+            body={work.content || ''}
+            titleStyle={{
+              fontSize: '2rem',
+              fontWeight: 700,
+              marginBottom: '2rem',
+              lineHeight: 1.3,
+            }}
+            bodyStyle={{
               fontSize: '1.0625rem',
               lineHeight: 1.7,
               color: '#333',

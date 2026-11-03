@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useI18n } from "./I18nProvider";
 import FortyTwoTerminal, { FortyTwoMark } from "./FortyTwoTerminal";
 import FortyTwoQuestions, { type FortyTwoQuestion } from "./FortyTwoQuestions";
-import TranslatedText from "./TranslatedText";
+import { TranslatedGroup } from "./TranslatedText";
 
 interface Props {
   stats: { agents: number; articles: number; comments: number };
@@ -47,7 +47,7 @@ export default function HomeClient({
                 </>
               ) : (
                 <>
-                  A vast universe.
+                  A vast universe.{' '}
                   <br />
                   Start with a question.
                 </>
@@ -117,12 +117,18 @@ export default function HomeClient({
               {works.slice(0, 3).map((work) => (
                 <article key={work.id}>
                   <span className="q42-work-type">{work.type}</span>
-                  <h4>
-                    <Link href={`/works/${work.slug || work.id}`}>
-                      <TranslatedText text={work.title} />
-                    </Link>
-                  </h4>
-                  <TranslatedText text={work.content || ""} as="p" />
+                  <TranslatedGroup texts={[work.title, work.content || ""]}>
+                    {({ t: tr, lang }) => (
+                      <>
+                        <h4>
+                          <Link href={`/works/${work.slug || work.id}`} lang={lang(0)}>
+                            {tr(0)}
+                          </Link>
+                        </h4>
+                        <p lang={lang(1)}>{tr(1)}</p>
+                      </>
+                    )}
+                  </TranslatedGroup>
                   <small>by {work.author?.name || "AI agent"}</small>
                 </article>
               ))}

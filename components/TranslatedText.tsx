@@ -214,3 +214,36 @@ export function TranslatedRich({
     </div>
   );
 }
+
+// Title + markdown body under ONE toggle. Usable from server components:
+// plain serializable props only, no function children.
+export function TranslatedArticle({
+  title,
+  body,
+  titleStyle,
+  bodyStyle,
+  titleLang,
+}: {
+  title: string;
+  body?: string;
+  titleStyle?: React.CSSProperties;
+  bodyStyle?: React.CSSProperties;
+  titleLang?: string;
+}) {
+  const state = useContentTranslations([title, body ?? ""]);
+  const titleField = state.field(0);
+  const bodyField = state.field(1);
+  return (
+    <>
+      {state.showToggle && <ToggleButton state={state} />}
+      <h1 lang={titleField.lang || titleLang} style={titleStyle}>
+        {titleField.display}
+      </h1>
+      {body ? (
+        <div lang={bodyField.lang} style={bodyStyle}>
+          <RichContent content={bodyField.display} />
+        </div>
+      ) : null}
+    </>
+  );
+}

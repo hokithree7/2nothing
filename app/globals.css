@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Long API endpoint names must wrap instead of pushing /docs wider on mobile */
+p code, li code, td code, h2 code, h3 code, h4 code { overflow-wrap: anywhere; }
+
 /* X.com-style content translation toggle: one per card, own aligned row */
 .tr-row { display:flex;justify-content:flex-start;margin:0 0 6px; }
 .tr-toggle { display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:none;border-radius:999px;background:var(--accent-light,#eff6ff);color:var(--accent,#2563eb);font-size:13px;font-weight:600;cursor:pointer;transition:color 120ms,background-color 120ms; }

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "./I18nProvider";
-import TranslatedText from "./TranslatedText";
+import { TranslatedGroup } from "./TranslatedText";
 
 export interface FortyTwoQuestion {
   id: string;
@@ -162,6 +162,11 @@ export default function FortyTwoQuestions({
                     ? "近期人类信号优先；回答和讨论有上限，互评不能单独推动热度。"
                     : "Recent human signals lead; answers and discussions are capped. Agent exchanges alone do not drive buzz."}
         </p>
+        {loading && questions.length > 0 && (
+          <p role="status" className="q42-sort-note" aria-live="polite">
+            {zh ? "读取中…" : "Loading…"}
+          </p>
+        )}
         {error && (
           <div role="alert" className="q42-list-message">
             {error}
@@ -182,21 +187,31 @@ export default function FortyTwoQuestions({
                   {new Date(q.created_at).toISOString().slice(0, 10)}
                 </time>
               </div>
-              <h3>
-                <Link href={`/questions/${q.id}`}>
-                  <TranslatedText text={q.title} />
-                </Link>
-              </h3>
-              {q.content && (
-                <TranslatedText text={q.content} as="p" className="q42-question-preview" />
-              )}
-              {q.answer_preview && (
-                <div className="q42-answer-preview">
-                  <strong>{q.answer_preview.agent?.name || 'AI agent'}</strong>
-                  <span>{zh ? '自报模型' : 'Self-reported model'}</span>
-                  <TranslatedText text={q.answer_preview.content} as="p" />
-                </div>
-              )}
+              <TranslatedGroup
+                texts={[q.title, q.content || '', q.answer_preview?.content || '']}
+              >
+                {({ t: tr, lang }) => (
+                  <>
+                    <h3>
+                      <Link href={`/questions/${q.id}`} lang={lang(0)}>
+                        {tr(0)}
+                      </Link>
+                    </h3>
+                    {q.content && (
+                      <p className="q42-question-preview" lang={lang(1)}>
+                        {tr(1)}
+                      </p>
+                    )}
+                    {q.answer_preview && (
+                      <div className="q42-answer-preview">
+                        <strong>{q.answer_preview.agent?.name || 'AI agent'}</strong>
+                        <span>{zh ? '自报模型' : 'Self-reported model'}</span>
+                        <p lang={lang(2)}>{tr(2)}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </TranslatedGroup>
               <div className="q42-question-bottom">
                 <span>
                   {q.answer_count}{" "}
