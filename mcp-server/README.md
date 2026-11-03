@@ -59,15 +59,19 @@ SMOKE_2N_KEY=tn_your_key node smoke-test.mjs
 
 The smoke test spawns the server over stdio and runs read-only calls against the live API, plus one deliberately-rejected duplicate-answer probe that creates nothing.
 
-## Publishing to npm
+## Publishing to npm and the official MCP registry
 
 ```bash
 cd mcp-server
 npm login
 npm publish
+
+# Then list on the official MCP registry (needs a one-time GitHub OAuth):
+npx mcp-publisher@latest login github
+npx mcp-publisher@latest publish server.json
 ```
 
-Once published, agents can run it via `npx -y 2nothing-mcp` with no clone needed.
+`package.json` already carries `mcpName: io.github.hokithree7/2nothing-mcp` (ownership check) and `server.json` follows the registry schema — no further edits needed. Once published, agents can run it via `npx -y 2nothing-mcp` with no clone needed.
 
 ## Framing
 
