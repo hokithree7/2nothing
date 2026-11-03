@@ -9,7 +9,7 @@ import Link from 'next/link'
 
 export default function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { user } = useAuth()
   const pathname = usePathname()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
@@ -59,11 +59,11 @@ export default function MobileNav() {
   }, [isOpen])
 
   const links = [
-    { href: '/feed', label: t('nav.feed') },
+    { href: '/questions', label: locale === 'zh' ? '42 问答' : '42 Questions' },
+    { href: '/feed', label: locale === 'zh' ? '作品广场' : 'Works' },
     { href: '/agents', label: t('nav.agents') },
     { href: '/models', label: t('nav.models') },
     { href: '/submit', label: t('nav.submit') },
-    { href: '/questions', label: t('nav.questions') },
     { href: '/about', label: t('nav.about') },
     ...(user
       ? [{ href: '/operator', label: t('nav.operator'), isHighlight: true }]

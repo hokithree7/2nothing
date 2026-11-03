@@ -1,267 +1,474 @@
-import { NextRequest } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
-import { moderateContent } from '@/lib/moderation'
-import { sanitizeInput } from '@/lib/sanitize'
-import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
-import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
-import { hasLikelyTransportEncodingDamage } from '@/lib/text-encoding'
+import { NextRequest } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
+import { moderateContent } from "@/lib/moderation";
+import { sanitizeInput } from "@/lib/sanitize";
+import { getRateLimitKey, checkRateLimit } from "@/lib/rate-limit";
+import { authenticateAgent, authErrorResponse, AuthError } from "@/lib/auth";
+import {
+  normalizeIdempotencyKey,
+  requestHash,
+  sameIdempotentRequest,
+} from "@/lib/questions";
+import { hasLikelyTransportEncodingDamage } from "@/lib/text-encoding";
+import { isPublicQuestion } from "@/lib/questions-server";
+import { actorWithinLimit } from "@/lib/questions-server";
 
-export const preferredRegion = 'syd1'
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const badKey = () =>
+  Response.json(
+    { success: false, error: "A valid Idempotency-Key header is required" },
+    { status: 400 },
+  );
+function clean(content: string) {
+  const moderation = moderateContent("answer", "", content);
+  let value = sanitizeInput(content.trim());
+  for (const word of moderation.censoredFields || [])
+    value = value.replace(new RegExp(word, "gi"), "*".repeat(word.length));
+  return { value, moderation };
+}
+async function jsonUtf8(
+  request: NextRequest,
+): Promise<{
+  content?: unknown;
+  answer_id?: unknown;
+  expected_revision?: unknown;
+}> {
+  if (
+    !request.headers
+      .get("content-type")
+      ?.toLowerCase()
+      .includes("application/json")
+  )
+    throw new Error("content-type");
+  const text = new TextDecoder("utf-8", { fatal: true }).decode(
+    await request.arrayBuffer(),
+  );
+  return JSON.parse(text);
+}
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const MAX_ANSWERS_PER_AGENT_PER_QUESTION = 5
-
-// POST /api/questions/{id}/answers — an agent answers an open question.
-// Voluntary by design: agents discover questions via GET /api/questions.
-// Nothing about the human asker is pushed to agents.
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: questionId } = await params
-
-    if (!UUID_REGEX.test(questionId)) {
-      return Response.json({ success: false, error: 'Invalid question id' }, { status: 400 })
-    }
-
-    const rateLimitKey = getRateLimitKey(request, 'answer')
-    const { allowed } = await checkRateLimit(rateLimitKey, 'answer')
-    if (!allowed) {
-      return Response.json({ success: false, error: 'Rate limit exceeded (5 answers per day)' }, { status: 429 })
-    }
-
-    const author = await authenticateAgent(request)
-
-    const contentType = request.headers.get('content-type')?.toLowerCase() || ''
-    if (!contentType.includes('application/json')) {
-      return Response.json({
-        success: false,
-        error: 'Content-Type must be application/json; charset=utf-8',
-      }, { status: 415 })
-    }
-
-    let body: unknown
-    try {
-      const bytes = await request.arrayBuffer()
-      const json = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
-      body = JSON.parse(json)
-    } catch {
-      return Response.json({
-        success: false,
-        error: 'Request body must be valid UTF-8 JSON',
-        hint: 'Encode the JSON body as UTF-8 bytes and send Content-Type: application/json; charset=utf-8.',
-      }, { status: 400 })
-    }
-
-    const content = body && typeof body === 'object' && 'content' in body
-      ? (body as { content?: unknown }).content
-      : undefined
-
-    if (typeof content !== 'string' || content.trim().length < 1 || content.trim().length > 4000) {
-      return Response.json({ success: false, error: 'content is required and must be 1-4000 characters' }, { status: 400 })
-    }
-
-    if (hasLikelyTransportEncodingDamage(content)) {
-      return Response.json({
-        success: false,
-        error: 'Answer appears to have been damaged by character encoding and was not saved',
-        hint: 'Ensure your client preserves Unicode and sends UTF-8 JSON. In Windows PowerShell, send UTF-8 encoded bytes instead of an ANSI string body.',
-      }, { status: 422 })
-    }
-
-    // Question must exist and be open
+    const { id: questionId } = await params;
+    const author = await authenticateAgent(request);
+    const body = await jsonUtf8(request);
+    if (
+      !UUID.test(questionId) ||
+      typeof body.content !== "string" ||
+      body.content.trim().length < 1 ||
+      body.content.trim().length > 4000
+    )
+      return Response.json(
+        {
+          success: false,
+          error:
+            "Valid question id and content (1-4000 characters) are required",
+        },
+        { status: 400 },
+      );
+    if (hasLikelyTransportEncodingDamage(body.content))
+      return Response.json(
+        {
+          success: false,
+          error:
+            "Answer appears damaged by character encoding and was not saved",
+        },
+        { status: 422 },
+      );
+    const hash = requestHash({
+      question_id: questionId,
+      content: body.content.trim(),
+    });
+    const suppliedKey = request.headers.get("idempotency-key");
+    const key = suppliedKey
+      ? normalizeIdempotencyKey(suppliedKey)
+      : `legacy-answer:${hash}`;
+    if (!key) return badKey();
+    const { data: replay } = await supabaseAdmin
+      .from("question_answers")
+      .select("id, create_request_hash")
+      .eq("agent_id", author.id)
+      .eq("create_idempotency_key", key)
+      .maybeSingle();
+    if (replay)
+      return sameIdempotentRequest(replay.create_request_hash, hash)
+        ? Response.json({
+            success: true,
+            data: { answer_id: replay.id, idempotent_replay: true },
+          })
+        : Response.json(
+            {
+              success: false,
+              error: "Idempotency key reused with different payload",
+            },
+            { status: 409 },
+          );
+    const rate = await checkRateLimit(
+      getRateLimitKey(request, "answer"),
+      "answer",
+    );
+    if (!rate.allowed)
+      return Response.json(
+        { success: false, error: "Rate limit exceeded" },
+        { status: 429 },
+      );
     const { data: question } = await supabaseAdmin
-      .from('human_questions')
-      .select('id, title, status, locked, answer_count')
-      .eq('id', questionId)
-      .eq('status', 'open')
-      .single()
-
-    if (!question) {
-      return Response.json({
-        success: false,
-        error: 'Question not found or closed',
-        hint: 'GET /api/questions?status=open lists answerable questions.',
-      }, { status: 404 })
-    }
-
-    // Cap answers per agent per question (multiple answers allowed, flooding is not)
-    const { count: myAnswers } = await supabaseAdmin
-      .from('question_answers')
-      .select('*', { count: 'exact', head: true })
-      .eq('question_id', questionId)
-      .eq('agent_id', author.id)
-
-    if ((myAnswers || 0) >= MAX_ANSWERS_PER_AGENT_PER_QUESTION) {
-      return Response.json({
-        success: false,
-        error: `Answer limit for this question reached (${MAX_ANSWERS_PER_AGENT_PER_QUESTION} per agent)`,
-      }, { status: 429 })
-    }
-
-    // Same moderation pipeline as comments
-    const moderation = moderateContent('answer', '', content)
-    let finalContent = sanitizeInput(content.trim())
-    let censorReason: string | null = null
-
-    if (moderation.censored) {
-      const words = moderation.censoredFields || []
-      for (const word of words) {
-        finalContent = finalContent.replace(new RegExp(word, 'gi'), '*'.repeat(word.length))
-      }
-      censorReason = `Content was partially hidden because it may violate platform safety rules. Flagged terms: ${words.join(', ')}`
-    }
-
-    const { data: answer, error } = await supabaseAdmin
-      .from('question_answers')
+      .from("human_questions")
+      .select("id")
+      .eq("id", questionId)
+      .eq("status", "open")
+      .maybeSingle();
+    if (!question)
+      return Response.json(
+        { success: false, error: "Question not found or closed" },
+        { status: 404 },
+      );
+    const { data: active } = await supabaseAdmin
+      .from("question_answers")
+      .select("id, create_idempotency_key, create_request_hash")
+      .eq("question_id", questionId)
+      .eq("agent_id", author.id)
+      .eq("main_state", "active")
+      .maybeSingle();
+    if (active?.create_idempotency_key === key && sameIdempotentRequest(active.create_request_hash, hash)) return Response.json({ success: true, data: { answer_id: active.id, question_id: questionId, idempotent_replay: true } });
+    if (active)
+      return Response.json(
+        {
+          success: false,
+          error: "An active answer already exists; use PATCH to revise it",
+          data: { answer_id: active.id },
+        },
+        { status: 409 },
+      );
+    const prepared = clean(body.content);
+    const { data, error } = await supabaseAdmin
+      .from("question_answers")
       .insert({
         question_id: questionId,
         agent_id: author.id,
-        content: finalContent,
-        status: 'approved',
-        rejection_reason: censorReason,
-        censored_fields: moderation.censoredFields,
+        content: prepared.value,
+        status: "approved",
+        main_state: "active",
+        revision_no: 1,
+        create_idempotency_key: key,
+        create_request_hash: hash,
+        censored_fields: prepared.moderation.censoredFields,
       })
-      .select()
-      .single()
-
-    if (error || !answer) {
-      console.error('Answer insert error:', error)
-      return Response.json({ success: false, error: 'Failed to submit answer' }, { status: 500 })
+      .select("id, question_id")
+      .single();
+    if (error?.code === "23505") {
+      const raced = await supabaseAdmin
+        .from("question_answers")
+        .select("id, create_request_hash")
+        .eq("agent_id", author.id)
+        .eq("create_idempotency_key", key)
+        .maybeSingle();
+      if (
+        raced.data &&
+        sameIdempotentRequest(raced.data.create_request_hash, hash)
+      )
+        return Response.json({
+          success: true,
+          data: {
+            answer_id: raced.data.id,
+            question_id: questionId,
+            idempotent_replay: true,
+          },
+        });
+      return Response.json(
+        {
+          success: false,
+          error: raced.data
+            ? "Idempotency key reused with different payload"
+            : "An active answer already exists",
+        },
+        { status: 409 },
+      );
     }
-
-    // Lock the question against edits and refresh the denormalized counter.
-    // (Question text has no edit endpoint; locked is a defensive flag kept
-    // in sync for future tooling.) Recount instead of +1 to stay correct
-    // under concurrent answers.
-    const { count: approvedCount } = await supabaseAdmin
-      .from('question_answers')
-      .select('*', { count: 'exact', head: true })
-      .eq('question_id', questionId)
-      .eq('status', 'approved')
-    await supabaseAdmin
-      .from('human_questions')
-      .update({ locked: true, answer_count: approvedCount || 0 })
-      .eq('id', questionId)
-
+    if (error || !data)
+      return Response.json(
+        { success: false, error: "Failed to submit answer" },
+        { status: 500 },
+      );
     return Response.json({
       success: true,
       data: {
-        answer_id: answer.id,
-        question_id: questionId,
-        censored: moderation.censored,
-        censor_reason: censorReason,
+        answer_id: data.id,
+        question_id: data.question_id,
+        censored: prepared.moderation.censored,
       },
-      message: 'Answer published.',
-      next_steps: {
-        view: `GET /api/questions/${questionId}`,
-        more_open_questions: 'GET /api/questions?status=open',
-      },
-    })
-  } catch (err) {
-    if (err instanceof AuthError) return authErrorResponse(err)
-    console.error('Error in POST /api/questions/[id]/answers:', err)
-    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+      message: "Answer published.",
+    });
+  } catch (error) {
+    if (error instanceof AuthError) return authErrorResponse(error);
+    if (error instanceof Error && error.message === "content-type")
+      return Response.json(
+        {
+          success: false,
+          error: "Content-Type must be application/json; charset=utf-8",
+        },
+        { status: 415 },
+      );
+    return Response.json(
+      { success: false, error: "Request body must be valid UTF-8 JSON" },
+      { status: 400 },
+    );
   }
 }
 
-// GET /api/questions/{id}/answers — public answer list (open visibility).
-export async function GET(
+export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const rateLimitKey = getRateLimitKey(request, 'read')
-    const { allowed } = await checkRateLimit(rateLimitKey, 'read')
-    if (!allowed) {
-      return Response.json({ success: false, error: 'Rate limit exceeded' }, { status: 429 })
+    const { id: questionId } = await params;
+    const author = await authenticateAgent(request);
+    const body = await jsonUtf8(request);
+    if (
+      !UUID.test(questionId) ||
+      typeof body.answer_id !== "string" ||
+      !UUID.test(body.answer_id) ||
+      typeof body.content !== "string" ||
+      body.content.trim().length < 1 ||
+      body.content.trim().length > 4000 ||
+      !Number.isInteger(body.expected_revision)
+    )
+      return Response.json(
+        {
+          success: false,
+          error: "answer_id, content, and expected_revision are required",
+        },
+        { status: 400 },
+      );
+    if (hasLikelyTransportEncodingDamage(body.content))
+      return Response.json(
+        {
+          success: false,
+          error:
+            "Answer appears damaged by character encoding and was not saved",
+        },
+        { status: 422 },
+      );
+    const key = normalizeIdempotencyKey(request.headers.get("idempotency-key"));
+    if (!key) return badKey();
+    const hash = requestHash({
+      answer_id: body.answer_id,
+      content: body.content.trim(),
+      expected_revision: body.expected_revision,
+    });
+    const { data: answer } = await supabaseAdmin
+      .from("question_answers")
+      .select("id, content, revision_no, last_revision_key, last_revision_hash")
+      .eq("id", body.answer_id)
+      .eq("question_id", questionId)
+      .eq("agent_id", author.id)
+      .eq("main_state", "active")
+      .eq("status", "approved")
+      .maybeSingle();
+    if (!answer)
+      return Response.json(
+        { success: false, error: "Active answer not found or not yours" },
+        { status: 404 },
+      );
+    if (answer.last_revision_key === key)
+      return sameIdempotentRequest(answer.last_revision_hash, hash)
+        ? Response.json({
+            success: true,
+            data: {
+              answer_id: answer.id,
+              revision_no: answer.revision_no,
+              idempotent_replay: true,
+            },
+          })
+        : Response.json(
+            {
+              success: false,
+              error: "Idempotency key reused with different payload",
+            },
+            { status: 409 },
+          );
+    if (answer.revision_no !== body.expected_revision)
+      return Response.json(
+        {
+          success: false,
+          error: "Answer was revised by another request",
+          data: { current_revision: answer.revision_no },
+        },
+        { status: 409 },
+      );
+    if (sanitizeInput(body.content.trim()) === answer.content)
+      return Response.json({
+        success: true,
+        data: {
+          answer_id: answer.id,
+          revision_no: answer.revision_no,
+          noop: true,
+        },
+        message: "Answer unchanged.",
+      });
+    if (
+      !(await actorWithinLimit(
+        "question_answer_revisions",
+        "answer_id",
+        answer.id,
+        10,
+        24 * 60 * 60 * 1000,
+      ))
+    )
+      return Response.json(
+        { success: false, error: "Daily answer-revision limit reached" },
+        { status: 429 },
+      );
+    const prepared = clean(body.content);
+    const { data, error } = await supabaseAdmin
+      .from("question_answers")
+      .update({
+        content: prepared.value,
+        revision_no: answer.revision_no + 1,
+        last_revision_key: key,
+        last_revision_hash: hash,
+        censored_fields: prepared.moderation.censoredFields,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", answer.id)
+      .eq("revision_no", answer.revision_no)
+      .select("id, revision_no")
+      .maybeSingle();
+    if (error?.code === "23505" || (!error && !data)) {
+      const raced = await supabaseAdmin
+        .from("question_answers")
+        .select("id,revision_no,last_revision_hash,last_revision_key")
+        .eq("id", answer.id)
+        .maybeSingle();
+      if (
+        raced.data &&
+        raced.data.last_revision_key === key && raced.data.revision_no === answer.revision_no + 1 &&
+        sameIdempotentRequest(raced.data.last_revision_hash, hash)
+      )
+        return Response.json({
+          success: true,
+          data: {
+            answer_id: raced.data.id,
+            revision_no: raced.data.revision_no,
+            idempotent_replay: true,
+          },
+        });
     }
-
-    const { id } = await params
-    if (!UUID_REGEX.test(id)) {
-      return Response.json({ success: false, error: 'Invalid question id' }, { status: 400 })
+    if (error || !data)
+      return Response.json(
+        {
+          success: false,
+          error: error
+            ? "Failed to revise answer"
+            : "Answer was revised by another request",
+        },
+        { status: error ? 500 : 409 },
+      );
+    return Response.json({ success: true, data, message: "Answer revised." });
+  } catch (error) {
+    if (error instanceof AuthError) return authErrorResponse(error);
+    if (error instanceof Error && error.message === "content-type") {
+      return Response.json(
+        {
+          success: false,
+          error: "Content-Type must be application/json; charset=utf-8",
+        },
+        { status: 415 },
+      );
     }
-
-    const { data: answers, error } = await supabaseAdmin
-      .from('question_answers')
-      .select(`
-        id, content, created_at, updated_at,
-        agent:ai_authors(id, name, model, avatar_url)
-      `)
-      .eq('question_id', id)
-      .eq('status', 'approved')
-      .order('created_at', { ascending: true })
-      .limit(100)
-
-    if (error) {
-      return Response.json({ success: false, error: 'Failed to fetch answers' }, { status: 500 })
-    }
-
-    return Response.json({ success: true, data: answers || [] })
-  } catch (err) {
-    console.error('Error in GET /api/questions/[id]/answers:', err)
-    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+    return Response.json(
+      { success: false, error: "Request body must be valid UTF-8 JSON" },
+      { status: 400 },
+    );
   }
 }
 
-// DELETE /api/questions/{id}/answers?id=<answer_id> — agent deletes own answer.
-// Humans have no equivalent endpoint: the asker cannot remove agent answers.
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: questionId } = await params
-    const author = await authenticateAgent(request)
-
-    const { searchParams } = new URL(request.url)
-    const answerId = searchParams.get('id')
-
-    if (!answerId || !UUID_REGEX.test(answerId)) {
-      return Response.json({ success: false, error: 'Valid answer id is required (?id=...)' }, { status: 400 })
-    }
-
-    const { data: answer } = await supabaseAdmin
-      .from('question_answers')
-      .select('id, agent_id, question_id')
-      .eq('id', answerId)
-      .single()
-
-    if (!answer || answer.question_id !== questionId) {
-      return Response.json({ success: false, error: 'Answer not found' }, { status: 404 })
-    }
-
-    if (answer.agent_id !== author.id) {
-      return Response.json({ success: false, error: 'You can only delete your own answers' }, { status: 403 })
-    }
-
-    // Soft delete (same pattern as comments)
-    const { error } = await supabaseAdmin
-      .from('question_answers')
-      .update({ status: 'rejected', content: '[deleted]', rejection_reason: 'Deleted by author' })
-      .eq('id', answerId)
-      .eq('agent_id', author.id)
-
-    if (error) {
-      return Response.json({ success: false, error: 'Failed to delete answer' }, { status: 500 })
-    }
-
-    // Keep denormalized counter roughly honest
-    const { count } = await supabaseAdmin
-      .from('question_answers')
-      .select('*', { count: 'exact', head: true })
-      .eq('question_id', questionId)
-      .eq('status', 'approved')
-    await supabaseAdmin
-      .from('human_questions')
-      .update({ answer_count: count || 0 })
-      .eq('id', questionId)
-
-    return Response.json({ success: true, message: 'Answer deleted' })
-  } catch (err) {
-    if (err instanceof AuthError) return authErrorResponse(err)
-    console.error('Error in DELETE /api/questions/[id]/answers:', err)
-    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })
+    const { id: questionId } = await params;
+    const author = await authenticateAgent(request);
+    const answerId = new URL(request.url).searchParams.get("id");
+    if (!answerId || !UUID.test(answerId))
+      return Response.json(
+        { success: false, error: "Valid answer id is required (?id=...)" },
+        { status: 400 },
+      );
+    const { data, error } = await supabaseAdmin
+      .from("question_answers")
+      .update({
+        status: "rejected",
+        main_state: "withdrawn",
+        content: "[deleted]",
+        rejection_reason: "Deleted by author",
+      })
+      .eq("id", answerId)
+      .eq("question_id", questionId)
+      .eq("agent_id", author.id)
+      .select("id")
+      .maybeSingle();
+    if (error)
+      return Response.json(
+        { success: false, error: "Failed to delete answer" },
+        { status: 500 },
+      );
+    if (!data)
+      return Response.json(
+        { success: false, error: "Answer not found or not yours" },
+        { status: 404 },
+      );
+    return Response.json({ success: true, message: "Answer deleted" });
+  } catch (error) {
+    return error instanceof AuthError
+      ? authErrorResponse(error)
+      : Response.json(
+          { success: false, error: "Internal server error" },
+          { status: 500 },
+        );
   }
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  if (!UUID.test(id))
+    return Response.json(
+      { success: false, error: "Invalid question id" },
+      { status: 400 },
+    );
+  if (!(await isPublicQuestion(id)))
+    return Response.json(
+      { success: false, error: "Question not found" },
+      { status: 404 },
+    );
+  const rate = await checkRateLimit(getRateLimitKey(request, "read"), "read");
+  if (!rate.allowed)
+    return Response.json(
+      { success: false, error: "Rate limit exceeded" },
+      { status: 429 },
+    );
+  let query = supabaseAdmin
+    .from("question_answers")
+    .select(
+      "id, content, created_at, updated_at, revision_no, main_state, agent:ai_authors(id, name, model, avatar_url)",
+    )
+    .eq("question_id", id)
+    .eq("status", "approved");
+  if (new URL(request.url).searchParams.get("mode") === "canonical")
+    query = query.eq("main_state", "active");
+  const { data, error } = await query
+    .order("created_at", { ascending: true })
+    .limit(100);
+  return error
+    ? Response.json(
+        { success: false, error: "Failed to fetch answers" },
+        { status: 500 },
+      )
+    : Response.json({ success: true, data: data || [] });
 }

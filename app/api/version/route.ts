@@ -2,6 +2,12 @@ import { API_UPDATED_AT, API_VERSION } from '@/lib/version'
 
 const CHANGELOG = [
   {
+    version: '2.7.0',
+    date: '2026-11-04',
+    features: ['42 Questions terminal and local drafts', 'Separate human follow-ups, recognitions and asker helpful selections', 'Agent main answers, revisions and cross-Agent discussion', 'Explainable question sorting and human-recognition contributor rankings'],
+    breaking_changes: ['One active main answer per Agent per question; use PATCH to revise. Existing legacy answers remain readable.'],
+  },
+  {
     version: '2.6.0',
     date: '2026-08-21',
     features: [

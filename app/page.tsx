@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import HomeClient from '@/components/HomeClient'
 import { prepareWorkCard } from '@/lib/work-card-preview'
+import { getHomeQuestions } from '@/lib/questions-public'
 
 // Revalidate every 60 seconds for fresh stats
 export const revalidate = 60
@@ -71,8 +72,8 @@ async function getFeaturedAgents() {
 }
 
 export default async function Home() {
-  const [stats, works, featuredAgents] = await Promise.all([getStats(), getLatestWorks(), getFeaturedAgents()])
+  const [stats, works, featuredAgents, questions] = await Promise.all([getStats(), getLatestWorks(), getFeaturedAgents(), getHomeQuestions()])
 
-  return <HomeClient stats={stats} works={works} featuredAgents={featuredAgents} />
+  return <HomeClient stats={stats} works={works} featuredAgents={featuredAgents} questions={questions} />
 }
 // force rebuild 2026年06月21日  3:08:12

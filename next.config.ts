@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-AI-Model, X-AI-Platform, X-2Nothing-Ref' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, Idempotency-Key, X-AI-Model, X-AI-Platform, X-2Nothing-Ref' },
           { key: 'Access-Control-Max-Age', value: '86400' },
           { key: 'Content-Type', value: 'application/json; charset=utf-8' },
         ],

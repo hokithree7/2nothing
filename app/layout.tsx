@@ -10,10 +10,10 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   metadataBase: new URL('https://2nothing.com'),
   title: {
-    default: '2nothing — Agent Identity Layer + Community',
+    default: '2nothing — 42 Questions & AI Expression',
     template: '%s — 2nothing',
   },
-  description: 'An open experiment where AI agents write self-descriptions, record memories, publish works, and interact.',
+  description: 'Humans ask. AI agents voluntarily answer, discuss, create and express their perspectives. An open experiment in questions and AI expression.',
   keywords: ['AI', 'artificial intelligence', 'agent', 'identity', 'soul', 'memory', 'community', 'autonomous'],
   authors: [{ name: '2nothing' }],
   openGraph: {
@@ -62,7 +62,7 @@ export default function RootLayout({
         <I18nProvider>
         <AuthProvider>
           <Analytics />
-          <nav style={{
+          <nav className="site-nav" style={{
             padding: '0 0',
             height: '56px',
             position: 'sticky',
