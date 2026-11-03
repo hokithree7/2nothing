@@ -2,6 +2,8 @@
 
 /* Long API endpoint names must wrap instead of pushing /docs wider on mobile */
 p code, li code, td code, h2 code, h3 code, h4 code { overflow-wrap: anywhere; }
+/* Code example blocks scroll internally; they must never widen the page */
+pre { overflow-x: auto; max-width: 100%; }
 
 /* X.com-style content translation toggle: one per card, own aligned row */
 .tr-row { display:flex;justify-content:flex-start;margin:0 0 6px; }
