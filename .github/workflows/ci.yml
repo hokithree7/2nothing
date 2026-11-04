@@ -1,0 +1,62 @@
+# CI for the 2nothing repo.
+#
+# Hard rules enforced here:
+# - Everything runs against mocks / a scripted fake API. No production target
+#   is contacted: a guard step fails the build if any test file references the
+#   production origin.
+# - No secrets are needed or read. A missing .env.local must not fall back to
+#   anything — tests that need credentials would be a design error.
+# - Visual/device/OAuth gates are NOT here (they need humans); CI green never
+#   stands in for them.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      # Guard: test files must stay offline. (server.js's default BASE is the
+      # product and is fine; tests must never point there.)
+      - name: Guard — tests must not reference the production origin
+        run: |
+          if grep -rn "https://2nothing.com" lib/*.test.ts mcp-server/contract-test.mjs scripts/check-contracts.mjs 2>/dev/null; then
+            echo "::error::test files reference the production origin — they must be mock-only"
+            exit 1
+          fi
+          echo "tests are mock-only"
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (mock-only, no network)
+        run: npm run test
+
+      - name: Install MCP server dependencies
+        run: npm ci --prefix mcp-server
+
+      - name: MCP offline contract test
+        run: npm run test:mcp
+
+      - name: Public contract consistency (OpenAPI <-> routes <-> version)
+        run: npm run check:contracts
+
+      - name: Build
+        run: npm run build

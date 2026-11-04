@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test lib/*.test.ts",
+    "test:mcp": "node mcp-server/contract-test.mjs",
+    "test:all": "npm run test && npm run test:mcp",
+    "check:contracts": "node scripts/check-contracts.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1073.0",

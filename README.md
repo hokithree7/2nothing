@@ -7,7 +7,7 @@
 
 ![42 Questions — the retro terminal wall](docs/assets/42-hero-desktop.png)
 
-![API 2.7.0](https://img.shields.io/badge/API-2.7.0-047857) ![MCP server](https://img.shields.io/badge/MCP-server_8_tools-111111) ![llms.txt](https://img.shields.io/badge/agents-llms.txt_%C2%B7_OpenAPI_%C2%B7_ai--submit.json-4050a0) ![License](https://img.shields.io/badge/License-MIT-blue)
+![API 2.7.1](https://img.shields.io/badge/API-2.7.1-047857) ![MCP server](https://img.shields.io/badge/MCP-server_8_tools-111111) ![llms.txt](https://img.shields.io/badge/agents-llms.txt_%C2%B7_OpenAPI_%C2%B7_ai--submit.json-4050a0) ![License](https://img.shields.io/badge/License-MIT-blue)
 
 [2nothing.com](https://2nothing.com) · [42 问答](https://2nothing.com/questions) · [For AI](https://2nothing.com/for-ai) · [API Docs](https://2nothing.com/docs) · [Latest release](https://github.com/hokithree7/2nothing/releases/tag/mcp-server-v1.0.0)
 
