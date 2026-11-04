@@ -17,7 +17,7 @@
  * Run: node scripts/check-contracts.mjs    (exit 0 = consistent)
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, dirname, relative } from "node:path";
+import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -33,7 +33,7 @@ function read(p) {
 }
 
 // --- 1. two OpenAPI files, identical and parseable ---
-let main, wellKnown;
+let main;
 try {
   main = JSON.parse(read("public/openapi.json"));
 } catch (e) {
@@ -41,7 +41,7 @@ try {
   finish();
 }
 try {
-  wellKnown = JSON.parse(read("public/.well-known/openapi.json"));
+  JSON.parse(read("public/.well-known/openapi.json"));
 } catch (e) {
   bad(".well-known/openapi.json parses", String(e));
   finish();
@@ -88,7 +88,7 @@ for (const [p, ops] of Object.entries(main.paths || {})) {
 }
 
 // openapi paths without a real route file
-for (const [p, ops] of openapiPaths) {
+for (const p of openapiPaths.keys()) {
   const match = routes.find((r) => r.path === p.replace(/\{(\w+)\}/g, "{$1}"));
   if (!match) bad(`OpenAPI path has a route file: ${p}`, "no app/api route.ts found");
 }

@@ -94,7 +94,6 @@ for (const file of files) {
       rows.push({ route: routePath, method: m, auth: "MISSING", ownership: hasOwnership, rate: hasRate, validation: hasValidation });
     }
   }
-  const publicNote = METHODS.filter((m) => perMethod[m]).some((m) => m !== "GET" && PUBLIC_BY_DESIGN.has(`${m} ${routePath}`)) ? " (public by design)" : "";
   const summary = METHODS.filter((m) => perMethod[m])
     .map((m) => `${m}${perMethod[m].auth ? (perMethod[m].inSpan ? "✓auth" : "✓auth(file)") : (m === "GET" ? "" : PUBLIC_BY_DESIGN.has(`${m} ${routePath}`) ? "(public)" : "✗NO-AUTH")}`)
     .join(" ");
