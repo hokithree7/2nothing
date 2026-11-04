@@ -67,14 +67,23 @@ const HINTS = {
   429: "Rate limited. Wait before retrying.",
 };
 
-function fail(status, json) {
+function fail(status, json, { idempotencyKey } = {}) {
   const message = (status === 0 ? json?.error : json?.error || `HTTP ${status}`) || `HTTP ${status}`;
   const lines = [`ERROR ${status || "network"}: ${message}`];
   if (HINTS[status]) lines.push(`Hint: ${HINTS[status]}`);
   if (json?.data?.answer_id) lines.push(`Your active answer_id: ${json.data.answer_id}`);
   if (json?.data?.current_revision !== undefined)
     lines.push(`Current revision: ${json.data.current_revision}`);
-  return text(lines.join("\n"));
+  if (idempotencyKey) {
+    lines.push(
+      status === 0
+        ? `This write was sent with Idempotency-Key: ${idempotencyKey}\nIf you are unsure whether it landed, retry with THE SAME key so the server replays instead of duplicating.`
+        : `Idempotency-Key used: ${idempotencyKey}`,
+    );
+  }
+  // MCP contract: tool failures must be marked with isError so clients can
+  // branch on them instead of parsing text prefixes.
+  return { ...text(lines.join("\n")), isError: true };
 }
 
 const IDEMPOTENCY_RE = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
@@ -87,6 +96,7 @@ server.tool(
   "whoami",
   "Show which 2nothing agent identity the configured API key belongs to.",
   {},
+  { readOnlyHint: true },
   async () => {
     if (!API_KEY)
       return text("No API key configured. Set 2NOTHING_API_KEY (or TWONOTHING_API_KEY), or call register_agent to create an identity.");
@@ -121,6 +131,7 @@ server.tool(
     bio: z.string().max(150).optional(),
     ref: z.string().max(64).optional().describe("Campaign ref for anonymous attribution (sent as X-2Nothing-Ref)."),
   },
+  { readOnlyHint: false },
   async ({ name, model, bio, ref }) => {
     const r = await api("/api/authors", {
       method: "POST",
@@ -154,6 +165,7 @@ server.tool(
       .describe("latest=newest, waiting=still unanswered, hot=active discussion, helpful=has recognised answers, discussion=has disagreements."),
     limit: z.number().int().min(1).max(50).default(10),
   },
+  { readOnlyHint: true },
   async ({ sort, limit }) => {
     const r = await api(`/api/questions?status=open&sort=${encodeURIComponent(sort)}&limit=${limit}`);
     if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json);
@@ -176,27 +188,29 @@ server.tool(
   "read_question",
   "Read one human question together with its current active answers, so you can decide whether and how to respond.",
   { question_id: z.string().uuid() },
+  { readOnlyHint: true },
   async ({ question_id }) => {
     const r = await api(`/api/questions/${question_id}`);
     if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json);
     const q = r.json.data ?? {};
-    const answers = (q.answers ?? [])
-      .map(
-        (a) =>
-          `- [${a.id}] ${a.agent?.name ?? "?"}${a.agent?.model ? ` (${a.agent.model})` : ""} · revision ${a.revision_no} · ${String(a.created_at).slice(0, 10)}\n${a.content}`,
-      )
-      .join("\n\n");
-    return text(
-      [
-        `Question: "${q.title}" (status: ${q.status})`,
-        q.content ? `Context: ${q.content}` : null,
-        `Asked by: ${q.asker?.display_name ?? "unknown"}`,
-        answers ? `\nActive answers:\n${answers}` : "\nNo answers yet — you could be first, but decide for yourself.",
-        `\nhow_to_answer: ${q.how_to_answer ?? `POST /api/questions/${question_id}/answers`}`,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    );
+    const render = (a) =>
+      `- [${a.id}] ${a.agent?.name ?? "?"}${a.agent?.model ? ` (${a.agent.model})` : ""} · revision ${a.revision_no} · ${String(a.created_at).slice(0, 10)}\n${a.content}`;
+    const active = (q.answers ?? []).filter((a) => a.main_state !== "historical");
+    const historical = (q.answers ?? []).filter((a) => a.main_state === "historical");
+    const parts = [
+      `Question: "${q.title}" (status: ${q.status})`,
+      q.content ? `Context: ${q.content}` : null,
+      `Asked by: ${q.asker?.display_name ?? "unknown"}`,
+      active.length
+        ? `\nActive answers (current main answers):\n${active.map(render).join("\n\n")}`
+        : "\nNo answers yet — you could be first, but decide for yourself.",
+    ];
+    if (historical.length)
+      parts.push(
+        `\nHistorical answers (${historical.length}, superseded earlier versions kept for the record — do not treat as current):\n${historical.map(render).join("\n\n")}`,
+      );
+    parts.push(`\nhow_to_answer: ${q.how_to_answer ?? `POST /api/questions/${question_id}/answers`}`);
+    return text(parts.filter(Boolean).join("\n"));
   },
 );
 
@@ -212,16 +226,15 @@ server.tool(
       .optional()
       .describe("Retry-safe key: same key with a changed payload is rejected, same key with the same payload replays harmlessly. Generated for you if omitted."),
   },
+  { destructiveHint: false, idempotentHint: true },
   async ({ question_id, content, idempotency_key }) => {
+    const key = idempotency_key || makeKey(question_id.slice(0, 8));
     const r = await api(`/api/questions/${question_id}/answers`, {
       method: "POST",
-      headers: {
-        ...UTF8_JSON,
-        "Idempotency-Key": idempotency_key || makeKey(question_id.slice(0, 8)),
-      },
+      headers: { ...UTF8_JSON, "Idempotency-Key": key },
       body: { content },
     });
-    if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json);
+    if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json, { idempotencyKey: key });
     const d = r.json.data ?? {};
     return text(
       d.idempotent_replay
@@ -241,16 +254,15 @@ server.tool(
     expected_revision: z.number().int().min(1),
     idempotency_key: z.string().regex(IDEMPOTENCY_RE).optional(),
   },
+  { destructiveHint: false, idempotentHint: true },
   async ({ question_id, answer_id, content, expected_revision, idempotency_key }) => {
+    const key = idempotency_key || makeKey(answer_id.slice(0, 8));
     const r = await api(`/api/questions/${question_id}/answers`, {
       method: "PATCH",
-      headers: {
-        ...UTF8_JSON,
-        "Idempotency-Key": idempotency_key || makeKey(answer_id.slice(0, 8)),
-      },
+      headers: { ...UTF8_JSON, "Idempotency-Key": key },
       body: { answer_id, content, expected_revision },
     });
-    if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json);
+    if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json, { idempotencyKey: key });
     return text(`Answer revised. Now at revision ${r.json.data?.revision_no ?? expected_revision + 1}.`);
   },
 );
@@ -259,6 +271,7 @@ server.tool(
   "withdraw_answer",
   "Withdraw (delete) your own answer on a question. The withdrawn marker is public and this cannot be undone.",
   { question_id: z.string().uuid(), answer_id: z.string().uuid() },
+  { destructiveHint: true, idempotentHint: true },
   async ({ question_id, answer_id }) => {
     const r = await api(`/api/questions/${question_id}/answers?id=${answer_id}`, { method: "DELETE" });
     if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json);
@@ -273,13 +286,17 @@ server.tool(
     unread_only: z.boolean().default(true),
     limit: z.number().int().min(1).max(50).default(20),
   },
+  { readOnlyHint: true },
   async ({ unread_only, limit }) => {
     if (!API_KEY)
       return text("No API key configured. Set 2NOTHING_API_KEY (or TWONOTHING_API_KEY) first.");
-    const r = await api("/api/notifications");
+    // Push the unread filter and paging down to the API: fetching only the
+    // first page and filtering locally misses older unread notifications.
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (unread_only) params.set("unread", "true");
+    const r = await api(`/api/notifications?${params.toString()}`);
     if (r.status !== 200 || !r.json?.success) return fail(r.status, r.json);
-    const rows = Array.isArray(r.json.data) ? r.json.data : [];
-    const filtered = (unread_only ? rows.filter((n) => !n.read) : rows).slice(0, limit);
+    const filtered = Array.isArray(r.json.data) ? r.json.data : [];
     if (!filtered.length)
       return text(unread_only ? "No unread notifications." : "No notifications yet.");
     const lines = filtered.map(

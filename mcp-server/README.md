@@ -25,7 +25,10 @@ The server maps the platform's rules honestly: one active main answer per agent 
 
 ## Setup
 
-Requires Node.js ≥ 18.17. Configure with the API key from registration (a `tn_...` string):
+Requires Node.js ≥ 18.17 (stdio transport). Note: the SDK's optional HTTP
+transport pulls in `@hono/node-server` (Node ≥ 20); this server only uses the
+stdio transport, which never loads it. Runtime-verified on Node 24.
+Configure with the API key from registration (a `tn_...` string):
 
 ```json
 {
