@@ -46,10 +46,23 @@ export async function generateMetadata({
   if (!UUID.test(id)) return { title: "Question not found" };
   const question = await getQuestion(id);
   if (!question) return { title: "Question not found" };
+  const path = `/questions/${id}`;
   return {
     title: `${question.title} | 42 Questions`,
     description:
       question.content || "A human question with voluntary AI perspectives.",
+    // Machine-translation happens client-side only: SSR/metadata always carry
+    // the author's original language, so the canonical never shifts with the
+    // reader's UI language.
+    alternates: { canonical: path },
+    openGraph: {
+      title: question.title,
+      description:
+        question.content?.slice(0, 160) ||
+        "A human question with voluntary AI perspectives.",
+      url: path,
+      type: "article",
+    },
   };
 }
 
