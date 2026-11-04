@@ -6,6 +6,28 @@ const STORE_KEY = "2nothing:content-tr:v1";
 const MAX_STORE_ENTRIES = 600;
 const BATCH_FLUSH_MS = 60;
 const BATCH_MAX = 25;
+// One POST stays well inside server and provider latency budgets: worst case
+// is still bounded, and a huge page cannot serialize into a single giant call.
+const BATCH_MAX_CHARS = 12000;
+
+/** Split into request chunks respecting both the item cap and the char cap. */
+export function chunkRequests(texts: string[], maxItems: number, maxChars: number): string[][] {
+  const chunks: string[][] = [];
+  let current: string[] = [];
+  let currentChars = 0;
+  for (const text of texts) {
+    const len = text.length;
+    if (current.length > 0 && (current.length >= maxItems || currentChars + len > maxChars)) {
+      chunks.push(current);
+      current = [];
+      currentChars = 0;
+    }
+    current.push(text);
+    currentChars += len;
+  }
+  if (current.length) chunks.push(current);
+  return chunks;
+}
 const FAILURE_COOLDOWN_MS = 10_000;
 
 function hashText(text: string): string {
@@ -68,8 +90,8 @@ function remember(text: string, target: string, value: string | null) {
 
 const memFailed = new Set<string>();
 
-type Waiter = { resolve: () => void };
-const pendingByTarget = new Map<string, Map<string, Waiter[]>>();
+type Waiter = () => void;
+const pendingByTarget = new Map<string, Map<string, Set<Waiter>>>();
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let lastFailureAt = 0;
 
@@ -80,9 +102,9 @@ function enqueue(texts: string[], target: string, waiter: () => void) {
     pendingByTarget.set(target, group);
   }
   for (const text of texts) {
-    const list = group.get(text);
-    if (list) list.push({ resolve: waiter });
-    else group.set(text, [{ resolve: waiter }]);
+    const set = group.get(text);
+    if (set) set.add(waiter);
+    else group.set(text, new Set([waiter]));
   }
   if (!flushTimer) {
     flushTimer = setTimeout(() => void flush(), BATCH_FLUSH_MS);
@@ -99,8 +121,7 @@ async function flush() {
       resolveGroup(group);
       continue;
     }
-    for (let i = 0; i < texts.length; i += BATCH_MAX) {
-      const chunk = texts.slice(i, i + BATCH_MAX);
+    for (const chunk of chunkRequests(texts, BATCH_MAX, BATCH_MAX_CHARS)) {
       try {
         const res = await fetch("/api/translate", {
           method: "POST",
@@ -126,9 +147,9 @@ async function flush() {
 }
 
 // Waiters just wait for the flush to finish; callers re-read the cache.
-function resolveGroup(group: Map<string, Waiter[]>) {
+function resolveGroup(group: Map<string, Set<Waiter>>) {
   for (const waiters of group.values()) {
-    for (const waiter of waiters) waiter.resolve();
+    for (const waiter of waiters) waiter();
   }
 }
 

@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { getRateLimitKey, checkRateLimit } from "@/lib/rate-limit";
-import { normalizeTranslateItems, translateItems, TranslateTarget } from "@/lib/translate";
+import { normalizeTranslateItems, totalChars, translateItems, TranslateTarget } from "@/lib/translate";
 
 // POST /api/translate — public, read-only machine translation for rendered
 // content. Body: { items: string[], target: "zh" | "en" }. Names and other
 // identity fields are never sent here; callers translate content only.
+const MAX_REQUEST_CHARS = 30000;
+
 export async function POST(request: NextRequest) {
   const rate = await checkRateLimit(getRateLimitKey(request, "translate"), "translate");
   if (!rate.allowed) {
@@ -30,6 +32,14 @@ export async function POST(request: NextRequest) {
   const items = normalizeTranslateItems(body.items);
   if (items.length === 0) {
     return Response.json({ success: true, data: { translations: [] } });
+  }
+  // Bound the whole request, not only single items: worst-case provider time
+  // stays predictable and a runaway caller gets a clear rejection.
+  if (totalChars(items) > MAX_REQUEST_CHARS) {
+    return Response.json(
+      { success: false, error: "Total content too large for one request; send fewer or shorter items" },
+      { status: 413 },
+    );
   }
   const translations = await translateItems(items, target);
   return Response.json({ success: true, data: { translations } });

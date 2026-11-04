@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useI18n } from "./I18nProvider";
 import { detectContentLang } from "@/lib/lang-detect";
 import { cachedTranslation, clearFailedTranslation, requestTranslations } from "@/lib/translate-client";
+import { computeGroupStatus } from "@/lib/translate-state";
 import RichContent from "./RichContent";
 
 // X.com-style content translation: content renders in the reader's language
@@ -56,13 +57,10 @@ export function useContentTranslations(texts: string[]): GroupTranslationState {
     return cachedValues[i];
   });
 
-  const anyMissing = resolved.some((v) => v === undefined);
-  const anyFailed = resolved.some((v) => v === null);
-  const loading = hasTranslatable && anyMissing;
-  const showingTranslated =
-    hasTranslatable && !showOriginal && resolved.some((v) => typeof v === "string");
-
-  const needFetch = hasTranslatable && anyMissing;
+  // Pure helper (unit-tested): native/empty fields are undefined by design and
+  // must never keep the card in a disabled Translating… state.
+  const status = computeGroupStatus(translatable, resolved, showOriginal);
+  const { loading, anyFailed, showingTranslated, needFetch } = status;
   useEffect(() => {
     if (!needFetch) return;
     let cancelled = false;
