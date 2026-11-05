@@ -6,11 +6,14 @@ p code, li code, td code, h2 code, h3 code, h4 code { overflow-wrap: anywhere; }
 pre { overflow-x: auto; max-width: 100%; }
 
 /* X.com-style content translation toggle: one per card, own aligned row */
-.tr-row { display:flex;justify-content:flex-start;margin:0 0 6px; }
-.tr-toggle { display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:none;border-radius:999px;background:var(--accent-light,#eff6ff);color:var(--accent,#2563eb);font-size:13px;font-weight:600;cursor:pointer;transition:color 120ms,background-color 120ms; }
-.tr-toggle:hover { color:#1d4ed8;background:#e0ebff; }
-.tr-toggle:disabled { opacity:.7;cursor:default; }
-.tr-toggle-compact { min-height:32px;font-size:12px;padding:0 10px; }
+.tr-row { display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-start;column-gap:4px;row-gap:0;margin:0 0 4px;color:#536471;font-size:13px;font-weight:400;line-height:20px; }
+.tr-icon { width:14px;height:14px;flex-shrink:0; }
+.tr-attribution { color:inherit; }
+.tr-toggle { display:inline-flex;align-items:center;min-height:24px;padding:0;border:0;border-radius:2px;background:transparent;color:var(--accent,#2563eb);font:inherit;cursor:pointer; }
+.tr-toggle:hover:not(:disabled) { text-decoration:underline; }
+.tr-toggle:disabled { color:#536471;cursor:default; }
+.tr-toggle:focus-visible { outline:2px solid var(--accent,#2563eb);outline-offset:2px; }
+.tr-row-compact { font-size:12px; }
 
 /* 42: real controls on an independent, blank CRT shell. */
 .q42-home,.q42-questions-page { background:#fbfcff;color:#111c32; }

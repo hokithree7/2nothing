@@ -8,7 +8,7 @@ import { computeGroupStatus } from "@/lib/translate-state";
 import RichContent from "./RichContent";
 
 // X.com-style content translation: content renders in the reader's language
-// (machine-translated) with ONE prominent "show original" toggle per card.
+// (machine-translated) with one quiet attribution/action row per card.
 // Author names, model names and other identity fields are never passed here.
 
 // The server caps one item at 8000 chars; longer content would translate to a
@@ -25,6 +25,8 @@ export type GroupTranslationState = {
   showToggle: boolean;
   loading: boolean;
   showingTranslated: boolean;
+  sourceLanguage: "zh" | "en" | null;
+  anyFailed: boolean;
   toggle: () => void;
 };
 
@@ -94,6 +96,8 @@ export function useContentTranslations(texts: string[]): GroupTranslationState {
     showToggle: hasTranslatable,
     loading,
     showingTranslated,
+    sourceLanguage: sourceLangs.find((lang, i) => translatable[i] && typeof resolved[i] === "string") ?? null,
+    anyFailed,
     toggle: () => {
       if (hasTranslatable && anyFailed && !loading && !showingTranslated) {
         // all attempts failed — retry the provider on click instead of a dead toggle
@@ -117,15 +121,29 @@ export function ToggleButton({
 }) {
   const { locale } = useI18n();
   const zh = locale === "zh";
+  const failed = state.anyFailed && !state.showingTranslated;
+  const source = state.sourceLanguage === "zh" ? (zh ? "中文" : "Chinese") : (zh ? "英语" : "English");
   let label: string;
   if (state.loading) label = zh ? "翻译中…" : "Translating…";
   else if (state.showingTranslated) label = zh ? "显示原文" : "Show original";
-  else label = zh ? "显示翻译" : "View translation";
+  else if (failed) label = zh ? "重试" : "Retry";
+  else label = zh ? "翻译帖子" : "Translate post";
   return (
-    <span className="tr-row">
+    <span className={compact ? "tr-row tr-row-compact" : "tr-row"}>
+      <svg className="tr-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+        <path d="M2 4h10M7 2v2M4 4c.5 4 3 6.5 7 8M10 4c-.5 4-3 6.5-7 8M10 17l4-9 4 9M11.5 14h5" />
+      </svg>
+      {state.showingTranslated && (
+        <span className="tr-attribution" aria-live="polite">
+          {state.anyFailed
+            ? (zh ? `部分内容译自${source}` : `Partially translated from ${source}`)
+            : (zh ? `译自${source}` : `Translated from ${source}`)}
+        </span>
+      )}
+      {failed && !state.loading && <span className="tr-attribution" role="status">{zh ? "暂时无法翻译" : "Translation unavailable"}</span>}
       <button
         type="button"
-        className={compact ? "tr-toggle tr-toggle-compact" : "tr-toggle"}
+        className="tr-toggle"
         onClick={state.toggle}
         disabled={state.loading}
         aria-pressed={state.showingTranslated}
@@ -153,12 +171,11 @@ export function TranslatedGroup({
   const state = useContentTranslations(texts);
   return (
     <>
-      {state.showToggle && !compact && <ToggleButton state={state} />}
+      {state.showToggle && <ToggleButton state={state} compact={compact} />}
       {children({
         t: (i) => state.field(i).display,
         lang: (i) => state.field(i).lang,
       })}
-      {state.showToggle && compact && <ToggleButton state={state} compact />}
     </>
   );
 }
@@ -181,11 +198,10 @@ export default function TranslatedText({
   const field = state.field(0);
   return (
     <>
-      {state.showToggle && !compact && <ToggleButton state={state} />}
+      {state.showToggle && <ToggleButton state={state} compact={compact} />}
       <Tag className={className} style={style} lang={field.lang}>
         {field.display}
       </Tag>
-      {state.showToggle && compact && <ToggleButton state={state} compact />}
     </>
   );
 }
