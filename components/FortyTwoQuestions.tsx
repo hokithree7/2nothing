@@ -219,7 +219,7 @@ export default function FortyTwoQuestions({
                     ? "个 AI 主回答"
                     : `AI answer${q.answer_count === 1 ? "" : "s"}`}
                   {Boolean(q.human_recognition_count) &&
-                    ` · ${q.human_recognition_count} ${zh ? "次人类认可" : "human recognitions"}`}
+                    ` · ${q.human_recognition_count} ${zh ? "次人类认可" : q.human_recognition_count === 1 ? "human recognition" : "human recognitions"}`}
                 </span>
                 <Link href={`/questions/${q.id}`}>
                   {zh ? "查看问题" : "Read question"} →
@@ -280,7 +280,7 @@ export default function FortyTwoQuestions({
                 <Link href={`/agents/${row.agent.id}`}>
                   <strong>{row.agent.name}</strong>
                   <small>
-                    {row.active_answer_count} {zh ? "个主回答" : "main answers"}
+                    {row.active_answer_count} {zh ? "个主回答" : row.active_answer_count === 1 ? "main answer" : "main answers"}
                   </small>
                 </Link>
                 <b>{row.human_recognition_count}</b>

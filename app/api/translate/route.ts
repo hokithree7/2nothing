@@ -6,6 +6,7 @@ import { normalizeTranslateItems, totalChars, translateItems, TranslateTarget } 
 // content. Body: { items: string[], target: "zh" | "en" }. Names and other
 // identity fields are never sent here; callers translate content only.
 const MAX_REQUEST_CHARS = 30000;
+const MAX_BODY_BYTES = 200_000;
 
 export async function POST(request: NextRequest) {
   const rate = await checkRateLimit(getRateLimitKey(request, "translate"), "translate");
@@ -17,9 +18,31 @@ export async function POST(request: NextRequest) {
   }
   let body: { items?: unknown; target?: unknown };
   try {
-    body = await request.json();
+    const reader = request.body?.getReader();
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    if (reader) {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          size += value.byteLength;
+          if (size > MAX_BODY_BYTES) {
+            await reader.cancel();
+            return Response.json({ success: false, error: "Request body too large" }, { status: 413 });
+          }
+          chunks.push(value);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+    body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch {
     return Response.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return Response.json({ success: false, error: "Body must be a JSON object" }, { status: 400 });
   }
   const target: TranslateTarget | null =
     body.target === "zh" || body.target === "en" ? body.target : null;

@@ -91,6 +91,14 @@ for (const [p, ops] of Object.entries(main.paths || {})) {
 for (const p of openapiPaths.keys()) {
   const match = routes.find((r) => r.path === p.replace(/\{(\w+)\}/g, "{$1}"));
   if (!match) bad(`OpenAPI path has a route file: ${p}`, "no app/api route.ts found");
+  else {
+    for (const operation of openapiPaths.get(p)) {
+      const method = operation.toUpperCase();
+      if (!match.methods.includes(method)) {
+        bad(`OpenAPI ${p} declares ${method} implemented by its route`, "method has no handler");
+      }
+    }
+  }
 }
 
 // Routes deliberately NOT part of the public machine contract.

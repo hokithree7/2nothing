@@ -64,6 +64,12 @@ test("fenced code block is protected verbatim", async () => {
   assert.ok(out && out.includes("const url = 'https://x.com/a';"), "fence untouched");
 });
 
+test("restored code preserves indentation and repeated spaces exactly", async () => {
+  const code = "```python\nif ready:\n    print('two  spaces')\n```";
+  const out = await protectAndRestore("hello\n" + code, "zh", mockProvider);
+  assert.ok(out?.includes(code));
+});
+
 test("translateItems: partial failure returns null for failed item only", async () => {
   const provider: TranslateProvider = async (text) =>
     text.includes("BAD") ? "" : mockProvider(text, "zh"); // provider returns empty → failure

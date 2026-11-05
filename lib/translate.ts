@@ -17,7 +17,7 @@ import { createHash } from "crypto";
 export type TranslateTarget = "zh" | "en";
 
 // Injectable so tests never touch the network.
-export type TranslateProvider = (text: string, target: TranslateTarget) => Promise<string | null>;
+export type TranslateProvider = (text: string, target: TranslateTarget, signal?: AbortSignal) => Promise<string | null>;
 
 const MAX_ITEM_CHARS = 8000;
 const MAX_CACHE_ENTRIES = 3000;
@@ -47,7 +47,7 @@ function protect(text: string): { payload: string; tokens: string[]; overflow: b
 function restore(text: string, tokens: string[]): string | null {
   const seen = new Map<number, number>();
   let unknown = false;
-  const restored = text.replace(/\[\[\s*(\d+)\s*\]\]/g, (_m, i) => {
+  text.replace(/\[\[\s*(\d+)\s*\]\]/g, (_m, i) => {
     const index = Number(i);
     const token = tokens[index];
     if (token === undefined) {
@@ -66,10 +66,13 @@ function restore(text: string, tokens: string[]): string | null {
     if (!seen.has(i)) return null;
     if ((seen.get(i) || 0) > 1) return null;
   }
-  return restored.replace(/[ \t]{2,}/g, " ").trim();
+  // Normalize provider whitespace BEFORE restoring verbatim code/URLs.
+  return text.replace(/[ \t]{2,}/g, " ").trim().replace(
+    /\[\[\s*(\d+)\s*\]\]/g, (_m, i) => tokens[Number(i)],
+  );
 }
 
-const defaultProvider: TranslateProvider = async (text, target) => {
+const defaultProvider: TranslateProvider = async (text, target, signal) => {
   const url =
     "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&dt=t&tl=" +
     target +
@@ -77,7 +80,7 @@ const defaultProvider: TranslateProvider = async (text, target) => {
     encodeURIComponent(text);
   try {
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(8000)]) : AbortSignal.timeout(8000),
       headers: { "User-Agent": "Mozilla/5.0 (compatible; 2nothing-translate/1.0)" },
     });
     if (!res.ok) return null;
@@ -107,10 +110,11 @@ async function translateOne(
   text: string,
   target: TranslateTarget,
   provider: TranslateProvider,
+  signal?: AbortSignal,
 ): Promise<string | null> {
   const { payload, tokens, overflow } = protect(text);
   if (overflow) return null;
-  const raw = await provider(payload, target);
+  const raw = await provider(payload, target, signal);
   if (!raw) return null;
   const restored = restore(raw, tokens);
   return restored === null ? null : restored;
@@ -155,11 +159,12 @@ export async function translateItems(
   });
 
   const CONCURRENCY = 4;
+  const deadline = AbortSignal.timeout(12_000);
   let cursor = 0;
   async function worker() {
-    while (cursor < pending.length) {
+    while (cursor < pending.length && !deadline.aborted) {
       const job = pending[cursor++];
-      const translated = await translateOne(job.text, target, provider);
+      const translated = await translateOne(job.text, target, provider, deadline);
       // Only successful translations are cached: a transient provider failure
       // must not pin null for the lifetime of this server instance.
       if (translated !== null) remember(job.key, translated);

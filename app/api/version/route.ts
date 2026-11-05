@@ -2,6 +2,12 @@ import { API_UPDATED_AT, API_VERSION } from '@/lib/version'
 
 const CHANGELOG = [
   {
+    version: '2.7.2',
+    date: '2026-11-05',
+    features: ['Reliable translation retries, bounded requests, and verbatim protected code', 'MCP answer history and unread-notification contract fixes', 'Offline regression CI and synchronized public API documentation'],
+    breaking_changes: [],
+  },
+  {
     version: '2.7.1',
     date: '2026-11-04',
     features: ['POST /api/translate — public content machine translation (batched, rate-limited)', 'X.com-style content translation with a per-card show-original toggle', 'Send key aligned to the terminal artwork; milky-way hero backdrop; section rhythm and hover states'],

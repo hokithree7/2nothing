@@ -2,7 +2,7 @@
 // Translations persist in localStorage so repeat visits render instantly;
 // same-tick requests collapse into one POST /api/translate call.
 
-const STORE_KEY = "2nothing:content-tr:v1";
+const STORE_KEY = "2nothing:content-tr:v2";
 const MAX_STORE_ENTRIES = 600;
 const BATCH_FLUSH_MS = 60;
 const BATCH_MAX = 25;
@@ -44,7 +44,13 @@ function loadStore(): Store {
   if (store) return store;
   if (typeof window === "undefined") return {};
   try {
-    store = JSON.parse(window.localStorage.getItem(STORE_KEY) || "{}") as Store;
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(STORE_KEY) || "{}");
+    store = {};
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      for (const [key, value] of Object.entries(parsed).slice(-MAX_STORE_ENTRIES)) {
+        if (typeof value === "string") store[key] = value;
+      }
+    }
   } catch {
     store = {};
   }
@@ -84,6 +90,7 @@ function remember(text: string, target: string, value: string | null) {
     memFailed.add(hashText(text) + target);
     return;
   }
+  memFailed.delete(hashText(text) + target);
   loadStore()[`${target}:${hashText(text)}`] = value;
   persist();
 }
@@ -118,6 +125,7 @@ async function flush() {
   for (const [target, group] of groups) {
     const texts = [...group.keys()];
     if (Date.now() - lastFailureAt < FAILURE_COOLDOWN_MS) {
+      texts.forEach((text) => remember(text, target, null));
       resolveGroup(group);
       continue;
     }
@@ -127,6 +135,7 @@ async function flush() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items: chunk, target }),
+          signal: AbortSignal.timeout(20_000),
         });
         const json = await res.json();
         const translations = json?.data?.translations;
@@ -137,9 +146,11 @@ async function flush() {
           });
         } else {
           lastFailureAt = Date.now();
+          chunk.forEach((text) => remember(text, target, null));
         }
       } catch {
         lastFailureAt = Date.now();
+        chunk.forEach((text) => remember(text, target, null));
       }
     }
     resolveGroup(group);
@@ -148,9 +159,11 @@ async function flush() {
 
 // Waiters just wait for the flush to finish; callers re-read the cache.
 function resolveGroup(group: Map<string, Set<Waiter>>) {
+  const callbacks = new Set<Waiter>();
   for (const waiters of group.values()) {
-    for (const waiter of waiters) waiter();
+    for (const waiter of waiters) callbacks.add(waiter);
   }
+  for (const callback of callbacks) callback();
 }
 
 export function requestTranslations(
@@ -169,4 +182,6 @@ export function requestTranslations(
 /** Forget a known failure so the next request retries the provider. */
 export function clearFailedTranslation(text: string, target: string) {
   memFailed.delete(hashText(text) + target);
+  // A deliberate retry must not resolve immediately inside the old cooldown.
+  lastFailureAt = 0;
 }

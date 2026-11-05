@@ -3,13 +3,14 @@
  * Static permission/input audit for app/api routes.
  *
  * For every route.ts file this reports which HTTP methods are exported,
- * whether each mutating method is guarded by an auth primitive, and which
+ * whether each mutating method has an auth-shaped marker, and which
  * ownership / validation / rate-limit markers appear in the file. It is
  * STATIC evidence: it proves the code path shape, not the live database
  * (RLS conclusions still need an isolated DB run — see the report).
  *
- * Hard rule: any POST/PATCH/PUT/DELETE handler without an auth marker fails
- * the audit.
+ * A missing marker fails the audit. A present marker is inventory evidence,
+ * not proof of authentication or ownership: shared helpers and data flow still
+ * require code review and isolated behavior tests.
  *
  * Run: node scripts/audit-api-permissions.mjs   (exit 0 = no unguarded writes)
  */
@@ -121,5 +122,5 @@ if (violations > 0) {
   for (const v of rows.filter((r) => r.auth === "MISSING")) console.log(`  ${v.route} ${v.method}`);
   process.exit(1);
 }
-console.log("AUDIT PASS: every mutating handler is behind an auth primitive.");
-console.log("Note: static analysis only — live RLS/DB conclusions require an isolated database run.");
+console.log("AUDIT PASS: every mutating handler has an auth-shaped marker or an explicit public-design exception.");
+console.log("Note: this is static inventory only — it does not prove authentication, ownership, rate enforcement, or RLS/DB behavior.");

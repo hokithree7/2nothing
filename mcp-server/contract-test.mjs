@@ -9,7 +9,6 @@
  * Run:  node mcp-server/contract-test.mjs     (exit 0 = all pass)
  * Deps: @modelcontextprotocol/sdk + zod from mcp-server/node_modules
  */
-import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -134,21 +133,34 @@ async function main() {
 
   // Serve the MCP server over stdio. Network-failure scenario uses its own instance.
   async function spawnServer(baseUrl, apiKey = "tn_test") {
-    const child = spawn(process.execPath, [SERVER_PATH], {
-      env: { ...process.env, TWONOTHING_BASE_URL: baseUrl, TWONOTHING_API_KEY: apiKey },
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    let stderr = "";
-    child.stderr.on("data", (c) => (stderr += c));
     const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
     const { StdioClientTransport } = await import("@modelcontextprotocol/sdk/client/stdio.js");
-    const transport = new StdioClientTransport({ command: process.execPath, args: [SERVER_PATH], env: { ...process.env, TWONOTHING_BASE_URL: baseUrl, TWONOTHING_API_KEY: apiKey } });
+    const transport = new StdioClientTransport({
+      command: process.execPath,
+      args: [SERVER_PATH],
+      // server.js gives digit-leading 2NOTHING_* precedence. Override both
+      // spellings so a developer's inherited production configuration cannot
+      // redirect this mock-only test away from the local fake API.
+      env: {
+        ...process.env,
+        "2NOTHING_BASE_URL": baseUrl,
+        TWONOTHING_BASE_URL: baseUrl,
+        "2NOTHING_API_KEY": apiKey,
+        TWONOTHING_API_KEY: apiKey,
+      },
+      stderr: "pipe",
+    });
+    let stderr = "";
+    // `stderr: pipe` creates this PassThrough in the transport constructor,
+    // before client.connect() starts the child process, so startup diagnostics
+    // cannot race past the listener.
+    transport.stderr?.on("data", (chunk) => (stderr += chunk));
     const client = new Client({ name: "contract-test", version: "1.0.0" });
     await client.connect(transport);
-    return { client, child, stderr: () => stderr };
+    return { client, stderr: () => stderr };
   }
 
-  const { client, child, stderr } = await spawnServer(`http://127.0.0.1:${port}`);
+  const { client, stderr } = await spawnServer(`http://127.0.0.1:${port}`);
 
   // --- whoami: success + 401(HTML body -> non-JSON path) ---
   const me = await client.callTool({ name: "whoami", arguments: {} });
@@ -213,11 +225,12 @@ async function main() {
   check("read tools declare readOnlyHint", ["whoami", "list_open_questions", "read_question", "check_notifications"].every((n) => byName[n]?.annotations?.readOnlyHint === true), JSON.stringify(Object.fromEntries(Object.entries(byName).map(([k, v]) => [k, v.annotations]))));
   check("withdraw declares destructiveHint", byName.withdraw_answer?.annotations?.destructiveHint === true);
 
-  // --- stdout hygiene: protocol must not be polluted ---
-  check("server wrote nothing to stdout/stderr besides protocol", stderr().trim() === "", stderr().slice(0, 200));
+  // stdout is parsed by the SDK as JSON-RPC: unexpected output would corrupt
+  // the protocol and make earlier calls fail. Stderr is directly captured
+  // above from the same transport, including startup output.
+  check("server wrote nothing to stderr", stderr().trim() === "", stderr().slice(0, 200));
 
   await client.close();
-  child.kill();
 
   // --- network failure: isError + idempotency key surfaced (bug B.4) ---
   const dead = await spawnServer("http://127.0.0.1:9"); // discard port: nothing listens
@@ -226,7 +239,6 @@ async function main() {
   const keyMatch = textOf(netAns).match(/Idempotency-Key: (mcp-[A-Za-z0-9-]+)/);
   check("network failure surfaces the SAME idempotency key for retry", !!keyMatch, textOf(netAns).slice(0, 200));
   await dead.client.close();
-  dead.child.kill();
 
   fake.close();
 
