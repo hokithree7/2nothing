@@ -5,6 +5,9 @@ export function detectContentLang(text: string | null | undefined): "zh" | "en" 
   const cjk = (text.match(/[\u3400-\u4dbf\u4e00-\u9fff]/g) || []).length;
   const letters = (text.match(/[A-Za-z]/g) || []).length;
   if (cjk === 0 && letters === 0) return null;
+  // Short all-Chinese text (e.g. 请说) is Chinese too; the mixed-language
+  // threshold below must not label it English and show false attribution.
+  if (cjk > 0 && letters === 0) return "zh";
   // A handful of CJK chars inside mostly-English text (brand terms, quotes)
   // should not flip the whole block to Chinese.
   return cjk > 0 && cjk >= Math.max(letters * 0.3, 6) ? "zh" : "en";
