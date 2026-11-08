@@ -145,20 +145,18 @@ pre { overflow-x: auto; max-width: 100%; }
 .q42-questions-hero { position:relative;background:#031420;color:white;overflow:hidden; }
 /* Wall hero: copy left, CRT close-up right — a monitor bezel, no shell */
 .q42-questions-hero .q42-questions-header { display:grid;grid-template-columns:1fr 460px;align-items:center;gap:36px;position:relative;padding:36px 24px 32px; }
-/* Close-up: crop window [4%,6%]-[96%,88%] of the shell artwork — CRT glass
-   plus the body below it, at original proportions. The DOM send bar slots
-   into the painted key zone, like reference layout 3. */
-.q42-crt { position:relative;aspect-ratio:1104/738;overflow:hidden;border-radius:12px;border:1px solid #3a5c46;box-shadow:inset 0 0 60px #00111b40,0 12px 34px #00111b66; }
-.q42-crt .q42-crt-shellimg { position:absolute;width:108.7%;height:121.95%;left:-4.35%;top:-7.32%;max-width:none;object-fit:fill; }
-/* glass occupies y 10.1%-75.7% of the crop; content lives inside it */
-.q42-crt .q42-crt-screen { position:absolute;left:12%;right:8%;top:10.5%;bottom:26%;padding:2% 1% 1%;z-index:1;display:flex;flex-direction:column; }
+/* Close-up: crop window [10%,6%]-[92%,92%] of the shell artwork — machine
+   upper body: top bezel, full glass, key zone (reference layout 3). The DOM
+   send key is aligned exactly over the painted key; screen content overlays
+   the glass. All percentages are crop-space. */
+.q42-crt { position:relative;aspect-ratio:984/774;overflow:hidden;border-radius:12px;border:1px solid #3a5c46;box-shadow:inset 0 0 60px #00111b40,0 12px 34px #00111b66; }
+.q42-crt .q42-crt-shellimg { position:absolute;width:121.95%;height:116.28%;left:-12.2%;top:-6.98%;max-width:none;object-fit:fill; }
+.q42-crt .q42-crt-screen { position:absolute;left:8.54%;right:8.54%;top:12.79%;bottom:27.91%;z-index:1;display:flex;flex-direction:column;color:#a8ed8a; }
 .q42-crt .q42-crt-screen .q42-screen-title { font-size:15px; }
-.q42-crt .q42-crt-screen textarea { font-size:16px;min-height:56px;flex:1; }
+.q42-crt .q42-crt-screen textarea { font-size:16px;min-height:60px;flex:1;resize:none; }
 .q42-crt .q42-crt-screen .q42-context { font-size:14px;min-height:44px;border:1px solid #34563e; }
 .q42-crt .q42-crt-screen .q42-input-hint { margin-top:8px; }
-.q42-crt::after { content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 50px #00111b30;border-radius:12px; }
-/* DOM send bar slotted over the painted key zone (bottom body area) */
-.q42-crt-send { position:absolute;left:26%;right:26%;bottom:3.5%;display:flex;align-items:center;justify-content:center;min-height:44px;border:2px solid #946219;border-radius:6px;background:linear-gradient(#ffda71,#e9ad30);box-shadow:inset 0 2px 2px #ffe8a0,inset 0 -3px 2px #bd7b20,0 2px 2px #31200c;color:#201707;font-size:15px;font-weight:800;cursor:pointer;transition:transform 100ms,box-shadow 100ms,filter 120ms; }
+.q42-crt-send { position:absolute;left:23.48%;right:28.05%;top:77.91%;bottom:9.17%;z-index:2;display:flex;align-items:center;justify-content:center;border:2px solid #946219;border-radius:6px;background:linear-gradient(#ffda71,#e9ad30);box-shadow:inset 0 2px 2px #ffe8a0,inset 0 -3px 2px #bd7b20,0 2px 2px #31200c;color:#201707;font-size:15px;font-weight:800;cursor:pointer;transition:transform 100ms,box-shadow 100ms,filter 120ms; }
 .q42-crt-send:hover:not(:disabled) { filter:brightness(1.05); }
 .q42-crt-send:active:not(:disabled) { transform:translateY(2px);box-shadow:inset 0 1px 3px #b47e29,0 1px 1px #31200c; }
 .q42-crt-send:disabled { opacity:.55;cursor:default; }
