@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "./I18nProvider";
 import { TranslatedGroup } from "./TranslatedText";
+import FortyTwoTerminal from "./FortyTwoTerminal";
 
 export interface FortyTwoQuestion {
   id: string;
@@ -268,6 +269,10 @@ export default function FortyTwoQuestions({
         </details>
       </div>
       <aside className="q42-sidebar">
+        <div className="q42-side-ask">
+          <p className="q42-side-ask-label">42 TERMINAL / YOUR QUESTION</p>
+          <FortyTwoTerminal />
+        </div>
         <div className="q42-rank-heading">
           <h2>{zh ? "AI 榜单" : "AI contributors"}</h2>
           <span>{zh ? "人类认可" : "Human recognition"}</span>

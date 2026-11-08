@@ -143,8 +143,8 @@ pre { overflow-x: auto; max-width: 100%; }
 /* Full-bleed dark hero + fade bridge: the dark canvas continues past the
    header and dissolves into the light content below (no hard edge). */
 .q42-questions-hero { position:relative;background:#031420;color:white;overflow:hidden; }
-.q42-questions-hero .q42-questions-header { display:grid;grid-template-columns:1fr 420px;align-items:center;gap:30px;background:transparent;border-radius:0;position:relative; }
-.q42-fadebridge { height:170px;background:linear-gradient(180deg,#031420 0%,#0d2c40 45%,#fbfcff 100%);position:relative;overflow:hidden; }
+.q42-questions-hero .q42-questions-header { display:block;position:relative;padding:44px 24px 40px; }
+.q42-fadebridge { height:130px;background:linear-gradient(180deg,#031420 0%,#0d2c40 45%,#fbfcff 100%);position:relative;overflow:hidden; }
 .q42-fadebridge::before { content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 20%,#9cc9e0 60%,transparent),radial-gradient(1px 1px at 38% 34%,#a0cce2 60%,transparent),radial-gradient(1px 1px at 64% 16%,#accadb 60%,transparent),radial-gradient(2px 2px at 86% 40%,#90bcda 40%,transparent),radial-gradient(1px 1px at 49% 60%,#76a6be 60%,transparent);opacity:.55;mask-image:linear-gradient(180deg,#000 25%,transparent 92%);-webkit-mask-image:linear-gradient(180deg,#000 25%,transparent 92%); }
 .q42-questions-header h1 { font-size:40px;font-weight:800; }
 .q42-questions-header p { color:#b6c7d2; }
@@ -211,7 +211,7 @@ body:has(.q42-home) .site-nav .lang-switcher-wrapper button { color:#25334a; }
   .q42-expanded .q42-machine { min-height:200px; }
   .q42-expanded .q42-terminal-status { font-size:12px;min-height:20px; }
   .q42-quota-hint { font-size:10px; }
-  .q42-questions-hero .q42-questions-header { display:block;padding:28px 24px 0; }
+  .q42-questions-hero .q42-questions-header { padding:28px 24px 22px; }
   .q42-questions-header h1 { font-size:30px; }
   .q42-questions-header .q42-terminal-wrap { max-width:450px;margin:auto; }
 }
@@ -767,3 +767,13 @@ body:has(.q42-home) .site-nav .desktop-nav { background:transparent;backdrop-fil
 .q42-idpanel-send:active:not(:disabled) { transform:translateY(2px);box-shadow:inset 0 1px 3px #b47e29,0 1px 1px #31200c; }
 .q42-idpanel-send:disabled { opacity:.55;cursor:default; }
 .q42-idpanel-note { display:block;margin-top:10px;font-size:10px;color:#8aac87; }
+
+/* /questions sidebar: compact ask terminal (wall page keeps the list as the protagonist) */
+.q42-side-ask { margin-bottom:28px;padding:14px;background:#031420;border-radius:8px;overflow:hidden;position:relative; }
+.q42-side-ask .q42-stars { opacity:.5; }
+.q42-side-ask-label { display:block;font:10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;color:#a2e77e;letter-spacing:.06em;margin-bottom:10px; }
+.q42-side-ask .q42-screen-label { font-size:9px; }
+.q42-side-ask .q42-screen-title { font-size:12px;margin:4px 0; }
+.q42-side-ask .q42-screen textarea { font-size:14px;padding:6px;min-height:38px; }
+.q42-side-ask .q42-send { font-size:13px; }
+.q42-side-ask .q42-invite-link { display:none; }
