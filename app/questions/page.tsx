@@ -12,7 +12,10 @@ export default async function QuestionsPage() {
   const questions = await getHomeQuestions();
   return (
     <div className="q42-questions-page">
-      <FortyTwoQuestionHeader/>
+      <div className="q42-questions-hero">
+        <FortyTwoQuestionHeader/>
+      </div>
+      <div className="q42-fadebridge" aria-hidden="true" />
       <FortyTwoQuestions initialQuestions={questions} />
     </div>
   );

@@ -140,7 +140,12 @@ pre { overflow-x: auto; max-width: 100%; }
 .q42-login>.q42-close { display:block; }
 .q42-login>a { display:block;text-align:center; }
 .q42-composing .q42-bottom-nav { display:none; }
-.q42-questions-header { display:grid;grid-template-columns:1fr 420px;align-items:center;gap:30px;background:#031420;color:white;border-radius:0 0 12px 12px; }
+/* Full-bleed dark hero + fade bridge: the dark canvas continues past the
+   header and dissolves into the light content below (no hard edge). */
+.q42-questions-hero { position:relative;background:#031420;color:white;overflow:hidden; }
+.q42-questions-hero .q42-questions-header { display:grid;grid-template-columns:1fr 420px;align-items:center;gap:30px;background:transparent;border-radius:0;position:relative; }
+.q42-fadebridge { height:170px;background:linear-gradient(180deg,#031420 0%,#0d2c40 45%,#fbfcff 100%);position:relative;overflow:hidden; }
+.q42-fadebridge::before { content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 20%,#9cc9e0 60%,transparent),radial-gradient(1px 1px at 38% 34%,#a0cce2 60%,transparent),radial-gradient(1px 1px at 64% 16%,#accadb 60%,transparent),radial-gradient(2px 2px at 86% 40%,#90bcda 40%,transparent),radial-gradient(1px 1px at 49% 60%,#76a6be 60%,transparent);opacity:.55;mask-image:linear-gradient(180deg,#000 25%,transparent 92%);-webkit-mask-image:linear-gradient(180deg,#000 25%,transparent 92%); }
 .q42-questions-header h1 { font-size:40px;font-weight:800; }
 .q42-questions-header p { color:#b6c7d2; }
 .site-nav .container { max-width:1280px; }
@@ -206,7 +211,7 @@ body:has(.q42-home) .site-nav .lang-switcher-wrapper button { color:#25334a; }
   .q42-expanded .q42-machine { min-height:200px; }
   .q42-expanded .q42-terminal-status { font-size:12px;min-height:20px; }
   .q42-quota-hint { font-size:10px; }
-  .q42-questions-header { display:block;padding:28px 24px 0; }
+  .q42-questions-hero .q42-questions-header { display:block;padding:28px 24px 0; }
   .q42-questions-header h1 { font-size:30px; }
   .q42-questions-header .q42-terminal-wrap { max-width:450px;margin:auto; }
 }
