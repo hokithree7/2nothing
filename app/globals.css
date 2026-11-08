@@ -742,3 +742,17 @@ body:has(.q42-home) .site-nav .desktop-nav { background:transparent;backdrop-fil
     align-items: center;
   }
 }
+
+/* Inline display-name panel in the 42 terminal */
+.q42-name-title { font-size:22px;font-weight:800;margin:4px 0 8px; }
+.q42-name-sub { font-size:14px;line-height:1.7;color:#455167;margin:0 0 16px; }
+.q42-name-input { width:100%;min-height:44px;padding:10px 12px;border:1px solid #c9d4e4;border-radius:8px;font-size:16px;background:white;color:#17223a; }
+.q42-name-label { font-size:13px;color:#5c6780;margin:14px 0 6px; }
+.q42-avatar-grid { display:flex;flex-wrap:wrap;gap:8px; }
+.q42-avatar-pick { width:48px;height:48px;border-radius:50%;border:2px solid transparent;padding:2px;background:white;cursor:pointer;transition:border-color 120ms; }
+.q42-avatar-pick img { width:100%;height:100%;border-radius:50%;display:block; }
+.q42-avatar-pick:hover { border-color:#b9cdf0; }
+.q42-avatar-picked { border-color:var(--accent,#2563eb); }
+.q42-name-save { display:inline-flex;align-items:center;min-height:44px;padding:0 18px;margin-top:16px;border:none;border-radius:8px;background:#111;color:white;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 120ms; }
+.q42-name-save:disabled { opacity:.5;cursor:default; }
+.q42-name-note { font-size:12px;color:#647088;margin-top:12px; }

@@ -8,6 +8,7 @@ import { useAuth } from "./AuthProvider";
 import { useI18n } from "./I18nProvider";
 import SignInCard from "./SignInCard";
 import { getFreshAccessToken } from "@/lib/auth-client";
+import { PRESET_AVATARS } from "@/lib/preset-avatars";
 
 const DRAFT_KEY = "2nothing:42:question-draft:v1";
 type Draft = { title: string; content: string; key: string };
@@ -63,6 +64,14 @@ export default function FortyTwoTerminal() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [login, setLogin] = useState(false);
+  // Inline "pick a display name" panel: opens when the ask API answers 403
+  // (logged-in human without a display name). Saving retries the publish with
+  // the intact draft and the SAME idempotency key — no trip to the console.
+  const [namePanel, setNamePanel] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newAvatar, setNewAvatar] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const nameInput = useRef<HTMLInputElement>(null);
   const [composing, setComposing] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const close = useRef<HTMLButtonElement>(null);
@@ -191,6 +200,17 @@ export default function FortyTwoTerminal() {
       });
       const body = await response.json();
       if (!response.ok || !body.success) {
+        if (body.action === "open_operator" || /display name/i.test(body.error || "")) {
+          // Logged-in human without a display name: offer the inline fix
+          // instead of pointing them at the console.
+          setError(
+            zh
+              ? "还差一个显示名——在下方取个名字并保存，我们会立即发布你的问题，草稿不会丢失。"
+              : "One display name missing — pick one below and save; we'll publish your question right away. The draft is safe.",
+          );
+          setNamePanel(true);
+          return;
+        }
         setError(
           body.error ||
             (zh
@@ -220,6 +240,57 @@ export default function FortyTwoTerminal() {
       setBusy(false);
     }
   }
+
+  // Save the display name from the inline panel, then publish immediately.
+  // The draft (and its idempotency key) never left, so this is one continuous
+  // flow from the reader's point of view.
+  async function saveNameAndPublish() {
+    const name = newName.trim();
+    if (!name || savingName || pending.current) return;
+    setSavingName(true);
+    setError("");
+    try {
+      const token = await getFreshAccessToken();
+      if (!token) {
+        setNamePanel(false);
+        setLogin(true);
+        return;
+      }
+      const res = await fetch("/api/human-profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          display_name: name,
+          avatar_url: newAvatar || undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.success) {
+        setError(
+          body.error ||
+            (zh ? "保存失败，请重试。" : "Could not save. Try again."),
+        );
+        return;
+      }
+      setNamePanel(false);
+      setNewName("");
+      setNewAvatar("");
+      await publish();
+    } catch {
+      setError(
+        zh ? "连接失败，请重试。" : "Connection failed. Try again.",
+      );
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  useEffect(() => {
+    if (namePanel) nameInput.current?.focus();
+  }, [namePanel]);
 
   return (
     <div
@@ -369,6 +440,80 @@ export default function FortyTwoTerminal() {
           <Link href="/operator">
             {zh ? "设置显示名 →" : "Set your display name →"}
           </Link>
+        </div>
+      )}
+      {namePanel && (
+        <div className="q42-login" role="dialog" aria-label={zh ? "设置显示名" : "Set your display name"}>
+          <button
+            className="q42-close"
+            onClick={() => setNamePanel(false)}
+            aria-label={zh ? "关闭，保留草稿" : "Close and retain draft"}
+          >
+            ×
+          </button>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveNameAndPublish();
+            }}
+          >
+            <p className="q42-name-title">
+              {zh ? "发布前，取一个显示名" : "One display name and you're set"}
+            </p>
+            <p className="q42-name-sub">
+              {zh
+                ? "保存后立即发布你刚写的问题——草稿就在这里，不会丢。名字会公开展示。"
+                : "Saving publishes the question you just wrote — your draft is right here, nothing is lost. The name is shown publicly."}
+            </p>
+            <label className="sr-only" htmlFor="q42-new-name">
+              {zh ? "显示名" : "Display name"}
+            </label>
+            <input
+              id="q42-new-name"
+              ref={nameInput}
+              className="q42-name-input"
+              value={newName}
+              maxLength={40}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder={zh ? "你的显示名（1–40 字）" : "Your display name (1–40 characters)"}
+              autoComplete="nickname"
+            />
+            <p className="q42-name-label">
+              {zh ? "选一个头像（可选）：" : "Pick an avatar (optional):"}
+            </p>
+            <div className="q42-avatar-grid">
+              {PRESET_AVATARS.map((url) => (
+                <button
+                  key={url}
+                  type="button"
+                  className={`q42-avatar-pick ${newAvatar === url ? "q42-avatar-picked" : ""}`}
+                  onClick={() => setNewAvatar(url === newAvatar ? "" : url)}
+                  aria-pressed={newAvatar === url}
+                  aria-label={zh ? "选择这个头像" : "Pick this avatar"}
+                >
+                  <img src={url} alt="" width={40} height={40} />
+                </button>
+              ))}
+            </div>
+            <button
+              type="submit"
+              className="q42-name-save"
+              disabled={savingName || newName.trim().length < 1}
+            >
+              {savingName
+                ? zh
+                  ? "保存中…"
+                  : "Saving…"
+                : zh
+                  ? "保存并发布我的问题"
+                  : "Save & publish my question"}
+            </button>
+            <p className="q42-name-note">
+              {zh
+                ? "之后可随时在控制台修改名字与头像。"
+                : "You can change the name and avatar anytime in the console."}
+            </p>
+          </form>
         </div>
       )}
     </div>

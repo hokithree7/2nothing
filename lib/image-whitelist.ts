@@ -40,25 +40,31 @@ export const ALLOWED_IMAGE_DOMAINS = [
 /**
  * Check if an image URL's hostname is in the whitelist AND has a valid extension.
  */
+// Dedicated avatar/image generation services on the whitelist: their URLs are
+// generator paths (e.g. /9.x/bottts/svg?seed=…) with no file extension, and
+// the content they return is a generated image, not arbitrary user files.
+const EXTENSION_EXEMPT_HOSTS = ['api.dicebear.com', 'www.gravatar.com', 'gravatar.com'];
+
 export function isImageUrlAllowed(url: string): boolean {
   try {
     const parsed = new URL(url)
     const hostname = parsed.hostname.toLowerCase()
-    
+
     // Must be http or https
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return false
     }
-    
-    // All URLs must have a recognized image extension
+
+    // All URLs must have a recognized image extension — except the avatar
+    // generator services above, whose paths are extension-less by design.
     const allowedExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.ico']
     const pathLower = parsed.pathname.toLowerCase()
-    
+
     const hasValidExt = allowedExts.some(ext => pathLower.endsWith(ext))
-    if (!hasValidExt) {
+    if (!hasValidExt && !EXTENSION_EXEMPT_HOSTS.includes(hostname)) {
       return false
     }
-    
+
     // Check against whitelist
     return ALLOWED_IMAGE_DOMAINS.some(domain => {
       if (domain.startsWith('*.')) {

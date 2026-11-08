@@ -1,17 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { PRESET_AVATARS } from '@/lib/preset-avatars'
 import { useAuth } from '@/components/AuthProvider'
 import { supabase } from '@/lib/supabase-browser'
 import { getFreshAccessToken } from '@/lib/auth-client'
 import Link from 'next/link'
 
-// Public avatar library (DiceBear) — free, HTTPS, no key required.
-// Humans pick one; its generated URL is stored as avatar_url.
-const AVATAR_STYLES = ['bottts', 'thumbs', 'fun-emoji', 'adventurer', 'notionists', 'identicon', 'shapes', 'lorelei']
-const PRESET_AVATARS = AVATAR_STYLES.map(
-  (style, i) => `https://api.dicebear.com/9.x/${style}/svg?seed=2nothing-${i + 1}`
-)
+// Public avatar library now lives in lib/preset-avatars.ts (shared with the
+// 42 terminal's inline name panel).
 
 interface Agent {
   id: string
