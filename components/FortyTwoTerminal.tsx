@@ -48,7 +48,12 @@ export function FortyTwoMark({ small = false }: { small?: boolean }) {
   );
 }
 
-export default function FortyTwoTerminal() {
+export default function FortyTwoTerminal({
+  zoom = false,
+}: {
+  /** Close-up variant: CRT screen only, no machine shell (used on /questions). */
+  zoom?: boolean;
+}) {
   const { locale } = useI18n();
   const zh = locale === "zh";
   const { user } = useAuth();
@@ -316,6 +321,73 @@ export default function FortyTwoTerminal() {
           </button>
         </div>
       )}
+      {zoom ? (
+        // Close-up variant (e.g. /questions hero): the CRT screen framed like
+        // a monitor bezel — no machine shell, no aspect-locked body.
+        <div className="q42-crt">
+          <div className="q42-crt-screen">
+            <span className="q42-screen-label">42 TERMINAL / INPUT READY</span>
+            {!expanded && (
+              <p className="q42-screen-title">
+                {zh ? "在这里，问出你的问题。" : "A question starts here."}
+              </p>
+            )}
+            <label htmlFor="q42-question" className="sr-only">
+              {zh ? "你的问题，5 至 200 字" : "Your question, 5 to 200 characters"}
+            </label>
+            <textarea
+              id="q42-question"
+              ref={input}
+              value={draft.title}
+              maxLength={200}
+              rows={3}
+              placeholder={zh ? "点击屏幕开始输入…" : "Click the screen to begin…"}
+              onFocus={() => setExpanded(true)}
+              onChange={(e) => update("title", e.target.value)}
+              onCompositionStart={() => setComposing(true)}
+              onCompositionEnd={() => setComposing(false)}
+              disabled={busy || !ready}
+            />
+            {expanded && (
+              <>
+                <label htmlFor="q42-context" className="q42-context-label">
+                  {zh ? "补充背景（可选）" : "Context (optional)"}
+                </label>
+                <textarea
+                  id="q42-context"
+                  className="q42-context"
+                  value={draft.content}
+                  maxLength={2000}
+                  rows={3}
+                  onChange={(e) => update("content", e.target.value)}
+                  onCompositionStart={() => setComposing(true)}
+                  onCompositionEnd={() => setComposing(false)}
+                  disabled={busy}
+                />
+              </>
+            )}
+            <span className="q42-input-hint">
+              {expanded
+                ? zh
+                  ? "回车换行 · 点击按键发布"
+                  : "Enter for a new line · Click to publish"
+                : zh
+                  ? "人类提问 · 支持多行"
+                  : "Humans ask · Multiple lines welcome"}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="q42-crt-send"
+            disabled={busy || composing || !ready || draft.title.trim().length < 5}
+            onClick={() => void publish()}
+          >
+            {busy
+              ? zh ? "发送中…" : "Sending…"
+              : zh ? "发出问题 ↵" : "Send question ↵"}
+          </button>
+        </div>
+      ) : (
       <div className="q42-machine">
         <Image
           src="/images/42/terminal-shell.webp"
@@ -397,6 +469,7 @@ export default function FortyTwoTerminal() {
               : "Send question ↵"}
         </button>
       </div>
+      )}
       <div className="q42-terminal-status" role="status" aria-live="polite">
         {error ||
           (expanded

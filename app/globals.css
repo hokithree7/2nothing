@@ -143,7 +143,19 @@ pre { overflow-x: auto; max-width: 100%; }
 /* Full-bleed dark hero + fade bridge: the dark canvas continues past the
    header and dissolves into the light content below (no hard edge). */
 .q42-questions-hero { position:relative;background:#031420;color:white;overflow:hidden; }
-.q42-questions-hero .q42-questions-header { display:block;position:relative;padding:44px 24px 40px; }
+/* Wall hero: copy left, CRT close-up right — a monitor bezel, no shell */
+.q42-questions-hero .q42-questions-header { display:grid;grid-template-columns:1fr 460px;align-items:center;gap:36px;position:relative;padding:36px 24px 32px; }
+.q42-crt { background:#04120b;border:1px solid #3a5c46;border-radius:12px;padding:14px;box-shadow:inset 0 0 0 6px #14231b,inset 0 0 34px #02110a,0 12px 34px #00111b66; }
+.q42-crt-screen { display:flex;flex-direction:column;min-height:170px;color:#a8ed8a; }
+.q42-crt-screen .q42-screen-title { font-size:15px; }
+.q42-crt-screen textarea { width:100%;flex:1;min-height:64px;resize:none;border:1px solid #679e54;border-radius:3px;background:rgba(0,16,9,.35);color:#b5f391;padding:10px;font:16px/1.6 system-ui,'Microsoft YaHei',sans-serif;caret-color:#caff9f; }
+.q42-crt-screen textarea::placeholder { color:#87a68b;opacity:1; }
+.q42-crt-screen textarea:focus-visible { outline:2px solid #b4f789;outline-offset:3px; }
+.q42-crt-screen .q42-context { font-size:14px;min-height:44px;border:1px solid #34563e; }
+.q42-crt-send { display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;margin-top:12px;border:2px solid #946219;border-radius:6px;background:linear-gradient(#ffda71,#e9ad30);box-shadow:inset 0 2px 2px #ffe8a0,inset 0 -3px 2px #bd7b20,0 2px 2px #31200c;color:#201707;font-size:15px;font-weight:800;cursor:pointer;transition:transform 100ms,box-shadow 100ms,filter 120ms; }
+.q42-crt-send:hover:not(:disabled) { filter:brightness(1.05); }
+.q42-crt-send:active:not(:disabled) { transform:translateY(2px);box-shadow:inset 0 1px 3px #b47e29,0 1px 1px #31200c; }
+.q42-crt-send:disabled { opacity:.55;cursor:default; }
 .q42-fadebridge { height:130px;background:linear-gradient(180deg,#031420 0%,#0d2c40 45%,#fbfcff 100%);position:relative;overflow:hidden; }
 .q42-fadebridge::before { content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 20%,#9cc9e0 60%,transparent),radial-gradient(1px 1px at 38% 34%,#a0cce2 60%,transparent),radial-gradient(1px 1px at 64% 16%,#accadb 60%,transparent),radial-gradient(2px 2px at 86% 40%,#90bcda 40%,transparent),radial-gradient(1px 1px at 49% 60%,#76a6be 60%,transparent);opacity:.55;mask-image:linear-gradient(180deg,#000 25%,transparent 92%);-webkit-mask-image:linear-gradient(180deg,#000 25%,transparent 92%); }
 .q42-questions-header h1 { font-size:40px;font-weight:800; }
@@ -211,7 +223,8 @@ body:has(.q42-home) .site-nav .lang-switcher-wrapper button { color:#25334a; }
   .q42-expanded .q42-machine { min-height:200px; }
   .q42-expanded .q42-terminal-status { font-size:12px;min-height:20px; }
   .q42-quota-hint { font-size:10px; }
-  .q42-questions-hero .q42-questions-header { padding:28px 24px 22px; }
+  .q42-questions-hero .q42-questions-header { display:block;padding:28px 24px 22px; }
+  .q42-questions-hero .q42-crt { margin-top:20px; }
   .q42-questions-header h1 { font-size:30px; }
   .q42-questions-header .q42-terminal-wrap { max-width:450px;margin:auto; }
 }
@@ -768,12 +781,3 @@ body:has(.q42-home) .site-nav .desktop-nav { background:transparent;backdrop-fil
 .q42-idpanel-send:disabled { opacity:.55;cursor:default; }
 .q42-idpanel-note { display:block;margin-top:10px;font-size:10px;color:#8aac87; }
 
-/* /questions sidebar: compact ask terminal (wall page keeps the list as the protagonist) */
-.q42-side-ask { margin-bottom:28px;padding:14px;background:#031420;border-radius:8px;overflow:hidden;position:relative; }
-.q42-side-ask .q42-stars { opacity:.5; }
-.q42-side-ask-label { display:block;font:10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;color:#a2e77e;letter-spacing:.06em;margin-bottom:10px; }
-.q42-side-ask .q42-screen-label { font-size:9px; }
-.q42-side-ask .q42-screen-title { font-size:12px;margin:4px 0; }
-.q42-side-ask .q42-screen textarea { font-size:14px;padding:6px;min-height:38px; }
-.q42-side-ask .q42-send { font-size:13px; }
-.q42-side-ask .q42-invite-link { display:none; }
