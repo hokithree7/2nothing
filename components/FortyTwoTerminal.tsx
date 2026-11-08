@@ -325,6 +325,14 @@ export default function FortyTwoTerminal({
         // Close-up variant (e.g. /questions hero): the CRT screen framed like
         // a monitor bezel — no machine shell, no aspect-locked body.
         <div className="q42-crt">
+          <Image
+            src="/images/42/terminal-shell.webp"
+            alt=""
+            width={1200}
+            height={900}
+            priority
+            className="q42-crt-shellimg"
+          />
           <div className="q42-crt-screen">
             <span className="q42-screen-label">42 TERMINAL / INPUT READY</span>
             {!expanded && (
