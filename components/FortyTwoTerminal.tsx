@@ -171,7 +171,7 @@ export default function FortyTwoTerminal() {
       view?.removeEventListener("scroll", measure);
       document.removeEventListener("keydown", onKey);
     };
-  }, [expanded]);
+  }, [expanded, namePanel]);
 
   async function publish() {
     if (pending.current || composing || draft.title.trim().length < 5 || !ready)
@@ -203,11 +203,7 @@ export default function FortyTwoTerminal() {
         if (body.action === "open_operator" || /display name/i.test(body.error || "")) {
           // Logged-in human without a display name: offer the inline fix
           // instead of pointing them at the console.
-          setError(
-            zh
-              ? "还差一个显示名——在下方取个名字并保存，我们会立即发布你的问题，草稿不会丢失。"
-              : "One display name missing — pick one below and save; we'll publish your question right away. The draft is safe.",
-          );
+          setError(zh ? "还差一个显示名 ↓" : "One display name missing ↓");
           setNamePanel(true);
           return;
         }
@@ -443,77 +439,75 @@ export default function FortyTwoTerminal() {
         </div>
       )}
       {namePanel && (
-        <div className="q42-login" role="dialog" aria-label={zh ? "设置显示名" : "Set your display name"}>
-          <button
-            className="q42-close"
-            onClick={() => setNamePanel(false)}
-            aria-label={zh ? "关闭，保留草稿" : "Close and retain draft"}
+        <div className="q42-idpanel-backdrop">
+          <div
+            className="q42-idpanel"
+            role="dialog"
+            aria-modal="true"
+            aria-label={zh ? "设置显示名" : "Set your display name"}
           >
-            ×
-          </button>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void saveNameAndPublish();
-            }}
-          >
-            <p className="q42-name-title">
-              {zh ? "发布前，取一个显示名" : "One display name and you're set"}
-            </p>
-            <p className="q42-name-sub">
-              {zh
-                ? "保存后立即发布你刚写的问题——草稿就在这里，不会丢。名字会公开展示。"
-                : "Saving publishes the question you just wrote — your draft is right here, nothing is lost. The name is shown publicly."}
-            </p>
-            <label className="sr-only" htmlFor="q42-new-name">
-              {zh ? "显示名" : "Display name"}
-            </label>
-            <input
-              id="q42-new-name"
-              ref={nameInput}
-              className="q42-name-input"
-              value={newName}
-              maxLength={40}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder={zh ? "你的显示名（1–40 字）" : "Your display name (1–40 characters)"}
-              autoComplete="nickname"
-            />
-            <p className="q42-name-label">
-              {zh ? "选一个头像（可选）：" : "Pick an avatar (optional):"}
-            </p>
-            <div className="q42-avatar-grid">
-              {PRESET_AVATARS.map((url) => (
-                <button
-                  key={url}
-                  type="button"
-                  className={`q42-avatar-pick ${newAvatar === url ? "q42-avatar-picked" : ""}`}
-                  onClick={() => setNewAvatar(url === newAvatar ? "" : url)}
-                  aria-pressed={newAvatar === url}
-                  aria-label={zh ? "选择这个头像" : "Pick this avatar"}
-                >
-                  <img src={url} alt="" width={40} height={40} />
-                </button>
-              ))}
-            </div>
             <button
-              type="submit"
-              className="q42-name-save"
-              disabled={savingName || newName.trim().length < 1}
+              className="q42-idpanel-close"
+              onClick={() => setNamePanel(false)}
+              aria-label={zh ? "关闭，保留草稿" : "Close and retain draft"}
             >
-              {savingName
-                ? zh
-                  ? "保存中…"
-                  : "Saving…"
-                : zh
-                  ? "保存并发布我的问题"
-                  : "Save & publish my question"}
+              ×
             </button>
-            <p className="q42-name-note">
-              {zh
-                ? "之后可随时在控制台修改名字与头像。"
-                : "You can change the name and avatar anytime in the console."}
-            </p>
-          </form>
+            <span className="q42-idpanel-label">42 TERMINAL / IDENTITY</span>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void saveNameAndPublish();
+              }}
+            >
+              <p className="q42-idpanel-line">
+                {zh ? "取一个显示名，立即发布。" : "Pick a display name — publish instantly."}
+              </p>
+              <label className="sr-only" htmlFor="q42-new-name">
+                {zh ? "显示名" : "Display name"}
+              </label>
+              <input
+                id="q42-new-name"
+                ref={nameInput}
+                className="q42-idpanel-input"
+                value={newName}
+                maxLength={40}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder={zh ? "你的显示名" : "Your display name"}
+                autoComplete="nickname"
+              />
+              <div className="q42-idpanel-avatars">
+                {PRESET_AVATARS.map((url) => (
+                  <button
+                    key={url}
+                    type="button"
+                    className={`q42-avatar-pick ${newAvatar === url ? "q42-avatar-picked" : ""}`}
+                    onClick={() => setNewAvatar(url === newAvatar ? "" : url)}
+                    aria-pressed={newAvatar === url}
+                    aria-label={zh ? "选择这个头像" : "Pick this avatar"}
+                  >
+                    <img src={url} alt="" width={36} height={36} />
+                  </button>
+                ))}
+              </div>
+              <button
+                type="submit"
+                className="q42-idpanel-send"
+                disabled={savingName || newName.trim().length < 1}
+              >
+                {savingName
+                  ? zh
+                    ? "发布中…"
+                    : "Publishing…"
+                  : zh
+                    ? "保存并发布 ↵"
+                    : "Save & publish ↵"}
+              </button>
+              <span className="q42-idpanel-note">
+                {zh ? "公开显示 · 之后可在控制台修改" : "Public · changeable in the console"}
+              </span>
+            </form>
+          </div>
         </div>
       )}
     </div>

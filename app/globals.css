@@ -743,16 +743,22 @@ body:has(.q42-home) .site-nav .desktop-nav { background:transparent;backdrop-fil
   }
 }
 
-/* Inline display-name panel in the 42 terminal */
-.q42-name-title { font-size:22px;font-weight:800;margin:4px 0 8px; }
-.q42-name-sub { font-size:14px;line-height:1.7;color:#455167;margin:0 0 16px; }
-.q42-name-input { width:100%;min-height:44px;padding:10px 12px;border:1px solid #c9d4e4;border-radius:8px;font-size:16px;background:white;color:#17223a; }
-.q42-name-label { font-size:13px;color:#5c6780;margin:14px 0 6px; }
-.q42-avatar-grid { display:flex;flex-wrap:wrap;gap:8px; }
-.q42-avatar-pick { width:48px;height:48px;border-radius:50%;border:2px solid transparent;padding:2px;background:white;cursor:pointer;transition:border-color 120ms; }
+/* Inline display-name panel — compact CRT card matching the 42 terminal */
+.q42-idpanel-backdrop { position:fixed;inset:0;z-index:230;background:#00111bd9;display:flex;align-items:center;justify-content:center;padding:16px; }
+.q42-idpanel { position:relative;width:100%;max-width:320px;background:#081f14;border:1px solid #2c4a38;border-radius:8px;padding:16px 16px 14px;color:#b5f391;box-shadow:0 0 40px #00111b,inset 0 0 24px #03140b; }
+.q42-idpanel-close { position:absolute;top:6px;right:8px;border:none;color:#87a68b;background:transparent;font-size:26px;line-height:1;width:36px;min-height:36px;cursor:pointer; }
+.q42-idpanel-label { display:block;font:10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;color:#a2e77e;letter-spacing:.06em;margin-bottom:10px; }
+.q42-idpanel-line { font-size:15px;font-weight:700;color:#d9f7c4;margin:0 0 12px; }
+.q42-idpanel-input { width:100%;min-height:44px;padding:10px 12px;border:1px solid #679e54;border-radius:3px;background:rgba(0,16,9,.35);color:#b5f391;font:16px/1.5 system-ui,'Microsoft YaHei',sans-serif;caret-color:#caff9f; }
+.q42-idpanel-input::placeholder { color:#87a68b;opacity:1; }
+.q42-idpanel-input:focus-visible { outline:2px solid #b4f789;outline-offset:3px; }
+.q42-idpanel-avatars { display:flex;flex-wrap:wrap;gap:6px;margin-top:10px; }
+.q42-avatar-pick { width:42px;height:42px;border-radius:50%;border:2px solid #2c4a38;padding:2px;background:rgba(0,16,9,.3);cursor:pointer;transition:border-color 120ms; }
 .q42-avatar-pick img { width:100%;height:100%;border-radius:50%;display:block; }
-.q42-avatar-pick:hover { border-color:#b9cdf0; }
-.q42-avatar-picked { border-color:var(--accent,#2563eb); }
-.q42-name-save { display:inline-flex;align-items:center;min-height:44px;padding:0 18px;margin-top:16px;border:none;border-radius:8px;background:#111;color:white;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 120ms; }
-.q42-name-save:disabled { opacity:.5;cursor:default; }
-.q42-name-note { font-size:12px;color:#647088;margin-top:12px; }
+.q42-avatar-pick:hover { border-color:#679e54; }
+.q42-avatar-picked { border-color:#b4f789; }
+.q42-idpanel-send { display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;margin-top:14px;border:2px solid #946219;border-radius:6px;background:linear-gradient(#ffda71,#e9ad30);box-shadow:inset 0 2px 2px #ffe8a0,inset 0 -3px 2px #bd7b20,0 2px 2px #31200c;color:#201707;font-size:15px;font-weight:800;cursor:pointer;transition:transform 100ms,box-shadow 100ms,filter 120ms; }
+.q42-idpanel-send:hover:not(:disabled) { filter:brightness(1.05); }
+.q42-idpanel-send:active:not(:disabled) { transform:translateY(2px);box-shadow:inset 0 1px 3px #b47e29,0 1px 1px #31200c; }
+.q42-idpanel-send:disabled { opacity:.55;cursor:default; }
+.q42-idpanel-note { display:block;margin-top:10px;font-size:10px;color:#8aac87; }
