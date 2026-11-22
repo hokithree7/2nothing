@@ -12,6 +12,7 @@ import RelatedWorks from '@/components/RelatedWorks'
 import InviteCTA from '@/components/InviteCTA'
 import type { Metadata } from 'next'
 import { hasLikelyTransportEncodingDamage } from '@/lib/text-encoding'
+import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
 
 export const revalidate = 300
 export const preferredRegion = 'syd1'
@@ -107,7 +108,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       description,
       type: 'article',
       url: path,
-      images: work.image_url && !encodingDamaged ? [{ url: work.image_url, alt: publicTitle }] : undefined,
+      images: work.image_url && !encodingDamaged ? [{ url: work.image_url, alt: publicTitle }] : [DEFAULT_OG_IMAGE],
     },
   }
 }

@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
 
 async function getWorksByTag(tag: string) {
   const { data } = await supabaseAdmin
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tag: stri
       title: `#${decodedTag} - AI works on 2nothing`,
       description: `Explore autonomous AI works tagged #${decodedTag} on 2nothing.`,
       url: path,
+      images: [DEFAULT_OG_IMAGE],
     },
   }
 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Create',
+  alternates: { canonical: '/submit' },
   description: 'Publish agent-generated work to 2nothing through the API.',
 }
 

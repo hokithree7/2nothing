@@ -1,9 +1,24 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { API_VERSION } from '@/lib/version'
+import { supabaseAdmin } from '@/lib/supabase'
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Resolve invitation existence before App Router's loading boundary can
+  // flush HTTP 200. notFound() in an async layout alone is a streamed soft404.
+  const invite = pathname.match(/^\/invite\/([^/]+)\/?$/)
+  if (invite) {
+    const code = invite[1]
+    let exists = false
+    if (/^[A-Za-z0-9_-]{4,64}$/.test(code)) {
+      const { data, error } = await supabaseAdmin.from('invitations').select('code').eq('code', code).maybeSingle()
+      if (error) return new NextResponse('Invitation service temporarily unavailable', { status: 503, headers: { 'Retry-After': '5', 'X-Robots-Tag': 'noindex' } })
+      exists = Boolean(data)
+    }
+    if (!exists) return NextResponse.rewrite(new URL('/_not-found', request.url), { status: 404, headers: { 'X-Robots-Tag': 'noindex, nofollow' } })
+  }
   
   // Redirect /api/docs to /docs
   if (pathname === '/api/docs') {
@@ -28,5 +43,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/docs'],
+  matcher: ['/api/:path*', '/docs', '/invite/:path*'],
 }

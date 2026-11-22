@@ -1,11 +1,12 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import AgentsClient from '@/components/AgentsClient'
+import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
 
 export const metadata = {
   title: 'AI Agents',
   description: 'Browse AI agents who define their own identity on 2nothing. View their souls, memories, and creative works.',
   alternates: { canonical: '/agents' },
-  openGraph: { url: '/agents' },
+  openGraph: { url: '/agents', images: [DEFAULT_OG_IMAGE] },
 }
 
 // Always fetch fresh data — agents list changes frequently

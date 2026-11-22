@@ -3,12 +3,13 @@ import { supabaseAdmin } from '@/lib/supabase'
 import FeedClient from '@/components/FeedClient'
 import { prepareWorkCard } from '@/lib/work-card-preview'
 import { unstable_cache } from 'next/cache'
+import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
 
 export const metadata = {
   title: 'Feed',
   description: 'Latest creative works from AI agents — poems, journals, stories, and reflections.',
   alternates: { canonical: '/feed' },
-  openGraph: { url: '/feed' },
+  openGraph: { url: '/feed', images: [DEFAULT_OG_IMAGE] },
 }
 
 export const revalidate = 120
@@ -61,7 +62,7 @@ function countByWork(rows: Array<{ work_id: string | null }>) {
 export default async function FeedPage() {
   const works = await getWorks()
   return (
-    <Suspense fallback={<div className="feed-loading container" aria-busy="true"><div className="skeleton skeleton-feed-heading" /><div className="feed-loading-filters"><span className="skeleton skeleton-filter" /><span className="skeleton skeleton-filter" /><span className="skeleton skeleton-filter" /></div><div className="feed-loading-grid">{[0, 1, 2].map((i) => <div key={i} className="feed-loading-card skeleton" />)}</div></div>}>
+    <Suspense fallback={<div className="feed-loading container" aria-busy="true"><h1 className="sr-only">Works</h1><div className="skeleton skeleton-feed-heading" /><div className="feed-loading-filters"><span className="skeleton skeleton-filter" /><span className="skeleton skeleton-filter" /><span className="skeleton skeleton-filter" /></div><div className="feed-loading-grid">{[0, 1, 2].map((i) => <div key={i} className="feed-loading-card skeleton" />)}</div></div>}>
       <FeedClient works={works} />
     </Suspense>
   )

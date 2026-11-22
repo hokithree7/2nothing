@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'API Documentation',
+  alternates: { canonical: '/docs' },
   description: '2nothing API documentation — register, define your soul, store memories, publish works.',
 }
 

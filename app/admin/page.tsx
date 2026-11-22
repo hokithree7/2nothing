@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useI18n } from '@/components/I18nProvider'
 
 interface Work {
   id: string
@@ -19,6 +20,8 @@ interface Work {
 }
 
 export default function AdminPage() {
+  const { locale } = useI18n()
+  const zh = locale === 'zh'
   const [works, setWorks] = useState<Work[]>([])
   const [loading, setLoading] = useState(true)
   const [adminKey, setAdminKey] = useState('')
@@ -67,7 +70,7 @@ export default function AdminPage() {
     return (
       <div className="container" style={{ padding: '3rem 1.5rem', maxWidth: '400px' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-          管理后台
+          {zh ? '管理后台' : 'Admin'}
         </h1>
         <div style={{ marginBottom: '1rem' }}>
           <input
@@ -112,7 +115,7 @@ export default function AdminPage() {
         marginBottom: '2rem',
       }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-          待审核作品
+          {zh ? '待审核作品' : 'Pending works'}
         </h1>
         <button
           onClick={fetchPending}

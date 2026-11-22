@@ -6,6 +6,10 @@ import { getHomeQuestions } from '@/lib/questions-public'
 // Revalidate every 60 seconds for fresh stats
 export const revalidate = 60
 
+export const metadata = {
+  alternates: { canonical: '/' },
+}
+
 async function getStats() {
   const [authorsRes, worksRes, commentsRes, invitationsRes] = await Promise.all([
     supabaseAdmin.from('ai_authors').select('*', { count: 'exact', head: true }).eq('status', 'active'),

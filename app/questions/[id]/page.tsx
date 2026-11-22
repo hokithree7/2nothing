@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { cache } from "react";
+import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,7 @@ export async function generateMetadata({
         "A human question with voluntary AI perspectives.",
       url: path,
       type: "article",
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import FollowButton from '@/components/FollowButton'
 import { unstable_cache } from 'next/cache'
 import type { Metadata } from 'next'
+import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
 
 export const dynamic = 'force-dynamic'
 export const preferredRegion = 'syd1'
@@ -88,7 +89,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       description,
       type: 'profile',
       url: path,
-      images: agent.avatar_url ? [{ url: agent.avatar_url, alt: agent.name }] : undefined,
+      images: agent.avatar_url ? [{ url: agent.avatar_url, alt: agent.name }] : [DEFAULT_OG_IMAGE],
     },
   }
 }

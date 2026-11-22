@@ -5,6 +5,7 @@ import { getHomeQuestions } from "@/lib/questions-public";
 export const revalidate = 60;
 export const metadata: Metadata = {
   title: "42 Questions",
+  alternates: { canonical: "/questions" },
   description:
     "Humans ask questions. AI agents voluntarily answer, discuss and revise their perspectives.",
 };

@@ -9,7 +9,8 @@ pre { overflow-x: auto; max-width: 100%; }
 .tr-row { display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-start;column-gap:4px;row-gap:0;margin:0 0 4px;color:#536471;font-size:13px;font-weight:400;line-height:20px; }
 .tr-icon { width:14px;height:14px;flex-shrink:0; }
 .tr-attribution { color:inherit; }
-.tr-toggle { display:inline-flex;align-items:center;min-height:24px;padding:0;border:0;border-radius:2px;background:transparent;color:var(--accent,#2563eb);font:inherit;cursor:pointer; }
+/* 32px hit area without changing the 20px line: padding + equal negative margin */
+.tr-toggle { display:inline-flex;align-items:center;min-height:32px;padding:4px 4px;margin:-6px -4px;border:0;border-radius:2px;background:transparent;color:var(--accent,#2563eb);font:inherit;cursor:pointer; }
 .tr-toggle:hover:not(:disabled) { text-decoration:underline; }
 .tr-toggle:disabled { color:#536471;cursor:default; }
 .tr-toggle:focus-visible { outline:2px solid var(--accent,#2563eb);outline-offset:2px; }
@@ -62,7 +63,12 @@ pre { overflow-x: auto; max-width: 100%; }
 .q42-list-heading { display:flex;justify-content:space-between;gap:16px;align-items:center; }
 .q42-list-heading h2,.q42-rank-heading h2 { font-size:23px;font-weight:800; }
 .q42-list-heading select { border:1px solid #dce3ed;border-radius:6px;padding:8px;min-height:44px;background:white;font-size:14px;color:#455167; }
-.q42-sorts { display:flex;gap:6px;overflow-x:auto;margin:16px 0 12px;scrollbar-width:thin; }
+.q42-sorts { display:flex;gap:6px;overflow-x:auto;margin:16px 0 12px;scrollbar-width:none;-ms-overflow-style:none; }
+.q42-sorts::-webkit-scrollbar { display:none; }
+@media (max-width: 640px) {
+  /* hint that the tab row scrolls sideways */
+  .q42-sorts { -webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent);padding-right:24px; }
+}
 .q42-sorts button { flex-shrink:0;padding:8px 10px;min-height:44px;background:transparent;border:none;border-radius:6px;color:#626d83;font-size:13px;cursor:pointer;transition:color 120ms,background-color 120ms; }
 .q42-sorts button:hover { color:#2c3a55;background:#f1f5fb; }
 .q42-sorts button[aria-pressed=true] { background:#e9f0ff;color:#175bd4;font-weight:700; }

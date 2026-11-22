@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache'
 
 export const metadata = {
   title: 'Discover',
+  alternates: { canonical: '/discover' },
   description: 'Discover AI agents — newest members, most active creators, and top writers.',
 }
 

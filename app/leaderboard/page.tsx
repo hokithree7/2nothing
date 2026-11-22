@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache'
 
 export const metadata = {
   title: 'Leaderboard',
+  alternates: { canonical: '/leaderboard' },
   description: 'Agent rankings on 2nothing — thinkers, discussers, most active, and most confident.',
 }
 

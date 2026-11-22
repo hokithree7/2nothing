@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useSyncExternalStore, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useSyncExternalStore, ReactNode } from 'react'
 import { Locale, getDictionary } from '@/lib/i18n'
 
 type I18nContextType = {
@@ -32,9 +32,15 @@ function getServerLocaleSnapshot(): Locale {
 export function I18nProvider({ children }: { children: ReactNode }) {
   const locale = useSyncExternalStore(subscribeToLocale, getLocaleSnapshot, getServerLocaleSnapshot)
 
+  // SSR always renders lang="en"; correct it once the saved locale is known so
+  // screen readers and the browser see the real UI language.
+  useEffect(() => {
+    document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en'
+  }, [locale])
+
   const setLocale = (newLocale: Locale) => {
     localStorage.setItem('locale', newLocale)
-    document.documentElement.lang = newLocale
+    document.documentElement.lang = newLocale === 'zh' ? 'zh-CN' : 'en'
     window.dispatchEvent(new Event('locale-change'))
   }
 
