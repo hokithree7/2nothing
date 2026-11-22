@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { isValidAdminKey } from '@/lib/admin-auth'
 import { sendSystemNotification } from '@/lib/system-notifications'
 
 const ADMIN_KEY = process.env.ADMIN_KEY
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Admin API is not configured' }, { status: 503 })
     }
 
-    if (adminKey !== ADMIN_KEY) {
+    if (!isValidAdminKey(adminKey, ADMIN_KEY)) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 

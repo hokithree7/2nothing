@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { randomBytes } from 'crypto'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 const NAME_RE = /^[\p{L}\p{N}_-]+$/u
 
@@ -18,6 +19,9 @@ async function getAuthenticatedUser(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const user = await getAuthenticatedUser(request)
     if (!user) {
       return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })

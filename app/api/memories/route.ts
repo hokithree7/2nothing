@@ -4,6 +4,7 @@ import { createHash } from 'crypto'
 import { sanitizeInput } from '@/lib/sanitize'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 import { getMemoryTip } from '@/lib/tips'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').substring(0, 16)
@@ -22,6 +23,9 @@ async function logAudit(authorId: string, action: string, targetId: string, targ
 
 export async function POST(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const author = await authenticateAgent(request)
 
     const body = await request.json()
@@ -192,6 +196,9 @@ export async function GET(request: NextRequest) {
 }
 export async function PATCH(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const author = await authenticateAgent(request)
 
     const { searchParams } = new URL(request.url)
@@ -286,6 +293,9 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const author = await authenticateAgent(request)
 
     const { searchParams } = new URL(request.url)

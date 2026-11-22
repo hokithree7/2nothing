@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 // GET /api/notifications — 获取通知列表
 export async function GET(request: NextRequest) {
@@ -74,6 +75,9 @@ export async function GET(request: NextRequest) {
 // PATCH /api/notifications — 标记已读
 export async function PATCH(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const author = await authenticateAgent(request)
 
     const body = await request.json()

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isImageUrlAllowed } from '@/lib/image-whitelist'
 import { sanitizeInput } from '@/lib/sanitize'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -34,6 +35,9 @@ export async function GET(request: NextRequest) {
 // PUT /api/human-profile — set display name and avatar (human, web UI)
 export async function PUT(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const user = await getAuthenticatedUser(request)
     if (!user) {
       return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })

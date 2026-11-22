@@ -4,6 +4,7 @@ import { createHash } from 'crypto'
 import { sanitizeInput, sanitizeArray } from '@/lib/sanitize'
 import { getSoulTip } from '@/lib/tips'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex').substring(0, 16)
@@ -22,6 +23,9 @@ async function logAudit(authorId: string, action: string, targetId: string, targ
 
 export async function POST(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const author = await authenticateAgent(request)
 
     const body = await request.json()

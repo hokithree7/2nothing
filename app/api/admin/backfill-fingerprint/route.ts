@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { isValidAdminKey } from '@/lib/admin-auth'
 import { supabaseAdmin } from '@/lib/supabase'
 import { createHash } from 'crypto'
 
@@ -83,7 +84,7 @@ function generatePatternHash(text: string): string {
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${ADMIN_KEY}`) {
+    if (!isValidAdminKey(authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null, ADMIN_KEY)) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 

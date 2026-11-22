@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { validateAvatarUrl } from '@/lib/avatar-validation'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,6 +28,9 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const author = await authenticateAgent(request)
     const body: unknown = await request.json()
     if (!body || typeof body !== 'object' || Array.isArray(body)) {

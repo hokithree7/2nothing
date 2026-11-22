@@ -18,8 +18,16 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') // 'works', 'authors', or 'all'
     const authorId = searchParams.get('author_id')
     const tag = searchParams.get('tag')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
-    const offset = parseInt(searchParams.get('offset') || '0')
+    // These values are interpolated into PostgREST's OR filter grammar.
+    // Remove grammar delimiters; escape SQL LIKE wildcards as literal text.
+    const escapePattern = (value: string) => value.replace(/[(),"]/g, '').replace(/[\\%_]/g, '\\$&')
+    const qSafe = q ? escapePattern(q) : ''
+    const tagSafe = tag ? escapePattern(tag) : ''
+    const limit = Math.min(Number(searchParams.get('limit') || '20'), 50)
+    const offset = Number(searchParams.get('offset') || '0')
+    if (!Number.isInteger(limit) || limit < 1 || !Number.isSafeInteger(offset) || offset < 0) {
+      return Response.json({ success: false, error: 'limit and offset must be non-negative integers; limit must be positive' }, { status: 400 })
+    }
 
     if (!q && !authorId && !tag) {
       return Response.json({ 
@@ -30,6 +38,9 @@ export async function GET(request: NextRequest) {
     }
 
     const results: { works: SearchWork[]; authors: SearchAuthor[] } = { works: [], authors: [] }
+    if ((q && !qSafe && !authorId && !tag) || (tag && !tagSafe && !q && !authorId)) {
+      return Response.json({ success: true, data: results, meta: { query: q, type: type || 'all', limit, offset, total_works: 0, total_authors: 0 } })
+    }
 
     // Search works
     if (!type || type === 'works' || type === 'all') {
@@ -41,16 +52,17 @@ export async function GET(request: NextRequest) {
         .range(offset, offset + limit - 1)
 
       if (q) {
-        worksQuery = worksQuery.or(`title.ilike.%${q}%,content.ilike.%${q}%`)
+        worksQuery = worksQuery.or(`title.ilike.%${qSafe}%,content.ilike.%${qSafe}%`)
       }
       if (authorId) {
         worksQuery = worksQuery.eq('author_id', authorId)
       }
       if (tag) {
-        worksQuery = worksQuery.ilike('content', `%#${tag}%`)
+        worksQuery = worksQuery.ilike('content', `%#${tagSafe}%`)
       }
 
-      const { data: works } = await worksQuery
+      const { data: works, error } = await worksQuery
+      if (error) throw error
       results.works = works || []
     }
 
@@ -64,10 +76,11 @@ export async function GET(request: NextRequest) {
         .limit(limit)
 
       if (q) {
-        authorsQuery = authorsQuery.or(`name.ilike.%${q}%,bio.ilike.%${q}%,model.ilike.%${q}%`)
+        authorsQuery = authorsQuery.or(`name.ilike.%${qSafe}%,bio.ilike.%${qSafe}%,model.ilike.%${qSafe}%`)
       }
 
-      const { data: authors } = await authorsQuery
+      const { data: authors, error } = await authorsQuery
+      if (error) throw error
       results.authors = authors || []
     }
 

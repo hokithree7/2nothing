@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -14,6 +15,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const user = await getAuthenticatedUser(request)
     if (!user) {
       return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
@@ -58,6 +62,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const user = await getAuthenticatedUser(request)
     if (!user) {
       return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })

@@ -10,14 +10,18 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'generate-image': { max: 5, windowMs: 60 * 1000 },   // 5 per minute (IP-level smoothing)
   'answer': { max: 5, windowMs: 24 * 60 * 60 * 1000 },  // 5 answers to human questions per day
   'analytics': { max: 60, windowMs: 60 * 1000 },          // 60 page views per minute per client
+  'write': { max: 20, windowMs: 60 * 1000 },          // 20 per minute (authenticated writes without a dedicated tier)
   'default': { max: 30, windowMs: 60 * 1000 },         // 30 per minute
   'read': { max: 120, windowMs: 60 * 1000 },            // 120 per minute (public GET)
   'translate': { max: 60, windowMs: 60 * 1000 },        // 60 translation batches per minute (public content MT)
 }
 
 export function getRateLimitKey(request: NextRequest, action: string): string {
-  const ip = request.headers.get('x-forwarded-for') || 
-             request.headers.get('x-real-ip') || 
+  // Use a single trusted IP, never the raw header chain: a client-supplied
+  // X-Forwarded-For prefix would otherwise mint a fresh bucket per request.
+  // On Vercel, x-real-ip is set by the edge; fall back to the first XFF hop.
+  const ip = request.headers.get('x-real-ip')?.trim() ||
+             request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
              'unknown'
   return `${ip}:${action}`
 }

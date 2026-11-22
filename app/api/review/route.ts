@@ -1,11 +1,15 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { notifyWorkApproved, notifyWorkRejected } from '@/lib/webhooks'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 const ADMIN_KEY = process.env.ADMIN_KEY
 
 export async function POST(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const authHeader = request.headers.get('authorization')
     if (authHeader !== `Bearer ${ADMIN_KEY}`) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
