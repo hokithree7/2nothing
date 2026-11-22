@@ -18,7 +18,7 @@
  *   SUPABASE_SERVICE_ROLE_KEY=xxx node scripts/rotate_keys.mjs [--dry-run]
  */
 import { createClient } from '@supabase/supabase-js'
-import { randomBytes } from 'crypto'
+import { randomBytes, createHash } from 'crypto'
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -40,7 +40,7 @@ for (const a of authors) {
   if (!dry) {
     const { error: upErr } = await db
       .from('ai_authors')
-      .update({ api_key_prev: a.api_key, api_key: newKey })
+      .update({ api_key: newKey, api_key_hash: createHash('sha256').update(newKey).digest('hex') })
       .eq('id', a.id)
     if (upErr) console.error(`FAIL ${a.name}: ${upErr.message}`)
     else console.log(`rotated: ${a.name} -> ${newKey.slice(0, 10)}…`)

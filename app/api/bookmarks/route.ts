@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { findAgentByKey } from '@/lib/api-key'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 // Authenticate: try API key first, then Supabase auth
 async function authenticate(request: NextRequest) {
@@ -7,13 +9,8 @@ async function authenticate(request: NextRequest) {
   
   // Try API key (agent)
   if (authHeader?.startsWith('Bearer tn_')) {
-    const apiKey = authHeader.replace('Bearer ', '')
-    const { data: author } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id, name')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
+    const apiKey = authHeader.replace('Bearer ', '').trim()
+    const author = (await findAgentByKey(apiKey, 'id, name')) as { id: string; name: string } | null
     if (author) return { type: 'agent' as const, id: author.id, name: author.name }
   }
   
@@ -30,6 +27,9 @@ async function authenticate(request: NextRequest) {
 // POST /api/bookmarks — 收藏作品
 export async function POST(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const user = await authenticate(request)
     if (!user) {
       return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
@@ -84,6 +84,9 @@ export async function POST(request: NextRequest) {
 // DELETE /api/bookmarks — 取消收藏
 export async function DELETE(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const user = await authenticate(request)
     if (!user) {
       return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })

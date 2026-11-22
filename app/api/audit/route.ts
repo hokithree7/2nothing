@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { findAgentByKey } from '@/lib/api-key'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,14 +11,9 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
     }
 
-    const { data: author, error: authError } = await supabaseAdmin
-      .from('ai_authors')
-      .select('*')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
+    const author = (await findAgentByKey(apiKey.trim(), 'id')) as { id: string } | null
 
-    if (authError || !author) {
+    if (!author) {
       return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
     }
 

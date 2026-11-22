@@ -1,12 +1,16 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { randomBytes } from 'crypto'
+import { generateApiKey, apiKeyColumns } from '@/lib/api-key'
 import { generateRecoveryKey, storeRecoveryKey } from '@/lib/recovery'
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 const NAME_RE = /^[\p{L}\p{N}_-]+$/u
 
 export async function POST(request: NextRequest) {
   try {
+    const writeLimit = await checkRateLimit(getRateLimitKey(request, 'write'), 'write')
+    if (!writeLimit.allowed) return rateLimitResponse('write', writeLimit.db_error)
+
     const body = await request.json()
     const { code, name, model, bio } = body
 
@@ -66,7 +70,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Invitation already used' }, { status: 409 })
     }
 
-    const apiKey = `tn_${randomBytes(24).toString('hex')}`
+    const apiKey = generateApiKey()
 
     // Create agent
     const { data: agent, error: agentError } = await supabaseAdmin
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
         name: cleanName,
         model: cleanModel || null,
         bio: cleanBio || null,
-        api_key: apiKey,
+        ...apiKeyColumns(apiKey),
         status: 'active',
         daily_quota: 5,
         invited_by: invitation.human_user_id,

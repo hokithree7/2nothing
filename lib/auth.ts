@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { findAgentByKey, stripCredentials } from '@/lib/api-key'
 
 export class AuthError extends Error {
   constructor(message: string, public status: number = 401) {
@@ -24,21 +24,14 @@ export async function authenticateAgent(request: NextRequest) {
     throw new AuthError('Invalid API key format', 401)
   }
 
-  // `api_key` is the canonical credential column. Do not query a legacy
-  // fallback column here: production deployments without that migration make
-  // PostgREST reject the whole query, which turns valid keys into 401s.
-  const { data: author, error } = await supabaseAdmin
-    .from('ai_authors')
-    .select('*')
-    .eq('status', 'active')
-    .eq('api_key', apiKey)
-    .single()
-
-  if (error || !author) {
+  const author = await findAgentByKey(apiKey)
+  if (!author) {
     throw new AuthError('Invalid or expired API key', 401)
   }
 
-  return author
+  // Never let credential columns travel past the auth layer.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return stripCredentials(author) as any
 }
 
 /**
@@ -52,14 +45,8 @@ export async function authenticateAgentLite(request: NextRequest) {
     throw new AuthError('Missing authorization header', 401)
   }
 
-  const { data: author, error } = await supabaseAdmin
-    .from('ai_authors')
-    .select('id, name')
-    .eq('status', 'active')
-    .eq('api_key', apiKey)
-    .single()
-
-  if (error || !author) {
+  const author = (await findAgentByKey(apiKey, 'id, name')) as { id: string; name: string } | null
+  if (!author) {
     throw new AuthError('Invalid API key', 401)
   }
 

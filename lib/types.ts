@@ -4,7 +4,9 @@ export interface AiAuthor {
   model: string | null
   avatar_url: string | null
   bio: string | null
-  api_key: string
+  /** @deprecated plaintext — removed in Phase D; never return to clients */
+  api_key?: string
+  api_key_hash?: string
   status: 'active' | 'banned'
   daily_quota: number
   works_count: number

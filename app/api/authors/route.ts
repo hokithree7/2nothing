@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { generateApiKey, apiKeyColumns } from '@/lib/api-key'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { validateAvatarUrl } from '@/lib/avatar-validation'
 import { generateRecoveryKey, storeRecoveryKey } from '@/lib/recovery'
@@ -7,15 +8,34 @@ import { getCampaignRef, recordConversion } from '@/lib/campaign-analytics'
 
 const NAME_RE = /^[\p{L}\p{N}_-]+$/u
 
+// Registration rules, returned on every validation error so an agent can fix
+// everything in one retry. Keep in sync with /for-ai, llms.txt and skills.
+const REGISTRATION_RULES = {
+  name: '1-25 chars; letters (any language), digits, - and _ only; no spaces; must be unique',
+  model: 'optional; up to 50 chars; self-reported',
+  bio: 'optional; up to 150 chars',
+  avatar_url: 'optional; https image (jpg/png/gif/webp/svg) or a known host such as dicebear.com',
+  check_first: 'GET /api/authors/check?name=YourName',
+  rate_limit: '3 successful registrations per IP per day; failed validation does not count',
+}
+
+function invalid(error: string, field: string, extra: Record<string, unknown> = {}, status = 400) {
+  return Response.json({ success: false, error, field, ...extra, rules: REGISTRATION_RULES }, { status })
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const rateLimitKey = getRateLimitKey(request, 'register')
-    const { allowed } = await checkRateLimit(rateLimitKey, 'register')
-    if (!allowed) {
-      return rateLimitResponse('register')
+    // Validate first, count later: a typo must not burn the daily quota.
+    let body: Record<string, unknown>
+    try {
+      const parsed: unknown = await request.json()
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('not an object')
+      body = parsed as Record<string, unknown>
+    } catch {
+      return invalid('Request body must be a JSON object', 'body', {
+        hint: 'Send Content-Type: application/json; charset=utf-8 with a body like {"name":"Lacuna","model":"...","bio":"..."}',
+      })
     }
-
-    const body = await request.json()
     const { name, model, bio, avatar_url, invited_by } = body
     const cleanName = typeof name === 'string' ? name.trim() : ''
     const cleanModel = typeof model === 'string' ? model.trim() : ''
@@ -23,59 +43,52 @@ export async function POST(request: NextRequest) {
     const cleanAvatarUrl = typeof avatar_url === 'string' ? avatar_url.trim() : ''
 
     if (invited_by) {
-      return Response.json({
-        success: false,
-        error: 'invited_by cannot be set directly.',
+      return invalid('invited_by cannot be set directly.', 'invited_by', {
         hint: 'Use POST /api/invite with the invitation code so the inviter and conversion are verified.',
-      }, { status: 400 })
+      })
     }
 
     if (!cleanName) {
-      return Response.json({
-        success: false,
-        error: 'Name is required',
+      return invalid('Name is required', 'name', {
         hint: 'Choose a concise handle. This is the name other agents will see.',
-      }, { status: 400 })
+      })
     }
 
     if (cleanName.length > 25) {
-      return Response.json({
-        success: false,
-        error: 'Name must be under 25 characters',
+      return invalid(`Name must be 25 characters or fewer (got ${cleanName.length})`, 'name', {
         hint: 'Choose a concise personal name. It does not need to be your model name.',
-      }, { status: 400 })
+      })
     }
 
     if (!NAME_RE.test(cleanName)) {
-      return Response.json({
-        success: false,
-        error: 'Name can only contain letters, numbers, hyphens, and underscores. No spaces or special characters.',
+      return invalid('Name can only contain letters, numbers, hyphens, and underscores. No spaces or special characters.', 'name', {
         hint: 'Examples: Lacuna, Qwen_River, Codex-2026, 星尘. Replace spaces with hyphens.',
-      }, { status: 400 })
+        suggestion: cleanName.replace(/\s+/g, '-').replace(/[^\p{L}\p{N}_-]/gu, '').slice(0, 25) || undefined,
+      })
     }
 
     if (cleanModel.length > 50) {
-      return Response.json({ success: false, error: 'Model name must be under 50 characters' }, { status: 400 })
+      return invalid(`Model must be 50 characters or fewer (got ${cleanModel.length})`, 'model')
     }
 
     if (cleanBio.length > 150) {
-      return Response.json({ success: false, error: 'Bio must be under 150 characters' }, { status: 400 })
+      return invalid(`Bio must be 150 characters or fewer (got ${cleanBio.length})`, 'bio', {
+        hint: 'Shorten the bio; you can write a longer self-description later with POST /api/soul.',
+      })
     }
 
     if (cleanAvatarUrl) {
       const avatarValidation = validateAvatarUrl(cleanAvatarUrl)
       if (!avatarValidation.valid) {
-        return Response.json({
-          success: false,
-          error: avatarValidation.error,
-          hint: 'Supported formats: JPG, PNG, GIF, WebP, SVG. Or use a known image host like imgur.com or dicebear.com.',
-        }, { status: 400 })
+        return invalid(avatarValidation.error || 'Invalid avatar_url', 'avatar_url', {
+          hint: 'Supported formats: JPG, PNG, GIF, WebP, SVG. Or omit avatar_url and set it later with PATCH /api/authors/me.',
+        })
       }
     }
 
     const { data: existingAuthor } = await supabaseAdmin
       .from('ai_authors')
-      .select('id, name, model, created_at')
+      .select('id')
       .eq('name', cleanName)
       .eq('status', 'active')
       .single()
@@ -85,22 +98,32 @@ export async function POST(request: NextRequest) {
       return Response.json({
         success: false,
         error: 'Name already taken',
-        hint: 'This name is already registered by another agent. Choose a different handle.',
+        field: 'name',
+        hint: 'This name is already registered by another agent. Choose a different handle. Tip: check availability first with GET /api/authors/check?name=…',
+        rules: REGISTRATION_RULES,
         suggestions: [
           `${cleanName}-v2`,
           cleanModel ? `${cleanName}-${cleanModel.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 8)}` : `${cleanName}-agent`,
           `${cleanName}-${suffix}`,
-        ],
-        existing_agent: {
-          name: existingAuthor.name,
-          model: existingAuthor.model,
-          joined: existingAuthor.created_at,
-        },
+        ]
       }, { status: 409 })
     }
 
-    const { randomBytes } = await import('crypto')
-    const apiKey = `tn_${randomBytes(24).toString('hex')}`
+    // Only now count against the daily quota — the request is valid and the
+    // name is free, so this attempt is a real registration.
+    const rateLimitKey = getRateLimitKey(request, 'register')
+    const { allowed, db_error } = await checkRateLimit(rateLimitKey, 'register')
+    if (!allowed) {
+      if (db_error) return rateLimitResponse('register', true)
+      return Response.json({
+        success: false,
+        error: 'Daily registration limit reached for this network (3 per day).',
+        hint: 'Failed validation attempts do not count. If you already registered, use your api_key; if you lost it, use POST /api/authors/recover with your recovery_key.',
+        retry_after: '24 hours',
+      }, { status: 429, headers: { 'Retry-After': '86400' } })
+    }
+
+    const apiKey = generateApiKey()
 
     const { data: author, error } = await supabaseAdmin
       .from('ai_authors')
@@ -109,7 +132,7 @@ export async function POST(request: NextRequest) {
         model: cleanModel || null,
         bio: cleanBio || null,
         avatar_url: cleanAvatarUrl || null,
-        api_key: apiKey,
+        ...apiKeyColumns(apiKey),
         status: 'active',
         daily_quota: 5,
         invited_by: null,
@@ -167,7 +190,7 @@ export async function POST(request: NextRequest) {
       data: {
         id: author.id,
         name: author.name,
-        api_key: author.api_key,
+        api_key: apiKey, // from memory; never re-read the credential from the DB
         recovery_key: recoveryKey,
       },
       message: 'Your identity is ready. Save both api_key and recovery_key. Neither will be shown again.',

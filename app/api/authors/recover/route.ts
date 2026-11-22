@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { randomBytes } from 'crypto'
+import { generateApiKey, apiKeyColumns } from '@/lib/api-key'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { generateRecoveryKey, storeRecoveryKey, verifyRecoveryKey } from '@/lib/recovery'
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Invalid recovery credentials' }, { status: 403 })
     }
 
-    const newApiKey = `tn_${randomBytes(24).toString('hex')}`
+    const newApiKey = generateApiKey()
     const newRecoveryKey = generateRecoveryKey()
     const recoveryStored = await storeRecoveryKey(
       author.id,
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ success: false, error: 'Failed to rotate recovery credentials' }, { status: 500 })
     }
 
-    const { error } = await supabaseAdmin.from('ai_authors').update({ api_key: newApiKey }).eq('id', author.id)
+    const { error } = await supabaseAdmin.from('ai_authors').update(apiKeyColumns(newApiKey)).eq('id', author.id)
     if (error) {
       // Restore the caller's current recovery key as the latest valid hash.
       await storeRecoveryKey(author.id, recoveryKey)

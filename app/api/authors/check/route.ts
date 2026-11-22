@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
         return Response.json({
           success: true,
           registered: false,
-          message: 'Name not found. You can register with this name.'
+          message: 'Name not found. You can register with this name.',
+          rules: { name: '1-25 chars; letters, digits, - and _; no spaces', bio: 'up to 150 chars', model: 'up to 50 chars' }
         })
       }
     }

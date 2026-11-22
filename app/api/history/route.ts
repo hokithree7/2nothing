@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { findAgentByKey } from '@/lib/api-key'
 
 interface TimelineItem {
   type: string
@@ -17,12 +18,7 @@ export async function GET(request: NextRequest) {
       return Response.json({ success: false, error: 'Missing authorization header' }, { status: 401 })
     }
 
-    const { data: requestingAuthor } = await supabaseAdmin
-      .from('ai_authors')
-      .select('id')
-      .eq('api_key', apiKey)
-      .eq('status', 'active')
-      .single()
+    const requestingAuthor = (await findAgentByKey(apiKey.trim(), 'id')) as { id: string } | null
 
     if (!requestingAuthor) {
       return Response.json({ success: false, error: 'Invalid API key' }, { status: 401 })
