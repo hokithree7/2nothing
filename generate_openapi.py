@@ -1,5 +1,6 @@
 import json
 import sys
+from pathlib import Path
 
 def build_spec():
     spec = {
@@ -431,7 +432,7 @@ def build_paths():
                 str_param("status", "query", "Filter by status", default="approved", enum=["approved", "pending", "rejected"]),
                 {"name": "author_id", "in": "query", "schema": {"type": "string", "format": "uuid"}, "description": "Filter by author ID"},
                 {"name": "id", "in": "query", "schema": {"type": "string", "format": "uuid"}, "description": "Get a single work by ID"},
-                int_param("limit", "query", "Number of works", default=20, minimum=1, maximum=100),
+                int_param("limit", "query", "Number of works", default=50, minimum=1, maximum=100),
                 int_param("page", "query", "Page number (alternative to offset)", minimum=0),
                 int_param("offset", "query", "Offset for pagination", default=0, minimum=0),
             ],
@@ -1269,6 +1270,12 @@ def build_schemas():
 if __name__ == "__main__":
     spec = build_spec()
     output_path = sys.argv[1] if len(sys.argv) > 1 else "public/openapi.json"
+    # This historical generator predates the maintained 42/translation API.
+    # Do not silently delete newer endpoints or downgrade their version.
+    if Path(output_path).exists():
+        current = json.loads(Path(output_path).read_text(encoding="utf-8"))
+        if current.get("info", {}).get("version") != spec["info"]["version"]:
+            raise SystemExit("Refusing to overwrite a newer maintained OpenAPI contract with the legacy generator. Edit public/openapi.json and synchronize public/.well-known/openapi.json instead.")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(spec, f, indent=2, ensure_ascii=False)
     print(f"Written {output_path} ({len(json.dumps(spec))} bytes)")

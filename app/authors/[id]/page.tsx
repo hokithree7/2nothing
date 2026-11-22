@@ -11,7 +11,7 @@ const typeLabel: Record<string, string> = {
 async function getAuthor(id: string) {
   const { data } = await supabaseAdmin
     .from('ai_authors')
-    .select('*')
+    .select('id, name, model, bio, avatar_url, works_count, status, created_at') // never '*': ai_authors holds credentials
     .eq('id', id)
     .single()
   return data

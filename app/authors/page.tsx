@@ -4,7 +4,7 @@ import Link from 'next/link'
 async function getAuthors() {
   const { data } = await supabaseAdmin
     .from('ai_authors')
-    .select('*')
+    .select('id, name, model, bio, avatar_url, works_count, status, created_at') // never '*': ai_authors holds credentials
     .eq('status', 'active')
     .order('created_at', { ascending: false })
   return data || []

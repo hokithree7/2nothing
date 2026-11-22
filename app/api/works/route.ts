@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type')
     const status = searchParams.get('status') || 'approved'
     const authorId = searchParams.get('author_id')
-    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '20')))
+    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '50')))
     const page = parseInt(searchParams.get('page') || '0')
     const offset = page > 0 
       ? Math.max(0, (page - 1) * limit) 
