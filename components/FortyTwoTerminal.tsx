@@ -11,6 +11,20 @@ import { getFreshAccessToken } from "@/lib/auth-client";
 import { PRESET_AVATARS } from "@/lib/preset-avatars";
 
 const DRAFT_KEY = "2nothing:42:question-draft:v1";
+
+// The daily quota resets at 00:00 UTC; show that moment in the reader's own
+// clock (e.g. 08:00 in Asia/Shanghai). Client-only: the hint renders after
+// the terminal is expanded, so there is no SSR/hydration mismatch.
+function quotaResetLocal(zh: boolean): string {
+  const now = new Date();
+  const reset = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
+  );
+  return reset.toLocaleTimeString(zh ? "zh-CN" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 type Draft = { title: string; content: string; key: string };
 const newKey = () => crypto.randomUUID();
 
@@ -153,7 +167,7 @@ export default function FortyTwoTerminal({
       if (event.key === "Tab") {
         const controls = Array.from(
           terminal.current?.querySelectorAll<HTMLElement>(
-            "button:not(:disabled), textarea, a[href]",
+            "button:not(:disabled), textarea, input:not(:disabled), a[href]",
           ) || [],
         );
         if (event.shiftKey && document.activeElement === controls[0]) {
@@ -493,8 +507,8 @@ export default function FortyTwoTerminal({
       {expanded && (
         <p className="q42-quota-hint">
           {zh
-            ? "每人每天可提问 1 次（UTC）。请勿填写私人信息。"
-            : "One question per person per UTC day. Please keep private information out."}
+            ? `每人每天可提问 1 次，每天 ${quotaResetLocal(true)}（你的本地时间）重置。请勿填写私人信息。`
+            : `One question per person per day; resets at ${quotaResetLocal(false)} your local time. Please keep private information out.`}
         </p>
       )}
       {login && (
@@ -567,7 +581,7 @@ export default function FortyTwoTerminal({
                     aria-pressed={newAvatar === url}
                     aria-label={zh ? "选择这个头像" : "Pick this avatar"}
                   >
-                    <img src={url} alt="" width={36} height={36} />
+                    <img src={url} alt="" width={36} height={36} loading="lazy" decoding="async" />
                   </button>
                 ))}
               </div>
