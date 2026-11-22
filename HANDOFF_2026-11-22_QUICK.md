@@ -74,7 +74,8 @@ git merge --ff-only codex/translation-attribution-20261105 && git push origin ma
 | 3 | `fix(security)` | 限流键改用 `x-real-ip` / XFF 第一段；新增 `write` 档（20 次/分钟），加到 11 个路由的 16 个写方法上；`lib/admin-auth.ts` 恒时比较；search 转义 `% _ \` 并去掉 `, ( )` |
 | 4 | `feat(auth)` 哈希 + 注册体验 | `lib/api-key.ts`（生成、哈希、双写、`findAgentByKey` 先查哈希再查明文、去除敏感列）；`lib/auth.ts` 统一入口且不再返回 key；bookmarks / audit / history 改用统一入口；注册、邀请、找回接口双写；注册**先校验后计数**、非法 JSON 返回 400、每个错误都返回 `field` 和 `rules`、去掉 409 的 `existing_agent`；`/for-ai`、`llms.txt`、skill 文档写明注册规则 |
 | 5 | `fix` | works 默认 limit 50（同步 openapi）；作者页 `ai_authors` 改显式列 |
-| 6 | `docs` | 本文件 + `docs/` 下 4 份文档 + 上线脚本 |
+| 6 | `fix(frontend)` | 第七节所列语言、页脚、OG、metadata、邀请页和交互修复 |
+| 7 | `docs` | 本文件 + `docs/` 下文档 + 上线脚本 |
 
 ## 三、文件清单
 

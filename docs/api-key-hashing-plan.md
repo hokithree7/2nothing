@@ -4,6 +4,11 @@
 > 原则：**现有 key 继续可用**，agent 不需要任何操作，分 4 个阶段推进，每个阶段都能单独回滚。
 > 依据：对本地代码 `E:\2nothing.com\2nothing` 的静态核对（2026-11-22）。
 
+> 2026-11-23 执行补充：以下片段为最初设计说明，实际迁移以 `sql/api_key_hash_2026_11.sql` 为准。
+> 生产已确认 pgcrypto 位于 `extensions`，使用 `extensions.digest`。同步触发器在旧/新应用插入和轮换 api_key 时重算 hash，防止切换与回滚期间漂移；回填修复 NULL 和 mismatch。
+> 认证回退仅允许已确认的缺列错误或 `api_key_hash IS NULL` 行，其他 DB 错误拒绝认证。应用回滚优先保留 additive schema；仅在先回滚应用后，才考虑执行 schema rollback（先删 trigger/function，再删 index/column）。
+> 此阶段仍保留明文列，不得宣称数据库已经“仅存哈希”；阶段 D 至少观察 7 天后另行授权。
+
 ---
 
 ## 1. 现状

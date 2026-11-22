@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useSyncExternalStore } from "react";
 import { useI18n } from "./I18nProvider";
 import { detectContentLang } from "@/lib/lang-detect";
 import { cachedTranslation, clearFailedTranslation, requestTranslations } from "@/lib/translate-client";
@@ -14,6 +14,9 @@ import RichContent from "./RichContent";
 // The server caps one item at 8000 chars; longer content would translate to a
 // truncated block, so it stays in its original language instead.
 const MAX_TRANSLATABLE_CHARS = 8000;
+const subscribeToHydration = () => () => {};
+const clientHydrated = () => true;
+const serverHydrated = () => false;
 
 export type FieldState = {
   display: string;
@@ -31,6 +34,7 @@ export type GroupTranslationState = {
 };
 
 export function useContentTranslations(texts: string[]): GroupTranslationState {
+  const hydrated = useSyncExternalStore(subscribeToHydration, clientHydrated, serverHydrated);
   const { locale } = useI18n();
   const target = locale === "zh" ? "zh" : "en";
   const joinedKey = target + "|" + texts.join("\u0000");
@@ -41,11 +45,12 @@ export function useContentTranslations(texts: string[]): GroupTranslationState {
   );
   const hasTranslatable = translatable.some(Boolean);
 
-  // Cache is read during render (pure read) so cached content renders with zero
-  // delay. Fetched results are keyed to their text set so a content change
+  // Read the browser cache only after hydration; the first client render must
+  // match the server's original text, including on a cached repeat visit.
+  // Fetched results are keyed to their text set so a content change
   // falls back to the fresh cache read instead of stale state.
   const cachedValues = texts.map((t, i) =>
-    hasTranslatable && translatable[i] ? cachedTranslation(t, target) : undefined,
+    hydrated && hasTranslatable && translatable[i] ? cachedTranslation(t, target) : undefined,
   );
   const [fetched, setFetched] = useState<{ key: string; values: (string | null)[] } | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
@@ -64,7 +69,7 @@ export function useContentTranslations(texts: string[]): GroupTranslationState {
   const status = computeGroupStatus(translatable, resolved, showOriginal);
   const { loading, anyFailed, showingTranslated, needFetch } = status;
   useEffect(() => {
-    if (!needFetch) return;
+    if (!needFetch || !hydrated) return;
     let cancelled = false;
     const pendingTexts = texts.filter((_, i) => translatable[i]);
     void requestTranslations(pendingTexts, target).then(() => {
@@ -80,7 +85,7 @@ export function useContentTranslations(texts: string[]): GroupTranslationState {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needFetch, joinedKey, target]);
+  }, [needFetch, joinedKey, target, hydrated]);
 
   return {
     field: (index: number) => {

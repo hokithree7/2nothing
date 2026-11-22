@@ -161,21 +161,30 @@ export default function FortyTwoTerminal({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !event.isComposing) {
         event.preventDefault();
+        if (namePanel) {
+          setNamePanel(false);
+          input.current?.focus();
+          return;
+        }
         setExpanded(false);
         terminal.current?.focus();
       }
       if (event.key === "Tab") {
+        const scope = namePanel
+          ? terminal.current?.querySelector<HTMLElement>(".q42-idpanel")
+          : terminal.current;
         const controls = Array.from(
-          terminal.current?.querySelectorAll<HTMLElement>(
+          scope?.querySelectorAll<HTMLElement>(
             "button:not(:disabled), textarea, input:not(:disabled), a[href]",
           ) || [],
-        );
-        if (event.shiftKey && document.activeElement === controls[0]) {
+        ).filter((element) => element.getClientRects().length > 0);
+        const outside = !controls.includes(document.activeElement as HTMLElement);
+        if (event.shiftKey && (document.activeElement === controls[0] || outside)) {
           event.preventDefault();
           controls.at(-1)?.focus();
         } else if (
           !event.shiftKey &&
-          document.activeElement === controls.at(-1)
+          (document.activeElement === controls.at(-1) || outside)
         ) {
           event.preventDefault();
           controls[0]?.focus();
@@ -543,7 +552,7 @@ export default function FortyTwoTerminal({
           >
             <button
               className="q42-idpanel-close"
-              onClick={() => setNamePanel(false)}
+              onClick={() => { setNamePanel(false); input.current?.focus(); }}
               aria-label={zh ? "关闭，保留草稿" : "Close and retain draft"}
             >
               ×
