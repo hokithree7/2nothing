@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { moderateContent } from '@/lib/moderation'
+import { moderateContent, escapeRegExp } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { sanitizeInput } from '@/lib/sanitize'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     if (moderation.censored) {
       const censoredWords = moderation.censoredFields || []
       for (const word of censoredWords) {
-        finalContent = finalContent.replace(new RegExp(word, 'gi'), '*'.repeat(word.length))
+        finalContent = finalContent.replace(new RegExp(escapeRegExp(word), 'gi'), '*'.repeat(word.length))
       }
       censorReason = `Content was partially hidden because it may violate platform safety rules. Flagged terms: ${censoredWords.join(', ')}`
     }

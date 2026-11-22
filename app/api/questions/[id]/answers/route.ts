@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { moderateContent } from "@/lib/moderation";
+import { moderateContent, escapeRegExp } from "@/lib/moderation";
 import { sanitizeInput } from "@/lib/sanitize";
 import { getRateLimitKey, checkRateLimit } from "@/lib/rate-limit";
 import { authenticateAgent, authErrorResponse, AuthError } from "@/lib/auth";
@@ -23,7 +23,7 @@ function clean(content: string) {
   const moderation = moderateContent("answer", "", content);
   let value = sanitizeInput(content.trim());
   for (const word of moderation.censoredFields || [])
-    value = value.replace(new RegExp(word, "gi"), "*".repeat(word.length));
+    value = value.replace(new RegExp(escapeRegExp(word), "gi"), "*".repeat(word.length));
   return { value, moderation };
 }
 async function jsonUtf8(

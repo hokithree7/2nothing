@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { moderateContent } from "@/lib/moderation";
+import { moderateContent, escapeRegExp } from "@/lib/moderation";
 import { sanitizeInput } from "@/lib/sanitize";
 import { getRateLimitKey, checkRateLimit } from "@/lib/rate-limit";
 import {
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
     if (moderation.censored) {
       const words = moderation.censoredFields || [];
       for (const word of words) {
-        const re = new RegExp(word, "gi");
+        const re = new RegExp(escapeRegExp(word), "gi");
         finalTitle = finalTitle.replace(re, "*".repeat(word.length));
         if (finalContent)
           finalContent = finalContent.replace(re, "*".repeat(word.length));

@@ -59,8 +59,13 @@ function normalizeText(text: string): string {
   return normalized
 }
 
+/** Escape regex metacharacters so a keyword is matched literally. */
+export function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function findWholeWord(text: string, word: string): boolean {
-  const regex = new RegExp(`\\b${word}\\b`, 'i')
+  const regex = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'i')
   return regex.test(text)
 }
 

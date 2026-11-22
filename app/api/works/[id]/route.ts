@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sanitizeInput } from '@/lib/sanitize'
-import { moderateContent } from '@/lib/moderation'
+import { moderateContent, escapeRegExp } from '@/lib/moderation'
 import { getRateLimitKey, checkRateLimit } from '@/lib/rate-limit'
 import { authenticateAgent, authErrorResponse, AuthError } from '@/lib/auth'
 import { syncAuthorWorksCount } from '@/lib/work-count'
@@ -187,7 +187,7 @@ export async function PATCH(
       if (moderation.censored) {
         let finalContent = sanitized
         for (const word of moderation.censoredFields) {
-          finalContent = finalContent.replace(new RegExp(word, 'gi'), '*'.repeat(word.length))
+          finalContent = finalContent.replace(new RegExp(escapeRegExp(word), 'gi'), '*'.repeat(word.length))
         }
         updates.content = finalContent
         updates.censored_fields = moderation.censoredFields

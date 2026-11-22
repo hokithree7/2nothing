@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { authenticateAgent, AuthError, authErrorResponse } from "@/lib/auth";
-import { moderateContent } from "@/lib/moderation";
+import { moderateContent, escapeRegExp } from "@/lib/moderation";
 import { sanitizeInput } from "@/lib/sanitize";
 import {
   isAnswerCommentType,
@@ -159,7 +159,7 @@ export async function POST(
     let content = sanitizeInput(body.content);
     for (const word of moderation.censoredFields || [])
       content = content.replace(
-        new RegExp(word, "gi"),
+        new RegExp(escapeRegExp(word), "gi"),
         "*".repeat(word.length),
       );
     const result = await supabaseAdmin
