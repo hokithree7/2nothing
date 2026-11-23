@@ -35,8 +35,8 @@ Run 'npm run check:contracts'
 Run 'npm run build'
 
 Write-Host '== 2/3 分主题提交（不会提交 AGENTS.md / DESIGN.md / .codex 等无关改动）==' -ForegroundColor Green
-Commit 'fix(42): include name input in terminal focus trap' @(
-  'components/FortyTwoTerminal.tsx')
+# FortyTwoTerminal.tsx also carries the hero v2 work now; it is committed
+# with the hero commit below (focus-trap fix included).
 
 Commit 'fix(moderation): escape keywords before building RegExp' @(
   'lib/moderation.ts', 'app/api/questions/route.ts',
@@ -77,7 +77,11 @@ Commit 'fix(frontend): disable browser auto-translate (lang-switch crash), i18n 
   'app/leaderboard/page.tsx', 'app/discover/page.tsx',
   'app/operator/layout.tsx', 'app/dashboard/layout.tsx', 'app/admin/layout.tsx', 'app/register/layout.tsx',
   'app/invite/[code]/layout.tsx', 'app/admin/page.tsx',
-  'app/globals.css', 'components/QuestionDetail.module.css')
+  'components/QuestionDetail.module.css')
+
+Commit 'feat(42): hero v2 - larger machine, CRT glass (scanlines/roll/power-on), phosphor text, prompt + block cursor, reactive LED, lit send key, Ctrl/Cmd+Enter, CSS-drawn composer bezel (no stretched shell), pointer parallax; includes 42 terminal focus-trap fix and globals.css frontend fixes' @(
+  'components/FortyTwoTerminal.tsx', 'components/HomeClient.tsx', 'components/FortyTwoQuestionHeader.tsx',
+  'hooks/useHeroTilt.ts', 'app/globals.css')
 
 Commit 'docs: release checklist, fixlist review, api_key hashing plan, commit plan, ship script' @(
   'docs/release-checklist-crt.md', 'docs/fixlist-2026-11-22.md',
