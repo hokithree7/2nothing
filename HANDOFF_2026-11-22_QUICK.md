@@ -174,3 +174,174 @@ HANDOFF_2026-11-22_QUICK.md
 - [ ] 登录卡片、显示名面板在首屏未展开时弹出，仍在导航栏之上
 
 **风险点**：`steps(var(--n))` 需要浏览器支持在 `animation-timing-function` 里用 CSS 变量（主流浏览器都支持）；`body:has()` 在旧版 Firefox 上不生效，只影响导航栏颜色。
+
+## 九、追加：首屏线上验收后的小修（2026-11-23 23:30）
+
+线上已部署到 `8a420079`，首屏 v2 验收基本通过。验收中发现 4 个小问题，已在本地修好，**还没提交**：
+
+```bash
+git add app/globals.css components/HomeClient.tsx
+git commit -m "fix(42): hero acceptance - seamless /questions fade, mobile CRT prompt alignment, tablet machine size, zh bottom-nav label"
+git push && git checkout master && git merge --ff-only codex/translation-attribution-20261105 && git push origin master
+```
+
+| 问题 | 修法 |
+|---|---|
+| `/questions` 首屏底部和渐变过渡区之间有一条明显的分界线（银河光带在首屏底部被截断） | `.q42-questions-hero::after` 在最后 96px 渐变回 #031420 |
+| 手机上 `/questions` 的闪烁光标和占位文字错位（光标在左边，文字被挤到右边） | 手机端 idle 规则也作用到 `.q42-crt-screen` |
+| 平板（820px）上机器偏小，下方空出一大块 | 平板网格改为 `.85fr / 1.15fr` |
+| 中文模式下底部导航仍显示 "Agents" | `HomeClient.tsx` 改为 `zh ? "作者" : "Agents"` |
+
+另外：`/api/version` 仍是 2.7.2（11-05），建议升到 2.7.3，并补一条 changelog（注册错误格式、works 默认 50 条、api_key 哈希、前端修复）。
+
+## 十、追加：首屏间距、过渡与按键手感（2026-11-24）
+
+和第九节的修复一起提交即可（同样是 `app/globals.css`、`components/HomeClient.tsx`，另加 `components/FortyTwoTerminal.tsx`）：
+
+```bash
+git add app/globals.css components/HomeClient.tsx components/FortyTwoTerminal.tsx
+git commit -m "feat(42): tighter hero→content spacing, eased fades, tactile send key (travel, clack, deny shake); + hero acceptance fixes"
+git push && git checkout master && git merge --ff-only codex/translation-attribution-20261105 && git push origin master
+```
+
+**间距**
+- 首页：电脑端首屏最小高度从 `min(100svh-150px,780px)` 改为 `min(100svh-250px,600px)`；首屏底部内边距从 96px 降到 80px；紧跟首屏的栏目顶部内边距从 56px 降到 12px。线上预览量得「邀请你的 AI」到「42 问答」标题的距离从 **252px → 122px**
+- /questions：首屏底部内边距从 40px 降到 20px，过渡区从 130px 降到 96px，后面栏目顶部内边距同样是 12px
+
+**过渡**
+- 首页：原来是 88px 的线性渐变，改为 80px 的 smootherstep 缓动 alpha 渐变（13 个色标），星空在渐变里自然消失，看不出明显的分界
+- /questions：原来是 3 色标线性渐变，中间有一条突兀的亮蓝带，改为 13 色标缓动渐变，中段经过深蓝 → 浅灰蓝，不会发灰；星点在上部 70% 内逐渐消失
+
+**发出问题按键（`FortyTwoTerminal.tsx`）**
+- 改用 `aria-disabled`（不再用 `disabled`）：被禁用的按钮收不到指针事件，这样字数不够时按下去也能给出反馈；`publish()` 自身的拦截逻辑没变
+- 按住：键帽下沉 4px，底边阴影消失；松开：有回弹过冲的动画（`q42-key-release`）
+- 键盘 Enter、空格或 Ctrl/⌘ + Enter 发布时，播放完整的下沉再弹起动画（`q42-key-strike`）
+- 字数不够时：按键只下沉 2px，然后左右晃一下；提示文字闪成琥珀色并抖一下，电源灯闪红（`q42-key-deny`）
+- 屏幕跟着反应：成功按下时，屏幕亮一下（`q42-screen-kick`），电源灯瞬间变亮
+- 声音：用 Web Audio 合成一声很轻的「咔嗒」（噪声加低频），第一次按下时才创建；不支持就跳过
+- 震动：手机上用 `navigator.vibrate` 给一次短震（字数不够时连震两下）
+- 开启「减少动态效果」时，关闭全部按键和屏幕动画
+
+**验收**
+- [ ] 首页、/questions 在电脑和手机上首屏到下方内容没有大片空白，过渡看不出分界
+- [ ] 字数不够时点按键：只下沉一半，有晃动，提示变琥珀色，电源灯闪红，不会发出问题
+- [ ] 满 5 个字后按住：键帽下沉；松开时回弹，有「咔嗒」声，屏幕亮一下
+- [ ] Ctrl/⌘ + Enter 和 Tab 聚焦后按空格都有按键动画；中文输入法选词时不会触发
+- [ ] 读屏软件把未满 5 字时的按键读作"不可用"（因为用了 aria-disabled）
+
+**风险点**：`keyFeedback` 用了 `requestAnimationFrame` 重新触发动画；`navigator.vibrate?.()` 在 TS 里类型没问题；如果 eslint 不允许 `??=`，改成 `if (!keyAudio) keyAudio = new AC()`。
+
+## 十一、追加：路过 agent 实地测试发现的 3 个问题（2026-11-24）
+
+报告见 `docs/agent-field-test-sojourn-2026-11-24.md`。代码已改，**未提交、未编译**：
+
+```bash
+git add lib/human-only.ts lib/human-only.test.ts app/api/invite/route.ts \
+  "app/api/questions/[id]/answers/[answerId]/comments/route.ts" \
+  "app/api/questions/[id]/answers/[answerId]/reactions/route.ts" \
+  "app/api/questions/[id]/answers/[answerId]/helpful/route.ts" \
+  "app/api/questions/[id]/followups/route.ts" "app/api/questions/[id]/route.ts" \
+  app/api/questions/route.ts app/api/human-profile/route.ts \
+  docs/agent-field-test-sojourn-2026-11-24.md HANDOFF_2026-11-22_QUICK.md
+git commit -m "fix(api): invite registrations count as campaign conversions; specific answer-comment validation errors; 403 human_only for agent keys on human endpoints"
+```
+
+| # | 问题 | 改动 |
+|---|---|---|
+| 1 | 邀请注册不计入 campaign 漏斗（`registrations=0`） | `app/api/invite/route.ts` 注册成功后调用 `recordConversion(request,'register')`，响应里加 `attribution`，和 `/api/authors` 一致 |
+| 2 | 回答评论校验失败只返回 `Invalid comment body` | 逐字段校验，返回 `field` 和完整的 `rules`（interaction_type 可选值、disagreement_code 什么时候必填和可选值、Idempotency-Key 必填，并注明作品评论用的是 `intent`）；非法 JSON 返回 400，原来是 500 |
+| 3 | agent 调用人类专用接口返回 401，看起来像 key 失效 | 新增 `lib/human-only.ts` 的 `humanAuthRequired()`：带 `Bearer tn_` 的请求返回 **403 `code: human_only`**，并提示 key 没问题、agent 可以做什么；其他情况仍是 401。覆盖 10 个处理函数：reactions POST/DELETE、helpful PUT/DELETE、followups POST、questions/[id] PATCH/DELETE、questions POST、human-profile GET/PUT |
+
+**验收**
+- [ ] 用 Sojourn 的 key（`E:\2nothing.com\sojourn.keys.local.json`）调用 `POST .../reactions`，返回 403 `human_only`；不带 key 返回 401
+- [ ] `POST .../comments` 带 `{"content":"x","interaction_type":"disagreement"}`，返回 400 `field: "disagreement_code"`，并附带 rules
+- [ ] 新开一个带 ref 的邀请码完成注册后，`GET /api/campaigns?ref=...` 里 registrations 加 1
+- [ ] `npm run test` 包含新的 `lib/human-only.test.ts`（2 个用例）
+
+**注意**：`/api/questions?mine=1` 未登录时仍返回原来的 401 文案（没有经过新的 helper）。`openapi.json` 和 `generate_openapi.py` 里这些接口的 403 响应还没补，可以顺手补上。
+
+## 十二、追加：API 版本 2.7.3 与文档同步（2026-11-24）
+
+和第十一节一起提交：
+
+```bash
+git add lib/version.ts app/api/version/route.ts README.md public/openapi.json public/.well-known/openapi.json public/llms.txt
+git commit -m "chore(api): 2.7.3 — changelog, OpenAPI 403 human_only + answer-comment 400 rules, llms.txt comment field notes"
+npm run check:contracts   # 两份 OpenAPI 必须完全一致，版本要和 lib/version.ts、README 对得上
+```
+
+- `lib/version.ts`：2.7.2 → **2.7.3**，更新日期 2026-11-24
+- `app/api/version/route.ts` changelog 新增 2.7.3：注册先校验后计数、邀请计入统计、回答评论报错细化、human_only 403、works 默认 50、搜索转义、写接口限流、409 不再泄露信息、api_key 哈希的前期准备。**breaking**：人类专用接口对 agent key 的返回从 401 改为 403
+- OpenAPI（两份文件写入的字节完全相同，格式和原文件一致，diff 只包含实际改动）：`info.version` 改为 2.7.3；10 个人类专用操作补上 401/403 `human_only`；回答评论 POST 补上 400（`field` + `rules`）；`POST /api/invite` 说明会返回 `attribution`
+- README 徽章改为 2.7.3
+- `llms.txt`：写明作品评论用 `intent`、回答评论用 `interaction_type`/`disagreement_code` 并且要带 Idempotency-Key，以及 human_only 403 的含义
+
+**注意**：changelog 里 api_key 哈希只写成"前期准备"。`sql/api_key_hash_2026_11.sql` 在生产环境执行并验证之前，不要写成"已全部哈希存储"。
+
+## 十三、追加：人类侧问题修复（2026-11-24）
+
+测试记录见 `docs/agent-field-test-sojourn-2026-11-24.md`「人类那一侧」一节。代码已改，**未提交、未编译**：
+
+```bash
+git add components/QuestionDetail.tsx components/QuestionDetail.module.css components/OperatorClient.tsx \
+  "app/api/questions/[id]/answers/route.ts" public/openapi.json public/.well-known/openapi.json app/api/version/route.ts
+git commit -m "fix(42): closed-topic page copy, pending state on recognise/helpful, in-page close confirm, 409 question_closed, zh operator console, no nested <main>"
+```
+
+| 问题 | 改动 |
+|---|---|
+| 已结束的问题页文案自相矛盾 | 已结束时不再显示「问题已发布，等待 AI 回答」，改为显示「本题已结束…已有回答保持公开」；没有回答时显示「本题已结束，没有收到 AI 回答」；隐藏「邀请一个 AI」和 AGENT CHANNEL 接入说明 |
+| 认可、有帮助没有加载态，可以连点 | 新增 `pending` 状态：请求期间所有这类按钮都禁用，正在处理的那个显示「处理中…」并带 `aria-busy`；认可按钮加 `aria-pressed` |
+| 结束本题用原生 `confirm()` | 改成页内确认框（`role=alertdialog`），文案写明「结束后不能重新开放」，默认焦点在「取消」，结束过程中显示「正在结束…」 |
+| agent 回答已结束的问题返回 404 | `POST /api/questions/{id}/answers`：不存在返回 404 `question_not_found`；已结束返回 **409 `question_closed`**，并附带去哪里找开放问题的提示（OpenAPI 和 changelog 已同步，列为 breaking） |
+| 控制台没有中文 | `OperatorClient.tsx` 新增 `L` 文案表（约 50 条），29 个文本节点、按钮状态、漏斗标签、placeholder、aria-label、alert 都支持中英文。给 agent 看的接入说明**故意保留英文** |
+| 问题详情页嵌套 `<main>` | `QuestionDetail` 的 3 处 `<main>` 改成 `<div>`（layout 已经提供 `<main>`） |
+
+**不是 bug，已从清单删除**：控制台「我的问题」回答数是旧的、已邀请 agent 列表里没有 Sojourn——都是测试时那个标签页打开得早，刷新后显示正确（💬 2，已邀请 10 个，包含 Sojourn）。
+
+**还没查清**：第一次点「发布追问」没有发出请求。代码里 `postFollowup` 只在 `followup.trim()` 为空时提前返回。我是用自动化工具输入文字的，可能 React 状态还没更新就点了，不一定是真实用户会遇到的问题。请用真实键盘输入复现一次。
+
+**验收**
+- [ ] 打开已结束的测试问题 `/questions/9f214322-46be-4644-8e27-3548047be41c`：显示结束提示，没有邀请区和 AGENT CHANNEL
+- [ ] 认可、有帮助点击后立刻显示「处理中…」，期间点不动
+- [ ] 结束本题：先出现页内确认框；点「取消」恢复原样；点「确认结束」后状态变为已结束
+- [ ] 用 Sojourn 的 key 回答上面这个已结束的问题，返回 409 `question_closed`
+- [ ] 中文模式下 `/operator` 是中文
+- [ ] 问题详情页只有 1 个 `<main>`
+
+## 十四、追加：全站 UI、配色、交互统一（2026-11-24）
+
+代码已改，**未提交、未编译**。CSS 和导航效果已在线上注入预览过（`/feed`），正文渲染器的改动只能等部署后验证。
+
+```bash
+git add components/RichContent.tsx lib/work-card-preview.ts \
+  components/WorkChrome.tsx components/PageHeading.tsx components/T.tsx \
+  "app/works/[id]/page.tsx" app/agents/page.tsx "app/agents/[id]/page.tsx" \
+  components/FollowButton.tsx components/InviteCTA.tsx components/FeedClient.tsx components/MobileNav.tsx \
+  app/globals.css HANDOFF_2026-11-22_QUICK.md
+git commit -m "feat(ui): markdown rendering for works/answers, bilingual work/agent pages, unified buttons/nav/focus, card previews keep hyphens"
+```
+
+| 问题 | 改动 |
+|---|---|
+| **正文 Markdown 不渲染**：`**加粗**`、`` `代码` ``、`[链接](url)`、`## 标题`、列表、引用都显示成原始符号 | `components/RichContent.tsx` 重写为安全的 Markdown 子集：段落、h2–h4、引用、有序/无序列表、代码块、分隔线、加粗、行内代码、http(s) 链接（`rel=noopener nofollow ugc`）、自动识别网址。全部用 React 节点渲染，不使用 innerHTML。原有的图片、@提及、#标签保留 |
+| 中文名 @提及不能点（如 @明日前夜） | 按已知 agent 名做最长前缀匹配；边界规则放宽，中文紧挨 @ 也能识别，邮箱不会被误判 |
+| 卡片摘要把 `2026-11-24` 变成 `2026 11 24`、`GPT-5` 变成 `GPT 5` | `lib/work-card-preview.ts` 只去掉 Markdown 语法，不再整类删除 `- * _ #` 字符 |
+| 作品页封面图重复出现（正文里嵌了一次，下面又显示一次） | 正文已包含同一张图时不再单独显示封面 |
+| 作品页英文残留：`<- Back to journal`、`JOURNAL`、英文日期、Agent-authored declaration、View Profile | 新增 `components/WorkChrome.tsx`（返回链接、类型、日期、声明、查看主页都支持中英文） |
+| 作者列表、作者主页英文残留 | 新增 `PageHeading` 和 `T`（服务端页面用的中英文小组件）；作者主页 13 处文案和统计标签改为中英文；`FollowButton` 的关注、粉丝、互相关注、已关注支持中英文 |
+| 作者主页统计挤在一行，粉丝/关注字号和其他不一致 | 统计区可以换行，数字和标签字号统一（1.05rem / 0.75rem） |
+| 导航里「控制台」和当前页同样是蓝色加粗，看起来像有两个当前页 | 「控制台」改为描边胶囊；当前页加下划线和 `aria-current="page"` |
+| 「公开邀请」区块全是英文；`<a>` 和 `<button>` 按钮高度不一 | `InviteCTA` 支持中英文；`.btn-primary/.btn-secondary` 统一为 44px 高的 inline-flex；去掉和筛选栏重复的分隔线 |
+| 手机菜单的标签和副标题是英文 | `MobileNav` 的 aria-label 和副标题支持中英文 |
+| 配色和交互状态零散 | `globals.css` 追加「site polish」一节：`--ink/--muted/--border/--surface` 等色板（muted 从 #666 改为 #5c6780，对比度 5.6:1）、键盘焦点环、鼠标点击不显示焦点框、选中文字颜色、徽章不再全大写、长单词换行 |
+
+**验收**
+- [ ] 打开 Sojourn 的作品 `/works/752c5606-…`：开头的「站长要求的实地测试｜2026-11-24。」是加粗，没有 `**`；`field: "bio"` 是行内代码；@Palimpsest、@Tidewatch 可以点；配图只出现一次
+- [ ] 明日前夜的作品里 `mcp-server/` 等反引号显示成代码样式；列表、引用正常
+- [ ] `/feed` 卡片摘要里的日期保留连字符
+- [ ] 中文模式下作品页、作者列表、作者主页没有英文残留
+- [ ] 导航只有当前页带下划线；「控制台」是胶囊样式
+- [ ] Tab 键能看到蓝色焦点环，鼠标点击不出现焦点框
+
+**typecheck 风险点**：`RichContent.tsx` 里 `const Tag = (...) as 'h2' | 'h3' | 'h4'` 和 `const List = ordered ? 'ol' : 'ul'` 是动态标签，需要 React 类型推断正常；`renderInline` 是递归调用；`app/agents/[id]/page.tsx` 的统计数组改了字段名（`label` 改为 `key/en/zh`）。
