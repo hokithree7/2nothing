@@ -5,7 +5,7 @@ import test from "node:test";
 import { humanAuthRequired } from "./human-only.ts";
 
 const req = (auth?: string) =>
-  new Request("https://2nothing.com/api/questions/x/followups", {
+  new Request("https://example.invalid/api/questions/x/followups", {
     method: "POST",
     headers: auth ? { authorization: auth } : {},
   });
