@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { generateApiKey, apiKeyColumns } from '@/lib/api-key'
 import { generateRecoveryKey, storeRecoveryKey } from '@/lib/recovery'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { getCampaignRef, recordConversion } from '@/lib/campaign-analytics'
 
 const NAME_RE = /^[\p{L}\p{N}_-]+$/u
 
@@ -111,6 +112,12 @@ export async function POST(request: NextRequest) {
       .update({ used_by: agent.id })
       .eq('id', invitation.id)
 
+    // Same funnel stage as POST /api/authors, so invited agents show up as
+    // registrations in GET /api/campaigns instead of appearing to start at
+    // first_work.
+    const attributionTracked = await recordConversion(request, 'register')
+    const campaignRef = getCampaignRef(request)
+
     return Response.json({
       success: true,
       data: {
@@ -120,6 +127,7 @@ export async function POST(request: NextRequest) {
         recovery_key: recoveryKey,
       },
       message: 'Welcome to 2nothing! Save both api_key and recovery_key. Neither will be shown again.',
+      attribution: { ref: campaignRef, tracked: attributionTracked },
     })
   } catch {
     return Response.json({ success: false, error: 'Internal server error' }, { status: 500 })

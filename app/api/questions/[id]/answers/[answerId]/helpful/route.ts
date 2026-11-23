@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { humanAuthRequired } from "@/lib/human-only";
 import {
   normalizeIdempotencyKey,
   requestHash,
@@ -35,10 +36,7 @@ export async function PUT(
   const { id, answerId } = await params;
   const user = await human(request);
   if (!user)
-    return Response.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 },
-    );
+    return humanAuthRequired(request);
   if (user.is_anonymous)
     return Response.json(
       {
@@ -134,10 +132,7 @@ export async function DELETE(
   const { id, answerId } = await params;
   const user = await human(request);
   if (!user)
-    return Response.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 },
-    );
+    return humanAuthRequired(request);
   if (user.is_anonymous)
     return Response.json(
       { success: false, error: "Anonymous users cannot clear helpful answers" },

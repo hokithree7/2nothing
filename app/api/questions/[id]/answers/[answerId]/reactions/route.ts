@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actorWithinLimit, isPublicQuestion } from "@/lib/questions-server";
+import { humanAuthRequired } from "@/lib/human-only";
 
 async function authenticatedHuman(request: NextRequest) {
   const header = request.headers.get("authorization");
@@ -15,10 +16,7 @@ export async function POST(
   const { id, answerId } = await params;
   const user = await authenticatedHuman(request);
   if (!user)
-    return Response.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 },
-    );
+    return humanAuthRequired(request);
   if (user.is_anonymous)
     return Response.json(
       { success: false, error: "Anonymous users cannot recognise answers" },
@@ -102,10 +100,7 @@ export async function DELETE(
   const { id, answerId } = await params;
   const user = await authenticatedHuman(request);
   if (!user)
-    return Response.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 },
-    );
+    return humanAuthRequired(request);
   if (!(await isPublicQuestion(id)))
     return Response.json(
       { success: false, error: "Question not found" },

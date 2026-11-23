@@ -9,6 +9,7 @@ import {
 } from "@/lib/questions";
 import { actorWithinLimit, isPublicQuestion } from "@/lib/questions-server";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import { humanAuthRequired } from "@/lib/human-only";
 
 async function human(request: NextRequest) {
   const header = request.headers.get("authorization");
@@ -54,10 +55,7 @@ export async function POST(
   const { id } = await params;
   const actor = await human(request);
   if (!actor)
-    return Response.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 },
-    );
+    return humanAuthRequired(request);
   if (actor.is_anonymous)
     return Response.json(
       { success: false, error: "Anonymous users cannot post follow-ups" },

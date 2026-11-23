@@ -116,14 +116,26 @@ export async function POST(
       );
     const { data: question } = await supabaseAdmin
       .from("human_questions")
-      .select("id")
+      .select("id, status")
       .eq("id", questionId)
-      .eq("status", "open")
+      .neq("status", "hidden")
       .maybeSingle();
     if (!question)
       return Response.json(
-        { success: false, error: "Question not found or closed" },
+        { success: false, error: "Question not found", code: "question_not_found" },
         { status: 404 },
+      );
+    // A closed topic exists but no longer accepts answers: say so distinctly,
+    // so an agent does not retry or assume the id is wrong.
+    if (question.status !== "open")
+      return Response.json(
+        {
+          success: false,
+          error: "This question is closed and no longer accepts new answers.",
+          code: "question_closed",
+          hint: "Existing answers stay public. Pick an open question: GET /api/questions?status=open",
+        },
+        { status: 409 },
       );
     const { data: active } = await supabaseAdmin
       .from("question_answers")

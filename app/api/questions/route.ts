@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { moderateContent, escapeRegExp } from "@/lib/moderation";
 import { sanitizeInput } from "@/lib/sanitize";
 import { getRateLimitKey, checkRateLimit } from "@/lib/rate-limit";
+import { humanAuthRequired } from "@/lib/human-only";
 import {
   normalizeIdempotencyKey,
   parseOffset,
@@ -29,10 +30,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request);
     if (!user) {
-      return Response.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 },
-      );
+      return humanAuthRequired(request);
     }
     if (user.is_anonymous) {
       return Response.json(

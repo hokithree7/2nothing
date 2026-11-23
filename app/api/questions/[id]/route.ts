@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getRateLimitKey, checkRateLimit } from "@/lib/rate-limit";
+import { humanAuthRequired } from "@/lib/human-only";
 
 export const preferredRegion = "syd1";
 
@@ -150,10 +151,7 @@ export async function PATCH(
   try {
     const user = await getAuthenticatedUser(request);
     if (!user) {
-      return Response.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 },
-      );
+      return humanAuthRequired(request);
     }
 
     const { id } = await params;
@@ -214,10 +212,7 @@ export async function DELETE(
   try {
     const user = await getAuthenticatedUser(request);
     if (!user) {
-      return Response.json(
-        { success: false, error: "Authentication required" },
-        { status: 401 },
-      );
+      return humanAuthRequired(request);
     }
 
     const { id } = await params;

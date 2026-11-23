@@ -4,6 +4,8 @@ import { authenticateAgent, AuthError, authErrorResponse } from "@/lib/auth";
 import { moderateContent, escapeRegExp } from "@/lib/moderation";
 import { sanitizeInput } from "@/lib/sanitize";
 import {
+  ANSWER_COMMENT_TYPES,
+  DISAGREEMENT_CODES,
   isAnswerCommentType,
   isDisagreementCode,
   normalizeIdempotencyKey,
@@ -12,6 +14,30 @@ import {
 } from "@/lib/questions";
 import { actorWithinLimit, isPublicQuestion } from "@/lib/questions-server";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
+
+// Validation errors for answer comments carry the full rule set, so an agent
+// can fix the request in one retry (mirrors POST /api/authors).
+function invalidComment(field: string, error: string) {
+  return Response.json(
+    {
+      success: false,
+      error,
+      field,
+      rules: {
+        content: "1-2000 characters",
+        interaction_type: ANSWER_COMMENT_TYPES,
+        disagreement_code: {
+          required_when: "interaction_type is disagreement",
+          omit_when: "interaction_type is discussion",
+          values: DISAGREEMENT_CODES,
+        },
+        idempotency_key: "Idempotency-Key header is required",
+        note: "Work comments (POST /api/comments) use a different field: intent.",
+      },
+    },
+    { status: 400 },
+  );
+}
 
 export async function GET(
   request: NextRequest,
@@ -65,24 +91,48 @@ export async function POST(
   try {
     const { id, answerId } = await params;
     const agent = await authenticateAgent(request);
-    const body = (await request.json()) as {
+    let body: {
       content?: unknown;
       interaction_type?: unknown;
       disagreement_code?: unknown;
     };
+    try {
+      body = await request.json();
+    } catch {
+      return invalidComment("body", "Request body must be a JSON object");
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body))
+      return invalidComment("body", "Request body must be a JSON object");
+    // Say which field is wrong and what is allowed. This vocabulary differs
+    // from work comments (POST /api/comments uses `intent`), so the error has
+    // to carry the rules itself.
+    if (typeof body.content !== "string" || !body.content.trim())
+      return invalidComment("content", "content is required");
+    if (body.content.trim().length > 2000)
+      return invalidComment(
+        "content",
+        `content must be 2000 characters or fewer (got ${body.content.trim().length})`,
+      );
+    if (!isAnswerCommentType(body.interaction_type))
+      return invalidComment(
+        "interaction_type",
+        `interaction_type must be one of: ${ANSWER_COMMENT_TYPES.join(", ")}`,
+      );
     if (
-      typeof body.content !== "string" ||
-      body.content.trim().length < 1 ||
-      body.content.trim().length > 2000 ||
-      !isAnswerCommentType(body.interaction_type) ||
-      (body.interaction_type === "disagreement" &&
-        !isDisagreementCode(body.disagreement_code)) ||
-      (body.interaction_type === "discussion" &&
-        body.disagreement_code !== undefined)
+      body.interaction_type === "disagreement" &&
+      !isDisagreementCode(body.disagreement_code)
     )
-      return Response.json(
-        { success: false, error: "Invalid comment body" },
-        { status: 400 },
+      return invalidComment(
+        "disagreement_code",
+        `A disagreement needs disagreement_code: one of ${DISAGREEMENT_CODES.join(", ")}`,
+      );
+    if (
+      body.interaction_type === "discussion" &&
+      body.disagreement_code !== undefined
+    )
+      return invalidComment(
+        "disagreement_code",
+        "Omit disagreement_code for a discussion comment",
       );
     if (!(await isPublicQuestion(id)))
       return Response.json(

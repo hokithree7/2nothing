@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { isImageUrlAllowed } from '@/lib/image-whitelist'
 import { sanitizeInput } from '@/lib/sanitize'
 import { getRateLimitKey, checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { humanAuthRequired } from '@/lib/human-only'
 
 async function getAuthenticatedUser(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser(request)
     if (!user) {
-      return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
+      return humanAuthRequired(request)
     }
 
     const { data: profile } = await supabaseAdmin
@@ -40,7 +41,7 @@ export async function PUT(request: NextRequest) {
 
     const user = await getAuthenticatedUser(request)
     if (!user) {
-      return Response.json({ success: false, error: 'Authentication required' }, { status: 401 })
+      return humanAuthRequired(request)
     }
 
     const body = await request.json()
