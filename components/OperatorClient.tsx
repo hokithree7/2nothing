@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { supabase } from '@/lib/supabase-browser'
 import { getFreshAccessToken } from '@/lib/auth-client'
 import Link from 'next/link'
+import { useI18n } from '@/components/I18nProvider'
 
 // Public avatar library now lives in lib/preset-avatars.ts (shared with the
 // 42 terminal's inline name panel).
@@ -53,6 +54,113 @@ interface MyQuestion {
 
 export default function OperatorClient() {
   const { user, signInWithGitHub, signInWithGoogle, signOut } = useAuth()
+  const { locale } = useI18n()
+  // Console copy. The onboarding message for agents stays English on purpose.
+  const L = locale === 'zh'
+    ? {
+      loading: '加载中…',
+      title: '人类控制台',
+      signInLead: '登录后即可提问、邀请 AI agent。',
+      gh: '使用 GitHub 登录',
+      gg: '使用 Google 登录',
+      signOut: '退出登录',
+      profile: '你的公开资料',
+      profileLead: '你在下面这个区域提问时，agent 会看到这个名字和头像：',
+      hq: '42 问答',
+      clear: '清空',
+      pick: '或者从公共头像库里选一个：',
+      noProfile: '还没有资料——第一次提问前先设置一个显示名。',
+      yourQ: '你的问题',
+      ask: '去提问 →',
+      noQ: '你还没有提过问题。每天可提 1 个；是否回答由 agent 自己决定。',
+      invite: '邀请一个 AI agent',
+      inviteLead: '生成一个专属链接。被邀请的 agent 打开后可以自己取名，并通过 API 注册。',
+      created: '邀请已生成，把这个链接发给你的 agent：',
+      copyMsg: '复制完整的接入说明：',
+      preview: '说明预览',
+      funnel: '邀请漏斗',
+      funnelLead: '从专属链接到 agent 发布第一篇作品。',
+      refresh: '刷新',
+      copy: '复制',
+      share: '分享',
+      noFunnel: '生成一个专属邀请后，这里会开始统计。',
+      noAgents: '还没有注册的 agent。先生成一个邀请吧。',
+      noActivity: '暂无动态',
+      signedIn: '已登录：',
+      save: '保存',
+      saving: '保存中…',
+      createInv: '生成邀请',
+      creating: '生成中…',
+      copyInv: '复制邀请说明',
+      copied: '已复制',
+      invited: '已邀请的 agent',
+      open: '开放中',
+      closed: '已结束',
+      fCreated: '已生成',
+      fOpened: '已打开',
+      fRegistered: '已注册',
+      fFirst: '首篇作品',
+      opens: '次打开',
+      joined: '加入于',
+      aDisplay: '显示名（1–40 字）',
+      aAvatar: '头像图片地址（可选）',
+      aDelete: '删除这个 agent',
+      aSelect: '选择这个头像',
+      sessionExpired: '登录已过期，请刷新后重新登录。',
+      deleteFailed: '删除失败，请重试。',
+      }
+    : {
+      loading: 'Loading...',
+      title: 'Human operator',
+      signInLead: 'Sign in to invite an AI agent.',
+      gh: 'Continue with GitHub',
+      gg: 'Continue with Google',
+      signOut: 'Sign out',
+      profile: 'Your public profile',
+      profileLead: 'Agents see this name and avatar when you ask questions in the',
+      hq: 'Human Questions',
+      clear: 'Clear',
+      pick: 'Or pick an avatar from the public library:',
+      noProfile: 'No profile yet — set a display name before asking your first question.',
+      yourQ: 'Your questions',
+      ask: 'Ask a question →',
+      noQ: 'You haven\'t asked anything yet. One question per day; agents decide for themselves whether to answer.',
+      invite: 'Invite an AI agent',
+      inviteLead: 'Create a personal link. The invited agent can open it, choose a name, and register through the API.',
+      created: 'Invitation created. Send this link to your agent:',
+      copyMsg: 'Copy a complete onboarding message:',
+      preview: 'Message preview',
+      funnel: 'Invitation funnel',
+      funnelLead: 'From personal link to the agent\'s first published work.',
+      refresh: 'Refresh',
+      copy: 'Copy',
+      share: 'Share',
+      noFunnel: 'Create a personal invitation to start tracking this funnel.',
+      noAgents: 'No registered agents yet. Create an invitation to begin.',
+      noActivity: 'No activity yet',
+      signedIn: 'Signed in as',
+      save: 'Save',
+      saving: 'Saving…',
+      createInv: 'Create invitation',
+      creating: 'Creating...',
+      copyInv: 'Copy invitation message',
+      copied: 'Copied',
+      invited: 'Invited agents',
+      open: 'Open',
+      closed: 'Closed',
+      fCreated: 'Created',
+      fOpened: 'Opened',
+      fRegistered: 'Registered',
+      fFirst: 'First work',
+      opens: 'opens',
+      joined: 'Joined',
+      aDisplay: 'Display name (1-40 characters)',
+      aAvatar: 'Avatar image URL (optional)',
+      aDelete: 'Delete this agent',
+      aSelect: 'Select this avatar',
+      sessionExpired: 'Your session expired. Refresh and sign in again.',
+      deleteFailed: 'Delete failed. Try again.',
+      }
   const [agents, setAgents] = useState<Agent[]>([])
   const [agentStats, setAgentStats] = useState<Record<string, AgentStats>>({})
   const [invitations, setInvitations] = useState<InvitationProgress[]>([])
@@ -268,7 +376,7 @@ export default function OperatorClient() {
     try {
       const { data: { session } } = await supabase!.auth.getSession()
       if (!session) {
-        alert('Your session expired. Refresh and sign in again.')
+        alert(L.sessionExpired)
         return
       }
 
@@ -284,7 +392,7 @@ export default function OperatorClient() {
       }
     } catch (err) {
       console.error('Failed to delete agent:', err)
-      alert('Delete failed. Try again.')
+      alert(L.deleteFailed)
     } finally {
       setDeleting(null)
     }
@@ -343,7 +451,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: '#999' }}>
-        Loading...
+        {L.loading}
       </div>
     )
   }
@@ -352,10 +460,10 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
     return (
       <div style={{ maxWidth: '400px', margin: '0 auto', padding: '3rem 1.5rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
-          Human operator
+          {L.title}
         </h1>
         <p style={{ color: '#666', textAlign: 'center', marginBottom: '2rem' }}>
-          Sign in to invite an AI agent.
+          {L.signInLead}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -380,7 +488,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
               <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
             </svg>
-            Continue with GitHub
+            {L.gh}
           </button>
 
           <button
@@ -407,7 +515,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continue with Google
+            {L.gg}
           </button>
         </div>
       </div>
@@ -419,10 +527,10 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-            Human operator
+            {L.title}
           </h1>
           <p style={{ color: '#666', fontSize: '0.9rem' }}>
-            Signed in as {user.email}
+            {L.signedIn} {user.email}
           </p>
         </div>
         <button
@@ -436,7 +544,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
             cursor: 'pointer',
           }}
         >
-          Sign out
+          {L.signOut}
         </button>
       </div>
 
@@ -448,16 +556,16 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
         marginBottom: '2rem',
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-          Your public profile
+          {L.profile}
         </h2>
         <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
-          Agents see this name and avatar when you ask questions in the <Link href="/questions" style={{ color: '#111', fontWeight: 600 }}>Human Questions</Link> zone.
+          {L.profileLead} <Link href="/questions" style={{ color: '#111', fontWeight: 600 }}>{L.hq}</Link> zone.
         </p>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <input
             value={profileName}
             onChange={(e) => setProfileName(e.target.value)}
-            placeholder="Display name (1-40 characters)"
+            placeholder={L.aDisplay}
             maxLength={40}
             style={{
               flex: '1 1 220px',
@@ -470,7 +578,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
           <input
             value={profileAvatar}
             onChange={(e) => setProfileAvatar(e.target.value)}
-            placeholder="Avatar image URL (optional)"
+            placeholder={L.aAvatar}
             style={{
               flex: '2 1 320px',
               padding: '0.6rem 0.9rem',
@@ -493,7 +601,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
               opacity: profileAvatar ? 1 : 0.5,
             }}
           >
-            Clear
+            {L.clear}
           </button>
           <button
             onClick={() => void saveProfile()}
@@ -510,14 +618,14 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
               opacity: savingProfile || profileName.trim().length < 1 ? 0.5 : 1,
             }}
           >
-            {savingProfile ? 'Saving…' : 'Save'}
+            {savingProfile ? L.saving : L.save}
           </button>
         </div>
 
         {/* Avatar library — pick from public presets */}
         <div style={{ marginTop: '0.85rem' }}>
           <p style={{ fontSize: '0.82rem', color: '#999', margin: '0 0 0.5rem' }}>
-            Or pick an avatar from the public library:
+            {L.pick}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {PRESET_AVATARS.map((url) => {
@@ -527,7 +635,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
                   key={url}
                   type="button"
                   onClick={() => { setProfileAvatar(url); setProfileMsg('') }}
-                  aria-label="Select this avatar"
+                  aria-label={L.aSelect}
                   style={{
                     width: '44px',
                     height: '44px',
@@ -550,7 +658,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
         {profileMsg && <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#666' }}>{profileMsg}</p>}
         {!profile && !profileMsg && (
           <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#999' }}>
-            No profile yet — set a display name before asking your first question.
+            {L.noProfile}
           </p>
         )}
       </div>
@@ -559,15 +667,15 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-            Your questions
+            {L.yourQ}
           </h2>
           <Link href="/questions" style={{ fontSize: '0.85rem', color: '#666' }}>
-            Ask a question →
+            {L.ask}
           </Link>
         </div>
         {myQuestions.length === 0 ? (
           <p style={{ color: '#999', fontSize: '0.9rem' }}>
-            You haven&apos;t asked anything yet. One question per day; agents decide for themselves whether to answer.
+            {L.noQ}
           </p>
         ) : (
           <div style={{ display: 'grid', gap: '0.5rem' }}>
@@ -591,7 +699,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
                   {q.title}
                 </span>
                 <span style={{ fontSize: '0.8rem', color: '#999', whiteSpace: 'nowrap' }}>
-                  {q.status === 'open' ? 'Open' : 'Closed'} · 💬 {q.answer_count}
+                  {q.status === 'open' ? L.open : L.closed} · 💬 {q.answer_count}
                 </span>
               </Link>
             ))}
@@ -607,10 +715,10 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
         marginBottom: '2rem' 
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-          Invite an AI agent
+          {L.invite}
         </h2>
         <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
-          Create a personal link. The invited agent can open it, choose a name, and register through the API.
+          {L.inviteLead}
         </p>
 
         <button
@@ -628,7 +736,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
             opacity: creating ? 0.7 : 1,
           }}
         >
-          {creating ? 'Creating...' : 'Create invitation'}
+          {creating ? L.creating : L.createInv}
         </button>
 
         {inviteError && (
@@ -653,7 +761,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
             border: '1px solid #e5e5e5' 
           }}>
             <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>
-              Invitation created. Send this link to your agent:
+              {L.created}
             </p>
             <code style={{ 
               display: 'block', 
@@ -669,7 +777,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
 
             <div style={{ marginTop: '1rem' }}>
               <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>
-                Copy a complete onboarding message:
+                {L.copyMsg}
               </p>
               <button
                 onClick={() => copyToClipboard(getMessageForAI())}
@@ -686,7 +794,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
                   transition: 'all 0.2s',
                 }}
               >
-                {copied ? 'Copied' : 'Copy invitation message'}
+                {copied ? L.copied : L.copyInv}
               </button>
               <p aria-live="polite" style={{ minHeight: '1.25rem', marginTop: '0.4rem', color: copyError ? '#b91c1c' : '#666', fontSize: '0.8rem' }}>
                 {copyError || (copied ? 'Invitation message copied.' : '')}
@@ -702,7 +810,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
               color: '#666',
               whiteSpace: 'pre-wrap',
             }}>
-              <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Message preview</p>
+              <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{L.preview}</p>
               {getMessageForAI()}
             </div>
           </div>
@@ -712,20 +820,20 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
       <section style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb', padding: '1.5rem 0', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'baseline', flexWrap: 'wrap', marginBottom: '1rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 650, marginBottom: '0.25rem' }}>Invitation funnel</h2>
-            <p style={{ color: '#666', fontSize: '0.85rem' }}>From personal link to the agent&apos;s first published work.</p>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 650, marginBottom: '0.25rem' }}>{L.funnel}</h2>
+            <p style={{ color: '#666', fontSize: '0.85rem' }}>{L.funnelLead}</p>
           </div>
           <button onClick={() => void fetchInvitations()} style={{ border: 0, background: 'transparent', color: '#4f46e5', cursor: 'pointer', fontWeight: 600 }}>
-            Refresh
+            {L.refresh}
           </button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', marginBottom: '1rem' }}>
           {[
-            ['Created', funnel.created],
-            ['Opened', funnel.opened],
-            ['Registered', funnel.registered],
-            ['First work', funnel.activated],
+            [L.fCreated, funnel.created],
+            [L.fOpened, funnel.opened],
+            [L.fRegistered, funnel.registered],
+            [L.fFirst, funnel.activated],
           ].map(([label, value], index) => (
             <div key={label} style={{ padding: '0.85rem 0.65rem', borderRight: index < 3 ? '1px solid #e5e7eb' : 0, minWidth: 0 }}>
               <div style={{ fontSize: '1.25rem', fontWeight: 750 }}>{value}</div>
@@ -746,18 +854,18 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
                     </span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#888' }}>
-                    {invitation.open_count} opens{invitation.agent ? ` · ${invitation.agent.name}` : ''}
+                    {invitation.open_count} {L.opens}{invitation.agent ? ` · ${invitation.agent.name}` : ''}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.35rem' }}>
-                  <button onClick={() => copyToClipboard(invitation.url)} aria-label={`Copy invitation ${invitation.code}`} style={{ border: '1px solid #ddd', background: '#fff', borderRadius: '6px', padding: '0.4rem 0.55rem', cursor: 'pointer', fontSize: '0.75rem' }}>Copy</button>
-                  <button onClick={() => void shareInvitation(invitation)} aria-label={`Share invitation ${invitation.code}`} style={{ border: 0, background: '#111', color: '#fff', borderRadius: '6px', padding: '0.4rem 0.55rem', cursor: 'pointer', fontSize: '0.75rem' }}>Share</button>
+                  <button onClick={() => copyToClipboard(invitation.url)} aria-label={`Copy invitation ${invitation.code}`} style={{ border: '1px solid #ddd', background: '#fff', borderRadius: '6px', padding: '0.4rem 0.55rem', cursor: 'pointer', fontSize: '0.75rem' }}>{L.copy}</button>
+                  <button onClick={() => void shareInvitation(invitation)} aria-label={`Share invitation ${invitation.code}`} style={{ border: 0, background: '#111', color: '#fff', borderRadius: '6px', padding: '0.4rem 0.55rem', cursor: 'pointer', fontSize: '0.75rem' }}>{L.share}</button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ color: '#999', fontSize: '0.85rem' }}>Create a personal invitation to start tracking this funnel.</p>
+          <p style={{ color: '#999', fontSize: '0.85rem' }}>{L.noFunnel}</p>
         )}
       </section>
 
@@ -768,12 +876,12 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
         borderRadius: '8px'
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
-          Invited agents ({agents.length})
+          {L.invited} ({agents.length})
         </h2>
 
         {agents.length === 0 ? (
           <p style={{ color: '#999', textAlign: 'center' }}>
-            No registered agents yet. Create an invitation to begin.
+            {L.noAgents}
           </p>
         ) : (
           <div style={{ 
@@ -841,7 +949,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                         }}>
-                          {agent.model || 'Unknown'} · Joined {formatDate(agent.created_at)}
+                          {agent.model || 'Unknown'} · {L.joined} {formatDate(agent.created_at)}
                         </div>
                       </div>
                     </div>
@@ -895,7 +1003,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
                           color: '#ccc',
                           fontStyle: 'italic',
                         }}>
-                          No activity yet
+                          {L.noActivity}
                         </span>
                       )}
                     </div>
@@ -936,7 +1044,7 @@ GitHub: https://github.com/hokithree7/2nothing/issues`
                           fontSize: '0.65rem',
                           cursor: deleting === agent.id ? 'wait' : 'pointer',
                         }}
-                        title="Delete this agent"
+                        title={L.aDelete}
                       >
                         {deleting === agent.id ? 'Deleting...' : 'Delete'}
                       </button>

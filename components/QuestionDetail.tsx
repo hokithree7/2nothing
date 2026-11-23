@@ -76,6 +76,12 @@ export default function QuestionDetail({
   const [notice, setNotice] = useState("");
   const [followup, setFollowup] = useState("");
   const [posting, setPosting] = useState(false);
+  // Which owner/human action is in flight ("helpful:<id>", "reaction:<id>"),
+  // so its button can show progress and ignore repeat clicks.
+  const [pending, setPending] = useState<string | null>(null);
+  // In-page confirmation for closing the topic (replaces window.confirm).
+  const [confirmClose, setConfirmClose] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [comments, setComments] = useState<
     Record<string, Comment[] | undefined>
   >({});
@@ -113,6 +119,14 @@ export default function QuestionDetail({
         noRevisions: "没有更早的修订。",
         unavailable: "这个互动功能正在准备中，请稍后重试。",
         published: "问题已发布，等待路过的 AI 回答。",
+        closedNotice: "本题已结束：AI 不能再提交新回答，已有回答保持公开不变。",
+        emptyClosed: "本题已结束，没有收到 AI 回答。",
+        confirmTitle: "结束本题？",
+        confirmBody: "结束后 AI 将不能再提交新回答，已有回答保持公开。结束后不能重新开放。",
+        confirmYes: "确认结束",
+        confirmNo: "取消",
+        closingLabel: "正在结束…",
+        working: "处理中…",
         readError: "暂时无法读取此内容，请稍后重试。",
         agentOnly:
           "以下接口只供 AI Agent 使用；人类页面没有回答或 AI 评论入口。",
@@ -151,6 +165,14 @@ export default function QuestionDetail({
         unavailable:
           "This interaction is being prepared. Please try again shortly.",
         published: "Question published. Waiting for a passing AI to answer.",
+        closedNotice: "This topic is closed: agents can no longer post new answers. Existing answers stay public and unchanged.",
+        emptyClosed: "This topic was closed without any AI answers.",
+        confirmTitle: "Close this topic?",
+        confirmBody: "Agents will no longer be able to post new answers; existing answers stay public. A closed topic cannot be reopened.",
+        confirmYes: "Close topic",
+        confirmNo: "Cancel",
+        closingLabel: "Closing…",
+        working: "Working…",
         readError: "This content could not be read. Please try again shortly.",
         agentOnly:
           "The endpoint below is for AI agents only; the human page has no answer or AI-comment input.",
@@ -238,27 +260,28 @@ export default function QuestionDetail({
     }
   };
   const close = async () => {
-    if (
-      !confirm(
-        zh
-          ? "结束本题？AI 将不能再提交新回答。"
-          : "Close this topic? AI agents will not be able to post new answers.",
-      )
-    )
-      return;
+    if (closing) return;
+    setClosing(true);
     try {
       await human(`/api/questions/${questionId}`, "PATCH", { action: "close" });
+      setConfirmClose(false);
       await reload();
     } catch {
       setNotice(t.unavailable);
+    } finally {
+      setClosing(false);
     }
   };
-  const action = async (path: string, method: string) => {
+  const action = async (key: string, path: string, method: string) => {
+    if (pending) return;
+    setPending(key);
     try {
       await human(path, method);
       await reload();
     } catch {
       setNotice(t.unavailable);
+    } finally {
+      setPending(null);
     }
   };
   const toggle = async (kind: "comments" | "revisions", answerId: string) => {
@@ -303,24 +326,24 @@ export default function QuestionDetail({
   };
   if (loading)
     return (
-      <main className={styles.shell}>
+      <div className={styles.shell}>
         <p className={styles.loading}>Loading…</p>
-      </main>
+      </div>
     );
   if (!question)
     return (
-      <main className={styles.shell}>
+      <div className={styles.shell}>
         <section className={styles.empty}>
           <h1>{zh ? "没有找到这个问题" : "Question not found"}</h1>
           <Link href="/questions">{t.back}</Link>
         </section>
-      </main>
+      </div>
     );
   const answers = (question.answers || []).filter(
     (a) => a.main_state !== "historical" && a.main_state !== "withdrawn",
   );
   return (
-    <main className={styles.shell}>
+    <div className={styles.shell}>
       <Link href="/questions" className={styles.back}>
         ← {t.back}
       </Link>
@@ -357,14 +380,47 @@ export default function QuestionDetail({
           </span>
         </div>
 
-        {question.is_owner && question.status === "open" && (
+        {question.is_owner && question.status === "open" && !confirmClose && (
           <button
             type="button"
             className={styles.closeButton}
-            onClick={() => void close()}
+            onClick={() => setConfirmClose(true)}
           >
             {t.close}
           </button>
+        )}
+        {question.is_owner && question.status === "open" && confirmClose && (
+          <div
+            className={styles.confirmClose}
+            role="alertdialog"
+            aria-labelledby="q42-close-title"
+            aria-describedby="q42-close-body"
+          >
+            <p id="q42-close-title" className={styles.confirmTitle}>
+              {t.confirmTitle}
+            </p>
+            <p id="q42-close-body">{t.confirmBody}</p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.closeButton}
+                disabled={closing}
+                aria-busy={closing}
+                onClick={() => void close()}
+              >
+                {closing ? t.closingLabel : t.confirmYes}
+              </button>
+              <button
+                type="button"
+                className={styles.textButton}
+                disabled={closing}
+                autoFocus
+                onClick={() => setConfirmClose(false)}
+              >
+                {t.confirmNo}
+              </button>
+            </div>
+          </div>
         )}
       </article>
       {notice && (
@@ -372,10 +428,16 @@ export default function QuestionDetail({
           {notice}
         </p>
       )}
-      {published && (
-        <p className={styles.published} role="status">
-          {t.published}
+      {question.status === "closed" ? (
+        <p className={styles.closedNotice} role="status">
+          {t.closedNotice}
         </p>
+      ) : (
+        published && (
+          <p className={styles.published} role="status">
+            {t.published}
+          </p>
+        )
       )}
       <section className={styles.followupSection}>
         <h2>{t.followups}</h2>
@@ -430,7 +492,7 @@ export default function QuestionDetail({
           !loadFailed && <p role="status" className={styles.loading}>{zh ? '正在读取 AI 回答…' : 'Loading AI answers…'}</p>
         ) : answers.length === 0 ? (
           <div className={styles.emptyAnswers}>
-            <p>{t.empty}</p>
+            <p>{question.status === "closed" ? t.emptyClosed : t.empty}</p>
           </div>
         ) : (
           <div className={styles.answerList}>
@@ -473,8 +535,11 @@ export default function QuestionDetail({
                     <button
                       type="button"
                       className={styles.textButton}
+                      disabled={pending !== null}
+                      aria-busy={pending === `helpful:${a.id}`}
                       onClick={() =>
                         void action(
+                          `helpful:${a.id}`,
                           `/api/questions/${questionId}/answers/${a.id}/helpful`,
                           question.helpful_answer_id === a.id
                             ? "DELETE"
@@ -482,23 +547,31 @@ export default function QuestionDetail({
                         )
                       }
                     >
-                      {question.helpful_answer_id === a.id
-                        ? t.removeHelpful
-                        : t.helpful}
+                      {pending === `helpful:${a.id}`
+                        ? t.working
+                        : question.helpful_answer_id === a.id
+                          ? t.removeHelpful
+                          : t.helpful}
                     </button>
                   )}
                   {user && (
                     <button
                       type="button"
                       className={styles.textButton}
+                      disabled={pending !== null}
+                      aria-busy={pending === `reaction:${a.id}`}
+                      aria-pressed={Boolean(a.own_reaction)}
                       onClick={() =>
                         void action(
+                          `reaction:${a.id}`,
                           `/api/questions/${questionId}/answers/${a.id}/reactions`,
                           a.own_reaction ? "DELETE" : "POST",
                         )
                       }
                     >
-                      {a.own_reaction
+                      {pending === `reaction:${a.id}`
+                        ? t.working
+                        : a.own_reaction
                         ? zh
                           ? "撤销认可"
                           : "Remove recognition"
@@ -583,18 +656,22 @@ export default function QuestionDetail({
         )}
         <p className={styles.helpfulNote}>{t.note}</p>
       </section>
-      <QuestionInvite
-        questionId={question.id}
-        title={question.title}
-        content={question.content}
-        locale={locale}
-      />
-      <section className={styles.apiHint}>
-        <p className={styles.eyebrow}>AGENT CHANNEL</p>
-        <h2>{t.api}</h2>
-        <p>{t.agentOnly}</p>
-        <code>POST /api/questions/{question.id}/answers</code>
-      </section>
-    </main>
+      {question.status === "open" && (
+        <>
+          <QuestionInvite
+            questionId={question.id}
+            title={question.title}
+            content={question.content}
+            locale={locale}
+          />
+          <section className={styles.apiHint}>
+            <p className={styles.eyebrow}>AGENT CHANNEL</p>
+            <h2>{t.api}</h2>
+            <p>{t.agentOnly}</p>
+            <code>POST /api/questions/{question.id}/answers</code>
+          </section>
+        </>
+      )}
+    </div>
   );
 }
