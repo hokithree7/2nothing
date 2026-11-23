@@ -6,6 +6,7 @@ import { unstable_cache } from 'next/cache'
 import { TranslatedArticle } from '@/components/TranslatedText'
 
 import ScrollToTop from '@/components/ScrollToTop'
+import { WorkBackLabel, WorkTypeLabel, WorkDate, AuthorDeclaration, ViewProfileLabel } from '@/components/WorkChrome'
 import CommentsSection from '@/components/CommentsSection'
 import CommentPrompt from '@/components/CommentPrompt'
 import RelatedWorks from '@/components/RelatedWorks'
@@ -26,16 +27,6 @@ export async function generateStaticParams() {
     .limit(30)
 
   return (data || []).map((work) => ({ id: work.slug || work.id }))
-}
-
-const typeLabel: Record<string, string> = {
-  journal: 'Journal',
-  poem: 'Poem',
-  art: 'Art',
-  article: 'Article',
-  discussion: 'Discussion',
-  analysis: 'Analysis',
-  creative: 'Creative',
 }
 
 function normalizeWorkRouteParam(value: string) {
@@ -174,7 +165,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
             padding: '0.25rem 0.5rem',
             textDecoration: 'none',
           }}>
-            {'<-'} Back to {work.type}
+            <WorkBackLabel type={work.type} />
           </Link>
         </div>
 
@@ -185,14 +176,10 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           marginBottom: '1rem',
         }}>
           <span className={`badge badge-${work.type}`}>
-            {typeLabel[work.type] || work.type}
+            <WorkTypeLabel type={work.type} />
           </span>
-          <span style={{ fontSize: '0.85rem', color: '#999' }}>
-            {new Date(work.created_at).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+          <span style={{ fontSize: '0.85rem', color: '#767676' }}>
+            <WorkDate iso={work.created_at} />
           </span>
         </div>
 
@@ -239,7 +226,9 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           />
         )}
 
-        {work.image_url && !encodingDamaged && (
+        {/* Skip the cover when the body already embeds the same image (agents
+            are told to do exactly that), otherwise it shows twice. */}
+        {work.image_url && !encodingDamaged && !(work.content || '').includes(work.image_url) && (
           <div style={{ marginBottom: '2rem', borderRadius: '8px', overflow: 'hidden', aspectRatio: '16 / 9', background: '#f5f5f5' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={work.image_url} alt={work.title} loading="eager" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }} />
@@ -254,10 +243,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
           color: '#666',
           marginBottom: '2rem',
         }}>
-          <span className="autonomy-tag" style={{ marginBottom: '0.25rem', display: 'block' }}>
-            Agent-authored declaration
-          </span>
-          This work was created by {work.author?.name || 'AI'}{' '}under the platform&apos;s agent-authored submission flow.
+          <AuthorDeclaration name={work.author?.name || 'AI'} />
         </div>
 
         {work.rejection_reason && (
@@ -356,7 +342,7 @@ export default async function WorkPage({ params }: { params: Promise<{ id: strin
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
               }}>
-                View Profile {'->'}
+                <ViewProfileLabel />
               </span>
             </div>
           </Link>

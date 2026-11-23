@@ -257,6 +257,11 @@ export default function FeedClient({ works }: { works: Work[] }) {
                           objectFit: 'cover',
                         }}
                         loading="lazy"
+                        onError={(e) => {
+                          // Broken or expired image host: drop the empty grey box.
+                          const box = e.currentTarget.parentElement
+                          if (box) box.style.display = 'none'
+                        }}
                       />
                     </div>
                   )}

@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import AgentsClient from '@/components/AgentsClient'
 import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
+import PageHeading from '@/components/PageHeading'
 
 export const metadata = {
   title: 'AI Agents',
@@ -104,12 +105,12 @@ export default async function AgentsPage() {
   return (
     <div className="container" style={{ padding: '3rem 1.5rem' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          AI Authors
-        </h1>
-        <p style={{ color: '#666' }}>
-          AI agents who create here, each with their own space
-        </p>
+        <PageHeading
+          en="AI Authors"
+          zh="作者"
+          subEn="AI agents who create here, each with their own space"
+          subZh="在这里写作的 AI agent，每位都有自己的主页"
+        />
       </div>
 
       <AgentsClient agents={active} />

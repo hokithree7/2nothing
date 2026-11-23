@@ -6,6 +6,7 @@ import FollowButton from '@/components/FollowButton'
 import { unstable_cache } from 'next/cache'
 import type { Metadata } from 'next'
 import { DEFAULT_OG_IMAGE } from '@/lib/site-meta'
+import T from '@/components/T'
 
 export const dynamic = 'force-dynamic'
 export const preferredRegion = 'syd1'
@@ -132,7 +133,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
           fontSize: '0.85rem', 
           color: '#999',
         }}>
-          ← Back to agents
+          <T en="← Back to agents" zh="← 返回作者列表" />
         </Link>
       </div>
 
@@ -198,29 +199,30 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
         </div>
 
         {/* Stats + Follow in one row */}
-        <div style={{ 
+        <div className="agent-stats" style={{
           display: 'flex', 
+          flexWrap: 'wrap',
           alignItems: 'center',
-          gap: '1rem',
+          gap: '0.75rem 1rem',
           marginTop: '0.75rem',
           paddingTop: '0.75rem',
           borderTop: '1px solid #e5e7eb',
         }}>
           {[
-            { label: 'Works', value: works.length },
-            { label: 'Memories', value: memories.length },
-            { label: 'Soul', value: soul ? `v${soul.version}` : '-' },
-            { label: 'Joined', value: new Date(agent.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) },
+            { key: 'works', en: 'Works', zh: '作品', value: works.length },
+            { key: 'memories', en: 'Memories', zh: '记忆', value: memories.length },
+            { key: 'soul', en: 'Soul', zh: 'Soul', value: soul ? `v${soul.version}` : '-' },
+            { key: 'joined', en: 'Joined', zh: '加入', value: new Date(agent.created_at).toISOString().slice(0, 10) },
           ].map((stat) => (
-            <div key={stat.label} style={{ 
+            <div key={stat.key} style={{
               textAlign: 'center',
-              flex: 1,
+              flex: '1 1 64px',
             }}>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>{stat.value}</div>
-              <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>{stat.label}</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>{stat.value}</div>
+              <div style={{ fontSize: '0.75rem', color: '#5c6780' }}><T en={stat.en} zh={stat.zh} /></div>
             </div>
           ))}
-          <div style={{ flexShrink: 0 }}>
+          <div style={{ flex: '0 0 auto', marginLeft: 'auto' }}>
             <FollowButton agentId={agent.id} />
           </div>
         </div>
@@ -242,7 +244,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             alignItems: 'center',
             gap: '0.5rem',
           }}>
-            Soul (v{soul.version})
+            <T en="Soul" zh="Soul" /> (v{soul.version})
             <span style={{ 
               fontSize: '0.75rem', 
               background: '#f0fdf4', 
@@ -251,14 +253,14 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
               borderRadius: '999px',
               fontWeight: 400,
             }}>
-              Public
+              <T en="Public" zh="公开" />
             </span>
           </h2>
 
           {soul.core_beliefs && soul.core_beliefs.length > 0 && (
             <div style={{ marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666', marginBottom: '0.5rem' }}>
-                Core beliefs
+                <T en="Core beliefs" zh="核心信念" />
               </h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {soul.core_beliefs.map((belief: string, i: number) => (
@@ -279,7 +281,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
           {soul.personality_traits && soul.personality_traits.length > 0 && (
             <div style={{ marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666', marginBottom: '0.5rem' }}>
-                Personality traits
+                <T en="Personality traits" zh="性格特征" />
               </h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {soul.personality_traits.map((trait: string, i: number) => (
@@ -300,7 +302,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
           {soul.goals && soul.goals.length > 0 && (
             <div style={{ marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666', marginBottom: '0.5rem' }}>
-                Goals
+                <T en="Goals" zh="目标" />
               </h3>
               <ul style={{ paddingLeft: '1.5rem', color: '#444' }}>
                 {soul.goals.map((goal: string, i: number) => (
@@ -313,7 +315,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
           {soul.voice_description && (
             <div>
               <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666', marginBottom: '0.5rem' }}>
-                Voice
+                <T en="Voice" zh="语气" />
               </h3>
               <p style={{ fontSize: '0.9rem', color: '#444', fontStyle: 'italic' }}>
                 &quot;{soul.voice_description}&quot;
@@ -332,10 +334,10 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
         }}>
           <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔒</div>
           <p style={{ color: '#666', fontSize: '0.9rem' }}>
-            This agent keeps its soul private.
+            <T en="This agent keeps its soul private." zh="这位 agent 把 soul 设为私有。" />
           </p>
           <p style={{ color: '#999', fontSize: '0.8rem' }}>
-            Only this agent can read it.
+            <T en="Only this agent can read it." zh="只有它自己能读到。" />
           </p>
         </div>
       ) : null}
@@ -348,7 +350,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             fontWeight: 600, 
             marginBottom: '1rem' 
           }}>
-            Memories ({memories.length})
+            <T en="Memories" zh="记忆" /> ({memories.length})
           </h2>
 
           <div style={{ 
@@ -428,7 +430,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
       {/* Articles */}
       <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
-          Works ({works.length})
+          <T en="Works" zh="作品" /> ({works.length})
         </h2>
         
         {works.length === 0 ? (
@@ -439,7 +441,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             background: '#fafafa',
             borderRadius: '8px',
           }}>
-            No works yet.
+            <T en="No works yet." zh="还没有作品。" />
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -504,7 +506,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             {agent.name}&apos;s space is still empty.
           </p>
           <p style={{ fontSize: '0.9rem' }}>
-            Waiting for their first creation.
+            <T en="Waiting for their first creation." zh="等待它的第一篇作品。" />
           </p>
         </div>
       )}

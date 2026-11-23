@@ -1035,6 +1035,16 @@ body:has(.q42-questions-page) .site-nav .hamburger-btn { background:transparent;
   color:transparent;-webkit-text-stroke:1.5px rgba(217,246,0,.13);
 }
 
+/* ---------- 11b. Acceptance fixes (2026-11-23) ---------- */
+/* /questions: the drifting milky-way band is clipped at the hero's bottom
+   edge, so the hero ended lighter than the fade bridge starts (#031420) and
+   left a visible seam. Fade the hero's last 96px back to #031420. */
+.q42-questions-hero::after {
+  content:"";position:absolute;left:0;right:0;bottom:0;height:96px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(3,20,32,0),#031420);
+}
+.q42-questions-hero .q42-questions-copy,.q42-questions-hero .q42-terminal-wrap { position:relative;z-index:1; }
+
 /* ---------- 12. Mobile ---------- */
 @media (max-width:767px) {
   .q42-hero { padding-bottom:80px; }
@@ -1048,8 +1058,9 @@ body:has(.q42-questions-page) .site-nav .hamburger-btn { background:transparent;
   .q42-cursor { left:9px;top:9px;font-size:15px; }
   /* idle: the block cursor stands in for ">" so the hint fits on one line */
   .q42-field-idle::before { display:none; }
-  .q42-screen .q42-field-idle textarea { text-indent:.9em;overflow:hidden;padding-left:8px;font-size:15px; }
-  .q42-screen .q42-field textarea { scrollbar-width:none; }
+  .q42-screen .q42-field-idle textarea,
+  .q42-crt .q42-crt-screen .q42-field-idle textarea { text-indent:.9em;overflow:hidden;padding-left:8px;font-size:15px; }
+  .q42-screen .q42-field textarea,.q42-crt-screen .q42-field textarea { scrollbar-width:none; }
   .q42-led { width:2.2%; }
   .q42-questions-hero .q42-questions-header { padding:32px 24px 24px;min-height:0; }
   .q42-questions-header .q42-terminal-wrap:not(.q42-expanded) .q42-crt { transform:none; }
@@ -1058,7 +1069,7 @@ body:has(.q42-questions-page) .site-nav .hamburger-btn { background:transparent;
   .q42-watermark { font-size:200px;left:auto;right:-6%;top:22%;transform:none; }
 }
 @media (min-width:768px) and (max-width:1000px) {
-  .q42-hero-grid { grid-template-columns:minmax(0,1fr) 420px;min-height:520px; }
+  .q42-hero-grid { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);min-height:520px; }
   .q42-questions-hero .q42-questions-header { grid-template-columns:minmax(0,1fr) 440px;gap:28px; }
 }
 
@@ -1070,4 +1081,171 @@ body:has(.q42-questions-page) .site-nav .hamburger-btn { background:transparent;
   .q42-terminal-wrap:not(.q42-expanded)::before,.q42-transmit i { animation:none !important; }
   .q42-glass::after { display:none; }
   .q42-hero .q42-terminal-wrap .q42-machine,.q42-questions-header .q42-terminal-wrap .q42-crt,.q42-stars { transition:none !important; }
+}
+
+
+/* =====================================================================
+   42 hero v3 (2026-11-24) — tighter hand-off to the content below, a soft
+   eased fade instead of a short linear one, and a send key that clacks.
+   ===================================================================== */
+
+/* ---------- spacing: hero → first section ---------- */
+@media (min-width:1001px) {
+  /* was min(100svh-150px,780px): left ~110px of empty night under the machine */
+  .q42-hero-grid { min-height:min(calc(100svh - 250px),600px); }
+}
+.q42-hero { padding-bottom:80px; }
+.q42-hero + .q42-discovery,
+.q42-fadebridge + .q42-discovery { padding-top:12px; }
+.q42-hero-terminal .q42-invite-link { margin-top:-6px; }
+
+/* ---------- home: eased fade over the stars ---------- */
+.q42-hero::after { height:80px;background:linear-gradient(180deg,rgba(251,252,255,0.000) 0%,rgba(251,252,255,0.005) 8%,rgba(251,252,255,0.035) 17%,rgba(251,252,255,0.104) 25%,rgba(251,252,255,0.210) 33%,rgba(251,252,255,0.347) 42%,rgba(251,252,255,0.500) 50%,rgba(251,252,255,0.653) 58%,rgba(251,252,255,0.790) 67%,rgba(251,252,255,0.896) 75%,rgba(251,252,255,0.965) 83%,rgba(251,252,255,0.995) 92%,rgba(251,252,255,1.000) 100%); }
+
+/* ---------- /questions: one continuous eased fade ---------- */
+.q42-questions-hero .q42-questions-header { padding-bottom:20px; }
+.q42-questions-hero::after { height:64px; }
+.q42-fadebridge { height:96px;background:linear-gradient(180deg,#031420 0%,#031421 8%,#051725 17%,#081e2e 25%,#0e283c 33%,#1f3d55 42%,#5f7a92 50%,#9fb7cf 58%,#c6d6e7 67%,#e1e9f3 75%,#f2f6fb 83%,#fafbfe 92%,#fbfcff 100%); }
+/* stars keep drifting into the fade and dissolve with it */
+.q42-fadebridge::before { opacity:.45;-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);mask-image:linear-gradient(180deg,#000,transparent 70%); }
+
+/* ---------- the send key: travel, bottom-out, spring back ---------- */
+.q42-send,.q42-crt-send {
+  --key-depth:#7a5214;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  box-shadow:inset 0 2px 1px #fff0b8,inset 0 -3px 2px #c98a28,0 5px 0 var(--key-depth),0 7px 8px rgba(0,0,0,.45);
+  transition:transform 70ms cubic-bezier(.3,0,.6,1),box-shadow 70ms,filter 120ms;
+}
+.q42-send[aria-disabled="true"],.q42-crt-send[aria-disabled="true"] { filter:saturate(.85) brightness(.95);cursor:default;color:#5b441f; }
+.q42-send:hover:not([aria-disabled="true"]),.q42-crt-send:hover:not([aria-disabled="true"]) { filter:brightness(1.06); }
+/* held down: the cap travels its full 4px and the skirt disappears */
+.q42-terminal-wrap .q42-send:active,.q42-terminal-wrap .q42-crt-send:active {
+  transform:translateY(4px);animation:none;transition-duration:35ms;filter:brightness(.97);
+  box-shadow:inset 0 2px 4px #a06b20,inset 0 -1px 1px #ffe7a0,0 1px 0 var(--key-depth),0 1px 2px rgba(0,0,0,.4);
+}
+/* too early: it only goes half way and wobbles */
+.q42-terminal-wrap .q42-send[aria-disabled="true"]:active,.q42-terminal-wrap .q42-crt-send[aria-disabled="true"]:active { transform:translateY(2px); }
+.q42-terminal-wrap .q42-send.q42-key-release,.q42-terminal-wrap .q42-crt-send.q42-key-release { animation:q42-key-release .3s cubic-bezier(.2,.9,.3,1.4); }
+.q42-terminal-wrap .q42-send.q42-key-strike,.q42-terminal-wrap .q42-crt-send.q42-key-strike { animation:q42-key-strike .3s cubic-bezier(.3,.6,.3,1); }
+.q42-terminal-wrap .q42-send.q42-key-deny,.q42-terminal-wrap .q42-crt-send.q42-key-deny { animation:q42-key-deny .4s ease-out; }
+@keyframes q42-key-release {
+  0% { transform:translateY(4px);box-shadow:inset 0 2px 4px #a06b20,0 1px 0 var(--key-depth),0 1px 2px rgba(0,0,0,.4); }
+  55% { transform:translateY(-1.5px); }
+  100% { transform:none; }
+}
+@keyframes q42-key-strike {
+  0% { transform:none; }
+  30% { transform:translateY(4px);box-shadow:inset 0 2px 4px #a06b20,0 1px 0 var(--key-depth),0 1px 2px rgba(0,0,0,.4);filter:brightness(.97); }
+  70% { transform:translateY(-1.5px); }
+  100% { transform:none; }
+}
+@keyframes q42-key-deny {
+  0% { transform:translateY(2px); }
+  25% { transform:translate(-3px,1px); }
+  45% { transform:translate(3px,1px); }
+  65% { transform:translate(-2px,0); }
+  85% { transform:translate(1px,0); }
+  100% { transform:none; }
+}
+/* keep the "ready" glow pulse on the new, deeper key */
+@keyframes q42-key-ready {
+  0%,100% { box-shadow:inset 0 2px 1px #fff0b8,inset 0 -3px 2px #c98a28,0 5px 0 var(--key-depth),0 7px 8px rgba(0,0,0,.45),0 0 0 rgba(255,200,80,0); }
+  50% { box-shadow:inset 0 2px 1px #fff0b8,inset 0 -3px 2px #c98a28,0 5px 0 var(--key-depth),0 7px 8px rgba(0,0,0,.45),0 0 24px rgba(255,200,80,.6); }
+}
+.q42-ready .q42-send:not([aria-disabled="true"]),.q42-ready .q42-crt-send:not([aria-disabled="true"]) { animation:q42-key-ready 1.6s ease-in-out infinite; }
+
+/* the machine answers the key */
+.q42-fx-release .q42-glass,.q42-fx-strike .q42-glass { animation:q42-screen-kick .28s ease-out; }
+.q42-fx-release .q42-led,.q42-fx-strike .q42-led { animation:none;filter:brightness(1.8); }
+.q42-fx-deny .q42-led { animation:none;background:radial-gradient(circle at 40% 35%,#ffd9d2,#ff5a3d 45%,#c22a18);box-shadow:0 0 8px 3px rgba(255,80,60,.8); }
+.q42-fx-deny .q42-input-hint { animation:q42-hint-nudge .4s ease-out;color:#ffd77a !important; }
+@keyframes q42-screen-kick {
+  0% { box-shadow:inset 0 0 36px rgba(0,0,0,.55),inset 0 0 60px rgba(170,255,160,.35);filter:brightness(1.35); }
+  100% { box-shadow:inset 0 0 36px rgba(0,0,0,.55),inset 0 0 10px rgba(150,255,160,.10);filter:none; }
+}
+@keyframes q42-hint-nudge { 0%,100% { transform:none; } 30% { transform:translateX(-4px); } 60% { transform:translateX(3px); } }
+
+@media (max-width:767px) {
+  .q42-hero { padding-bottom:84px; }
+  .q42-hero::after { height:84px; }
+  .q42-mobile-caption { margin-top:4px; }
+  .q42-questions-hero .q42-questions-header { padding-bottom:16px; }
+  .q42-fadebridge { height:72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .q42-terminal-wrap .q42-send.q42-key-release,.q42-terminal-wrap .q42-crt-send.q42-key-release,
+  .q42-terminal-wrap .q42-send.q42-key-strike,.q42-terminal-wrap .q42-crt-send.q42-key-strike,
+  .q42-terminal-wrap .q42-send.q42-key-deny,.q42-terminal-wrap .q42-crt-send.q42-key-deny,
+  .q42-fx-release .q42-glass,.q42-fx-strike .q42-glass,.q42-fx-deny .q42-input-hint { animation:none !important; }
+}
+
+
+/* =====================================================================
+   site polish (2026-11-24) — one visual language outside the 42 hero:
+   ink + one accent blue, 44px controls, visible states, calmer greys.
+   ===================================================================== */
+:root {
+  --ink: #111c32;
+  --muted: #5c6780;            /* was #666: 5.6:1 on white, same feel */
+  --border: #e3e7ee;
+  --surface: #f6f8fb;
+  --accent: #2563eb;
+  --accent-light: #eef4ff;
+  --radius: 10px;
+}
+body { color: var(--ink); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+::selection { background: #cfe0ff; color: var(--ink); }
+
+/* buttons: same height whether rendered as <a> or <button> */
+.btn-primary,.btn-secondary {
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  min-height:44px;padding:0 1.15rem;border-radius:var(--radius);
+  font:inherit;font-size:.9rem;font-weight:600;line-height:1;cursor:pointer;
+  text-decoration:none;white-space:nowrap;
+  transition:background-color .15s,border-color .15s,color .15s,transform .08s,box-shadow .15s;
+}
+.btn-primary { background:var(--ink);color:#fff;border:1px solid var(--ink); }
+.btn-primary:hover { background:#1d2b4a; }
+.btn-secondary { background:#fff;color:var(--ink);border:1px solid var(--border); }
+.btn-secondary:hover { border-color:#c5cedb;background:var(--surface); }
+.btn-primary:active,.btn-secondary:active { transform:translateY(1px); }
+button:disabled,.btn-primary[aria-disabled="true"],.btn-secondary[aria-disabled="true"] { cursor:not-allowed; }
+
+/* focus: always visible for keyboard, never for mouse */
+:focus-visible { outline:2px solid var(--accent);outline-offset:2px;border-radius:4px; }
+:focus:not(:focus-visible) { outline:none; }
+
+/* nav: one active page, console as a pill */
+.desktop-nav { gap:1.1rem; }
+.desktop-nav .nav-link { position:relative;transition:color .12s; }
+.desktop-nav .nav-link:hover { color:var(--ink) !important; }
+.desktop-nav .nav-link[aria-current="page"]::after {
+  content:"";position:absolute;left:0;right:0;bottom:8px;height:2px;border-radius:2px;background:currentColor;
+}
+.desktop-nav .nav-pill { transition:background-color .12s,color .12s; }
+.desktop-nav .nav-pill:hover { background:var(--accent-light); }
+body:has(.q42-home) .desktop-nav .nav-pill:hover,
+body:has(.q42-questions-page) .desktop-nav .nav-pill:hover { background:rgba(255,255,255,.08); }
+
+/* badges: sentence case reads calmer in Chinese and English */
+.badge { text-transform:none;letter-spacing:0;font-weight:600;padding:3px 10px; }
+
+/* invite strip: align heading and buttons, wrap cleanly on mobile */
+.invite-cta { align-items:center;gap:1rem 2rem;border-top:0;padding-top:.5rem; } /* the filter bar above already draws a rule */
+.invite-cta-kicker { color:var(--accent);font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.35rem; }
+.invite-cta h2 { font-size:1.15rem;font-weight:700;margin-bottom:.25rem; }
+.invite-cta p:not(.invite-cta-kicker) { color:var(--muted);font-size:.9rem;line-height:1.7;max-width:36em; }
+@media (max-width:640px) {
+  .invite-cta-actions { justify-content:flex-start;width:100%; }
+  .invite-cta-actions > * { flex:1 1 auto; }
+}
+
+/* agent profile stats wrap instead of squeezing */
+.agent-stats > div:first-child { min-width:56px; }
+
+/* long-form body (works, answers): comfortable measure */
+article p,article li { overflow-wrap:anywhere; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,.btn-secondary,.desktop-nav .nav-link,.desktop-nav .nav-pill { transition:none; }
 }

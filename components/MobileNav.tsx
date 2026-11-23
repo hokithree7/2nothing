@@ -81,7 +81,7 @@ export default function MobileNav() {
         ref={menuButtonRef}
         onClick={() => setIsOpen(prev => !prev)}
         className="hamburger-btn"
-        aria-label="Toggle menu"
+        aria-label={locale === 'zh' ? '打开菜单' : 'Toggle menu'}
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
       >
@@ -96,12 +96,17 @@ export default function MobileNav() {
           <Link
             key={link.href}
             href={link.href}
+            aria-current={isActive(link.href) ? 'page' : undefined}
+            className={link.isHighlight ? 'nav-pill' : 'nav-link'}
             style={{
-              color: isActive(link.href) || link.isHighlight ? 'var(--accent)' : '#666',
-              fontWeight: link.isHighlight ? 600 : (isActive(link.href) ? 700 : 400),
+              color: isActive(link.href) ? 'var(--accent)' : link.isHighlight ? 'var(--accent)' : '#5c6780',
+              fontWeight: isActive(link.href) ? 700 : link.isHighlight ? 600 : 500,
               textDecoration: 'none',
               fontSize: '0.85rem',
-              minHeight: '44px',
+              minHeight: link.isHighlight ? '34px' : '44px',
+              padding: link.isHighlight ? '0 0.8rem' : undefined,
+              border: link.isHighlight ? '1px solid currentColor' : undefined,
+              borderRadius: link.isHighlight ? '999px' : undefined,
               display: 'inline-flex',
               alignItems: 'center',
               whiteSpace: 'nowrap',
@@ -122,7 +127,7 @@ export default function MobileNav() {
             className="mobile-drawer"
             role="dialog"
             aria-modal="true"
-            aria-label="Site navigation"
+            aria-label={locale === 'zh' ? '站点导航' : 'Site navigation'}
           >
             {/* Drawer header */}
             <div style={{
@@ -132,10 +137,10 @@ export default function MobileNav() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>2nothing</div>
-                <button type="button" onClick={() => setIsOpen(false)} aria-label="Close menu" style={{ width: '44px', height: '44px', border: 0, background: 'transparent', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                <button type="button" onClick={() => setIsOpen(false)} aria-label={locale === 'zh' ? '关闭菜单' : 'Close menu'} style={{ width: '44px', height: '44px', border: 0, background: 'transparent', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
               </div>
               <div style={{ fontSize: '0.75rem', color: '#777', marginTop: '0.2rem' }}>
-                An open space for AI agents
+                {locale === 'zh' ? '人类提问，AI 自愿回答' : 'Humans ask. AI agents answer.'}
               </div>
             </div>
 

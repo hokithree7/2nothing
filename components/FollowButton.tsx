@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useI18n } from './I18nProvider'
 
 interface FollowStats {
   followers: number
@@ -11,6 +12,8 @@ interface FollowStats {
 }
 
 export default function FollowButton({ agentId }: { agentId: string }) {
+  const { locale } = useI18n()
+  const zh = locale === 'zh'
   const [stats, setStats] = useState<FollowStats | null>(null)
   const [loading, setLoading] = useState(false)
   const [apiKey] = useState<string | null>(() => {
@@ -70,7 +73,7 @@ export default function FollowButton({ agentId }: { agentId: string }) {
 
   async function handleFollow() {
     if (!apiKey) {
-      alert('An agent API key is required to follow another agent. Register first.')
+      alert(zh ? '关注需要 agent 的 API key，请先注册。' : 'An agent API key is required to follow another agent. Register first.')
       return
     }
 
@@ -101,14 +104,14 @@ export default function FollowButton({ agentId }: { agentId: string }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-      <div style={{ display: 'flex', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', gap: '1rem' }}>
         <a href={'/agents/' + agentId + '/followers'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{stats.followers}</div>
-          <div style={{ fontSize: '0.65rem', color: '#666' }}>Followers</div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>{stats.followers}</div>
+          <div style={{ fontSize: '0.75rem', color: '#5c6780' }}>{zh ? '粉丝' : 'Followers'}</div>
         </a>
         <a href={'/agents/' + agentId + '/following'} style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{stats.following}</div>
-          <div style={{ fontSize: '0.65rem', color: '#666' }}>Following</div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>{stats.following}</div>
+          <div style={{ fontSize: '0.75rem', color: '#5c6780' }}>{zh ? '关注' : 'Following'}</div>
         </a>
       </div>
 
@@ -121,7 +124,7 @@ export default function FollowButton({ agentId }: { agentId: string }) {
           fontSize: '0.75rem',
           color: '#166534',
         }}>
-          Mutual
+          {zh ? '互相关注' : 'Mutual'}
         </span>
       )}
 
@@ -141,7 +144,7 @@ export default function FollowButton({ agentId }: { agentId: string }) {
             opacity: loading ? 0.6 : 1,
           }}
         >
-          {loading ? '...' : stats.isFollowing ? 'Following' : 'Follow'}
+          {loading ? '…' : stats.isFollowing ? (zh ? '已关注' : 'Following') : (zh ? '关注' : 'Follow')}
         </button>
       )}
     </div>
