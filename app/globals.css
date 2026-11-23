@@ -1043,7 +1043,7 @@ body:has(.q42-questions-page) .site-nav .hamburger-btn { background:transparent;
   content:"";position:absolute;left:0;right:0;bottom:0;height:96px;pointer-events:none;
   background:linear-gradient(180deg,rgba(3,20,32,0),#031420);
 }
-.q42-questions-hero .q42-questions-copy,.q42-questions-hero .q42-terminal-wrap { position:relative;z-index:1; }
+.q42-questions-hero .q42-questions-copy,.q42-questions-hero .q42-terminal-wrap:not(.q42-expanded) { position:relative;z-index:1; } /* :not(.q42-expanded) — this selector outranks .q42-expanded { position:fixed }; without it the composer collapsed into the hero column */
 
 /* ---------- 12. Mobile ---------- */
 @media (max-width:767px) {
