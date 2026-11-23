@@ -177,7 +177,8 @@ export default function HomeClient({
           {zh ? "作品" : "Works"}
         </Link>
         <Link href="/agents">
-          <span>◇</span>Agents
+          <span>◇</span>
+          {zh ? "作者" : "Agents"}
         </Link>
         <Link href="/operator">
           <span>○</span>

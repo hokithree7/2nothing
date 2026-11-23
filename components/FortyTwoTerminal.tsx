@@ -13,6 +13,52 @@ import { PRESET_AVATARS } from "@/lib/preset-avatars";
 
 const DRAFT_KEY = "2nothing:42:question-draft:v1";
 
+// A short synthesized key "clack" for the send key: a filtered noise tick for
+// the switch plus a low thump for the keycap bottoming out. Created lazily on
+// the first press (a user gesture), quiet, and silently skipped if Web Audio
+// is unavailable.
+let keyAudio: AudioContext | null = null;
+function playKeyClack(accepted: boolean) {
+  try {
+    const AC =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AC) return;
+    keyAudio ??= new AC();
+    const ctx = keyAudio;
+    if (ctx.state === "suspended") void ctx.resume();
+    const t = ctx.currentTime;
+    const len = Math.floor(ctx.sampleRate * 0.028);
+    const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++)
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+    const tick = ctx.createBufferSource();
+    tick.buffer = buffer;
+    const band = ctx.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.value = accepted ? 2600 : 1400;
+    band.Q.value = 0.8;
+    const tickGain = ctx.createGain();
+    tickGain.gain.value = accepted ? 0.2 : 0.1;
+    tick.connect(band).connect(tickGain).connect(ctx.destination);
+    tick.start(t);
+    const thump = ctx.createOscillator();
+    thump.type = "sine";
+    thump.frequency.setValueAtTime(accepted ? 160 : 110, t);
+    thump.frequency.exponentialRampToValueAtTime(55, t + 0.07);
+    const thumpGain = ctx.createGain();
+    thumpGain.gain.setValueAtTime(accepted ? 0.16 : 0.08, t);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+    thump.connect(thumpGain).connect(ctx.destination);
+    thump.start(t);
+    thump.stop(t + 0.1);
+  } catch {
+    /* audio is decoration only */
+  }
+}
+
 // The daily quota resets at 00:00 UTC; show that moment in the reader's own
 // clock (e.g. 08:00 in Asia/Shanghai). Client-only: the hint renders after
 // the terminal is expanded, so there is no SSR/hydration mismatch.
@@ -95,6 +141,11 @@ export default function FortyTwoTerminal({
   const [composing, setComposing] = useState(false);
   // Brief "keystroke" flag that makes the power LED flicker while typing.
   const [typing, setTyping] = useState(false);
+  // Send-key feedback: "release" = spring back after a pointer press,
+  // "strike" = full down-up for keyboard sends, "deny" = key bottoms out but
+  // nothing is sent (too short), with a shake and an amber hint.
+  const [keyFx, setKeyFx] = useState<"" | "release" | "strike" | "deny">("");
+  const keyFxTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const close = useRef<HTMLButtonElement>(null);
@@ -164,9 +215,31 @@ export default function FortyTwoTerminal({
       e.nativeEvent.keyCode !== 229
     ) {
       e.preventDefault();
-      void publish();
+      keyFeedback(canSend ? "strike" : "deny");
+      if (canSend) void publish();
     }
   }
+
+  function keyFeedback(kind: "release" | "strike" | "deny", sound = true) {
+    if (busy) return;
+    if (keyFxTimer.current) clearTimeout(keyFxTimer.current);
+    // clear first so the same animation can restart on rapid presses
+    setKeyFx("");
+    requestAnimationFrame(() => setKeyFx(kind));
+    keyFxTimer.current = setTimeout(
+      () => setKeyFx(""),
+      kind === "deny" ? 420 : 300,
+    );
+    if (sound) playKeyClack(kind !== "deny");
+    if (kind !== "release") navigator.vibrate?.(kind === "deny" ? [8, 40, 8] : 12);
+  }
+
+  useEffect(
+    () => () => {
+      if (keyFxTimer.current) clearTimeout(keyFxTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!expanded && !login) return;
@@ -453,12 +526,31 @@ export default function FortyTwoTerminal({
     </>
   );
 
+  // aria-disabled instead of disabled: a disabled button swallows pointer
+  // events, and the key should still "bottom out" (and say why) when pressed
+  // too early. publish() keeps its own guards.
   const sendKey = (className: string) => (
     <button
       type="button"
-      className={className}
-      disabled={!canSend}
-      onClick={() => void publish()}
+      className={`${className} ${keyFx ? `q42-key-${keyFx}` : ""}`}
+      aria-disabled={!canSend}
+      onPointerDown={(e) => {
+        if (e.button !== 0 || busy) return;
+        if (canSend) {
+          playKeyClack(true);
+          navigator.vibrate?.(12);
+        } else keyFeedback("deny");
+      }}
+      onPointerUp={() => {
+        if (canSend && !busy) keyFeedback("release", false);
+      }}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && !e.repeat)
+          keyFeedback(canSend ? "strike" : "deny");
+      }}
+      onClick={() => {
+        if (canSend) void publish();
+      }}
     >
       {busy
         ? zh
@@ -474,7 +566,7 @@ export default function FortyTwoTerminal({
     <div
       ref={terminal}
       tabIndex={-1}
-      className={`q42-terminal-wrap q42-boot ${expanded ? "q42-expanded" : ""} ${canSend ? "q42-ready" : ""}`}
+      className={`q42-terminal-wrap q42-boot ${expanded ? "q42-expanded" : ""} ${canSend ? "q42-ready" : ""} ${keyFx ? `q42-fx-${keyFx}` : ""}`}
       role={expanded ? "dialog" : undefined}
       aria-modal={expanded || undefined}
       aria-label={
