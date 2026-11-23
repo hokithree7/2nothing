@@ -1,5 +1,7 @@
 "use client";
+import { useRef } from "react";
 import Link from "next/link";
+import useHeroTilt from "@/hooks/useHeroTilt";
 import { useI18n } from "./I18nProvider";
 import FortyTwoTerminal, { FortyTwoMark } from "./FortyTwoTerminal";
 import FortyTwoQuestions, { type FortyTwoQuestion } from "./FortyTwoQuestions";
@@ -31,9 +33,11 @@ export default function HomeClient({
 }: Props) {
   const { locale } = useI18n();
   const zh = locale === "zh";
+  const heroRef = useRef<HTMLElement>(null);
+  useHeroTilt(heroRef);
   return (
     <div className="q42-home">
-      <section className="q42-hero">
+      <section className="q42-hero" ref={heroRef}>
         <div className="q42-stars" aria-hidden="true" />
         <div className="q42-hero-grid container">
           <div className="q42-intro">

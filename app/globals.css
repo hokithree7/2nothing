@@ -791,3 +791,282 @@ body:has(.q42-home) .site-nav .desktop-nav { background:transparent;backdrop-fil
 .q42-idpanel-send:disabled { opacity:.55;cursor:default; }
 .q42-idpanel-note { display:block;margin-top:10px;font-size:10px;color:#8aac87; }
 
+
+
+/* =====================================================================
+   42 hero v2 (2026-11-23) — scale, light and a CRT that feels switched on.
+   Everything below is additive and overrides earlier 42 rules by order.
+   Coordinates are measured on terminal-shell.webp (1200x900):
+     glass  x 15.5%–84.5%, y 14.4%–66.7%
+     LED    centre x 87.25%, y 79.2%
+   The /questions close-up crops the art (see .q42-crt-shellimg), so its
+   numbers are the same points mapped into crop space.
+   ===================================================================== */
+
+/* ---------- 1. Scale: the machine is the hero, not a widget ---------- */
+.q42-hero { padding:24px 0 96px; }
+.q42-hero .q42-hero-grid.container { max-width:1440px; }
+@media (min-width:1001px) {
+  .q42-hero-grid { grid-template-columns:minmax(0,1.15fr) minmax(0,2fr) minmax(0,.8fr);min-height:min(calc(100svh - 150px),780px);gap:16px; }
+  .q42-intro h1 { font-size:clamp(30px,2.9vw,46px);line-height:1.3; }
+  .q42-subtitle { font-size:clamp(16px,1.2vw,19px); }
+}
+.q42-eyebrow { color:#9fe27c;opacity:.9;letter-spacing:.18em; }
+.q42-totem .q42-mark { filter:drop-shadow(0 0 22px rgba(217,246,0,.28)); }
+/* dark → light without a hard edge */
+.q42-hero::after { content:"";position:absolute;left:0;right:0;bottom:0;height:88px;background:linear-gradient(180deg,rgba(3,20,32,0),#fbfcff);pointer-events:none; }
+
+/* ---------- 2. Light: the screen lights the room ---------- */
+/* No stacking context on the wrap: overlays inside it (login card, name panel)
+   must keep competing with the sticky nav at the root level. The glow sits at
+   z 0 and the machine/close-up at z 1 instead of using a negative z-index. */
+.q42-machine,.q42-crt { z-index:1; }
+.q42-terminal-wrap:not(.q42-expanded)::before {
+  content:"";position:absolute;left:-14%;right:-14%;top:-10%;height:86%;z-index:0;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(126,255,140,.32),rgba(70,210,130,.13) 50%,transparent 100%);
+  filter:blur(36px);animation:q42-ambient 6s ease-in-out infinite alternate;
+}
+.q42-machine { isolation:isolate; }
+/* contact shadow + a faint green spill on the "desk" */
+.q42-machine::after {
+  content:"";position:absolute;left:10%;right:10%;bottom:2.5%;height:9%;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(0,0,0,.65),rgba(0,0,0,.25) 60%,transparent),radial-gradient(60% 100% at 50% 0,rgba(120,255,140,.14),transparent 70%);
+  transform:translateY(55%);filter:blur(5px);
+}
+@keyframes q42-ambient { from { opacity:.75;transform:scale(.97); } to { opacity:1;transform:scale(1.03); } }
+
+/* ---------- 3. Pointer parallax (vars from useHeroTilt) ---------- */
+.q42-hero .q42-terminal-wrap:not(.q42-expanded) .q42-machine,
+.q42-questions-header .q42-terminal-wrap:not(.q42-expanded) .q42-crt {
+  transform:perspective(1600px) rotateX(calc(var(--ty,0) * -3deg)) rotateY(calc(var(--tx,0) * 4deg));
+  transition:transform .35s cubic-bezier(.2,.7,.2,1);will-change:transform;
+}
+.q42-hero .q42-stars,.q42-questions-header .q42-stars {
+  transform:translate3d(calc(var(--tx,0) * -14px),calc(var(--ty,0) * -8px),0);transition:transform .6s ease-out;
+}
+
+/* ---------- 4. The glass: scanlines, vignette, curvature, refresh roll ---------- */
+.q42-glass {
+  position:absolute;z-index:3;pointer-events:none;overflow:hidden;
+  left:15.5%;right:15.5%;top:14.4%;bottom:33.3%;border-radius:4% / 6%;
+  background:
+    repeating-linear-gradient(180deg,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.16) 2px 3px),
+    radial-gradient(130% 100% at 50% 45%,rgba(120,255,140,.07) 0,transparent 55%,rgba(0,0,0,.42) 100%),
+    linear-gradient(158deg,rgba(255,255,255,.09) 0,rgba(255,255,255,.02) 26%,transparent 40%);
+  box-shadow:inset 0 0 36px rgba(0,0,0,.55),inset 0 0 10px rgba(150,255,160,.10);
+  animation:q42-flicker 5s steps(1) infinite;
+}
+/* slow refresh band rolling down the tube */
+.q42-glass::before {
+  content:"";position:absolute;left:0;right:0;top:0;height:22%;
+  background:linear-gradient(180deg,transparent,rgba(190,255,190,.06) 45%,rgba(190,255,190,.09) 50%,transparent);
+  transform:translateY(-120%);animation:q42-roll 7.5s linear 1.4s infinite;
+}
+/* power-on: a bright line opens into the picture */
+.q42-glass::after {
+  content:"";position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;
+  background:#e6ffd9;box-shadow:0 0 16px 4px rgba(170,255,160,.75);
+  transform:scaleX(0);opacity:0;animation:q42-poweron .7s cubic-bezier(.3,.7,.2,1) .15s both;
+}
+@keyframes q42-poweron {
+  0% { transform:scaleX(0);opacity:1; }
+  45% { transform:scaleX(1) scaleY(1);opacity:1; }
+  100% { transform:scaleX(1) scaleY(120);opacity:0; }
+}
+@keyframes q42-roll { to { transform:translateY(560%); } }
+@keyframes q42-flicker { 0%,100% { opacity:1; } 41% { opacity:.94; } 42% { opacity:1; } 77% { opacity:.97; } }
+.q42-crt .q42-glass { left:6.7%;right:9.1%;top:9.8%;bottom:29.4%;border-radius:3.5% / 5%; }
+
+/* ---------- 5. Phosphor text + boot sequence ---------- */
+.q42-screen,.q42-crt-screen { z-index:2; }
+.q42-screen-label,.q42-screen-title,.q42-input-hint,.q42-screen textarea,.q42-crt-screen textarea {
+  text-shadow:0 0 6px rgba(150,255,120,.45),0 0 1px rgba(200,255,180,.6);
+}
+.q42-screen-label { color:#b6f58f;letter-spacing:.08em; }
+.q42-screen-title { color:#d6ffbf; }
+.q42-boot .q42-screen-label { animation:q42-in .25s ease-out .55s both; }
+.q42-boot .q42-field,.q42-boot .q42-input-hint { animation:q42-in .35s ease-out 1.15s both; }
+.q42-type { animation:q42-type calc(var(--n,12) * 55ms) steps(var(--n,12)) .75s both; }
+@keyframes q42-in { from { opacity:0;filter:blur(2px); } to { opacity:1;filter:none; } }
+@keyframes q42-type { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
+
+/* ---------- 6. The prompt: corner brackets, ">" and a block cursor ---------- */
+.q42-field {
+  position:relative;flex:1;display:flex;min-height:0;
+  --bk:#8fe36b;
+  background:
+    linear-gradient(var(--bk),var(--bk)) top left / 14px 2px no-repeat,
+    linear-gradient(var(--bk),var(--bk)) top left / 2px 14px no-repeat,
+    linear-gradient(var(--bk),var(--bk)) top right / 14px 2px no-repeat,
+    linear-gradient(var(--bk),var(--bk)) top right / 2px 14px no-repeat,
+    linear-gradient(var(--bk),var(--bk)) bottom left / 14px 2px no-repeat,
+    linear-gradient(var(--bk),var(--bk)) bottom left / 2px 14px no-repeat,
+    linear-gradient(var(--bk),var(--bk)) bottom right / 14px 2px no-repeat,
+    linear-gradient(var(--bk),var(--bk)) bottom right / 2px 14px no-repeat,
+    rgba(0,18,10,.28);
+  box-shadow:inset 0 0 0 1px rgba(143,227,107,.28),0 0 12px rgba(120,255,140,.08);
+  border-radius:3px;transition:box-shadow .2s;
+}
+.q42-field::before {
+  content:">";position:absolute;left:10px;top:8px;color:#c8ff9f;pointer-events:none;
+  font:700 16px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;text-shadow:0 0 6px rgba(150,255,120,.6);
+}
+.q42-field:focus-within { box-shadow:inset 0 0 0 1px rgba(180,247,137,.6),0 0 18px rgba(130,255,140,.18); }
+.q42-screen .q42-field textarea,.q42-crt .q42-crt-screen .q42-field textarea {
+  border:0;background:transparent;padding:8px 10px 8px 28px;min-height:0;caret-color:#d7ffb8;
+}
+.q42-screen .q42-field textarea:focus-visible,.q42-crt-screen .q42-field textarea:focus-visible { outline:none; }
+.q42-field-idle textarea { text-indent:1.05em; }
+.q42-cursor {
+  position:absolute;left:27px;top:11px;width:.62em;height:1.1em;font-size:16px;pointer-events:none;
+  background:#c4ff9a;box-shadow:0 0 10px rgba(160,255,120,.85);animation:q42-blink 1.05s steps(1) infinite;
+}
+@keyframes q42-blink { 50% { opacity:0; } }
+.q42-hint-missing { color:#ffd77a !important;text-shadow:0 0 6px rgba(255,200,90,.45) !important; }
+
+/* ---------- 7. Power LED that reacts ---------- */
+.q42-led {
+  position:absolute;z-index:4;pointer-events:none;left:87.25%;top:79.2%;width:1.75%;aspect-ratio:1;
+  transform:translate(-50%,-50%);border-radius:2px;
+  background:radial-gradient(circle at 40% 35%,#fff1b8,#ffc23d 45%,#e08a12);
+  box-shadow:0 0 6px 2px rgba(255,186,60,.65),0 0 18px 4px rgba(255,170,40,.25);
+  animation:q42-led-breathe 3.2s ease-in-out infinite;
+}
+.q42-led[data-state="typing"] { animation:none;filter:brightness(1.45);box-shadow:0 0 9px 3px rgba(255,200,80,.9),0 0 24px 6px rgba(255,170,40,.4); }
+.q42-led[data-state="ready"] {
+  background:radial-gradient(circle at 40% 35%,#eaffd6,#8dff5c 45%,#3dbb2c);
+  box-shadow:0 0 7px 2px rgba(140,255,100,.8),0 0 22px 5px rgba(120,255,90,.35);animation:q42-led-breathe 1.4s ease-in-out infinite;
+}
+.q42-led[data-state="busy"] { animation:q42-blink .22s steps(1) infinite; }
+.q42-led[data-state="error"] { background:radial-gradient(circle at 40% 35%,#ffd9d2,#ff5a3d 45%,#c22a18);box-shadow:0 0 8px 3px rgba(255,80,60,.8);animation:none; }
+@keyframes q42-led-breathe { 0%,100% { opacity:.78; } 50% { opacity:1; } }
+.q42-crt .q42-led { left:94.2%;top:85.1%;width:2.2%; }
+
+/* ---------- 8. The key: unlit until there is something to send ---------- */
+/* resting = a little dimmer, never "greyed out": the key is the call to action */
+.q42-send:disabled,.q42-crt-send:disabled { filter:saturate(.85) brightness(.95);opacity:1; }
+.q42-ready .q42-send:not(:disabled),.q42-ready .q42-crt-send:not(:disabled) { animation:q42-key-ready 1.6s ease-in-out infinite; }
+@keyframes q42-key-ready {
+  0%,100% { box-shadow:inset 0 2px 2px #ffe8a0,inset 0 -4px 2px #bd7b20,0 3px 2px #31200c,0 0 0 rgba(255,200,80,0); }
+  50% { box-shadow:inset 0 2px 2px #ffe8a0,inset 0 -4px 2px #bd7b20,0 3px 2px #31200c,0 0 22px rgba(255,200,80,.65); }
+}
+.q42-send:active:not(:disabled),.q42-crt-send:active:not(:disabled) {
+  transform:translateY(4px) scale(.992);animation:none;
+  box-shadow:inset 0 2px 5px #a46f22,inset 0 -1px 1px #ffe7a0,0 0 0 #31200c;transition-duration:40ms;
+}
+
+/* ---------- 9. Transmit bar while sending ---------- */
+.q42-transmit {
+  display:flex;align-items:center;gap:10px;margin-top:6px;
+  font:700 11px/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.14em;color:#c8ff9f;
+}
+.q42-transmit i { flex:1;height:6px;border:1px solid #7fd85e;background:linear-gradient(90deg,#9dff6a 0 40%,transparent 40%) 0 0 / 200% 100%;animation:q42-transmit 0.9s linear infinite; }
+@keyframes q42-transmit { from { background-position:100% 0; } to { background-position:-100% 0; } }
+
+/* ---------- 10. Opening the composer: zoom in, don't jump ---------- */
+.q42-expanded {
+  animation:q42-zoom-in .32s cubic-bezier(.2,.8,.2,1) both;
+  background:
+    radial-gradient(50% 40% at 50% 38%,rgba(110,255,140,.14),transparent 70%),
+    radial-gradient(1px 1px at 12% 18%,#cfe3f2 60%,transparent),
+    radial-gradient(1px 1px at 82% 26%,#cfe3f2 60%,transparent),
+    radial-gradient(1.5px 1.5px at 66% 78%,#dcecf7 60%,transparent),
+    radial-gradient(1px 1px at 28% 84%,#cfe3f2 60%,transparent),
+    #031420;
+}
+@keyframes q42-zoom-in { from { opacity:0;transform:scale(.94); } to { opacity:1;transform:none; } }
+.q42-expanded .q42-glass { bottom:33.3%; }
+
+/* ---------- 10b. Composer = inside the terminal ----------
+   The old composer stretched terminal-shell.webp to the viewport (object-fit:
+   fill), which distorted the machine. In the composer the bezel is drawn in
+   CSS instead, so it can take any height without warping: beige case, black
+   inner bezel, glowing tube, full-width key. */
+.q42-expanded .q42-machine,.q42-expanded .q42-crt {
+  flex:1;aspect-ratio:auto;min-height:260px;max-height:640px;transform:none;overflow:hidden;
+  border:0;border-radius:22px;
+  background:linear-gradient(180deg,#eee5cf 0%,#ddd0b4 55%,#cbbb98 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.65),inset 0 -8px 14px rgba(90,66,30,.28),0 30px 60px -20px rgba(0,0,0,.75),0 0 90px rgba(120,255,140,.14);
+}
+.q42-expanded .q42-shell,.q42-expanded .q42-crt-shellimg,.q42-expanded .q42-machine::after { display:none; }
+.q42-expanded .q42-screen,.q42-expanded .q42-crt .q42-crt-screen {
+  left:18px;right:18px;top:18px;bottom:96px;padding:18px 18px 12px;border-radius:16px / 20px;
+  background:radial-gradient(120% 90% at 50% 40%,#0f2d1f 0%,#07190f 65%,#030c08 100%);
+  box-shadow:inset 0 0 0 7px #1c1a15,inset 0 0 0 8px #3a3527,inset 0 0 40px rgba(0,0,0,.85);
+}
+.q42-expanded .q42-glass,.q42-expanded .q42-crt .q42-glass { left:25px;right:25px;top:25px;bottom:103px;border-radius:12px / 16px; }
+.q42-expanded .q42-send,.q42-expanded .q42-crt-send {
+  left:max(96px,22%);right:max(64px,16%);width:auto;top:auto;bottom:22px;height:56px;min-height:56px;font-size:clamp(18px,2.2vw,22px);
+}
+.q42-expanded .q42-led,.q42-expanded .q42-crt .q42-led { left:auto;right:30px;top:auto;bottom:44px;width:12px;transform:none; }
+/* speaker grille */
+.q42-expanded .q42-machine::before,.q42-expanded .q42-crt::before {
+  content:"";position:absolute;left:26px;bottom:32px;width:48px;height:34px;border-radius:2px;opacity:.7;
+  background:repeating-linear-gradient(180deg,#3a3326 0 4px,transparent 4px 8px);
+}
+@media (max-width:767px) {
+  .q42-expanded .q42-machine,.q42-expanded .q42-crt { border-radius:18px; }
+  .q42-expanded .q42-screen,.q42-expanded .q42-crt .q42-crt-screen { left:12px;right:12px;top:12px;bottom:84px;padding:14px 12px 10px; }
+  .q42-expanded .q42-glass,.q42-expanded .q42-crt .q42-glass { left:19px;right:19px;top:19px;bottom:91px; }
+  .q42-expanded .q42-send,.q42-expanded .q42-crt-send { left:82px;right:52px;bottom:16px;height:52px;min-height:52px; }
+  .q42-expanded .q42-machine::before,.q42-expanded .q42-crt::before { left:18px;bottom:24px;width:44px; }
+  .q42-expanded .q42-led,.q42-expanded .q42-crt .q42-led { right:22px;bottom:36px; }
+}
+
+/* ---------- 11. /questions: a monitor in the dark, not a card ---------- */
+.q42-questions-hero .q42-questions-header {
+  grid-template-columns:minmax(0,1fr) minmax(0,600px);gap:48px;padding:64px 24px 40px;min-height:min(calc(100svh - 200px),560px);
+}
+.q42-questions-header .q42-crt { border:0;border-radius:14px;box-shadow:0 30px 60px -20px rgba(0,0,0,.7),0 0 0 1px rgba(160,255,160,.06); }
+.q42-questions-header .q42-terminal-wrap:not(.q42-expanded) .q42-crt {
+  transform:perspective(1600px) rotateY(calc(-7deg + var(--tx,0) * 4deg)) rotateX(calc(2deg + var(--ty,0) * -3deg));
+}
+.q42-questions-copy { position:relative;z-index:1; }
+/* one continuous night sky: dark nav on the question wall too */
+body:has(.q42-questions-page) .site-nav { background:#031420!important;color:#f6faff; }
+body:has(.q42-questions-page) .site-nav a { color:#dce9f1!important; }
+body:has(.q42-questions-page) .site-nav .hamburger-line { background:#eaf5fa; }
+body:has(.q42-questions-page) .site-nav .hamburger-btn { background:transparent;border-color:#3a5363; }
+.q42-questions-header h1 { font-size:clamp(40px,4.4vw,64px);letter-spacing:-.03em;line-height:1.1;margin:6px 0 14px; }
+.q42-questions-header .q42-questions-copy > p:last-child { font-size:18px;max-width:30em; }
+.q42-watermark {
+  position:absolute;left:-1%;top:50%;transform:translateY(-52%);z-index:0;pointer-events:none;user-select:none;
+  font:900 clamp(220px,30vw,460px)/1 Arial,sans-serif;letter-spacing:-.06em;
+  color:transparent;-webkit-text-stroke:1.5px rgba(217,246,0,.13);
+}
+
+/* ---------- 12. Mobile ---------- */
+@media (max-width:767px) {
+  .q42-hero { padding-bottom:80px; }
+  .q42-hero::after { height:64px; }
+  .q42-hero-grid { min-height:0; }
+  .q42-hero-terminal { margin:14px -14px 0; }
+  .q42-terminal-wrap:not(.q42-expanded)::before { top:4%;height:60%;filter:blur(24px); }
+  .q42-screen-title { font-size:16px; }
+  .q42-field::before { font-size:15px;left:8px;top:6px; }
+  .q42-screen .q42-field textarea { padding:6px 8px 6px 24px; }
+  .q42-cursor { left:9px;top:9px;font-size:15px; }
+  /* idle: the block cursor stands in for ">" so the hint fits on one line */
+  .q42-field-idle::before { display:none; }
+  .q42-screen .q42-field-idle textarea { text-indent:.9em;overflow:hidden;padding-left:8px;font-size:15px; }
+  .q42-screen .q42-field textarea { scrollbar-width:none; }
+  .q42-led { width:2.2%; }
+  .q42-questions-hero .q42-questions-header { padding:32px 24px 24px;min-height:0; }
+  .q42-questions-header .q42-terminal-wrap:not(.q42-expanded) .q42-crt { transform:none; }
+  .q42-questions-header h1 { font-size:34px; }
+  .q42-questions-header .q42-questions-copy > p:last-child { font-size:15px; }
+  .q42-watermark { font-size:200px;left:auto;right:-6%;top:22%;transform:none; }
+}
+@media (min-width:768px) and (max-width:1000px) {
+  .q42-hero-grid { grid-template-columns:minmax(0,1fr) 420px;min-height:520px; }
+  .q42-questions-hero .q42-questions-header { grid-template-columns:minmax(0,1fr) 440px;gap:28px; }
+}
+
+/* ---------- 13. Reduced motion: keep the look, drop the movement ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .q42-glass,.q42-glass::before,.q42-glass::after,.q42-type,.q42-boot .q42-screen-label,.q42-boot .q42-field,.q42-boot .q42-input-hint,
+  .q42-cursor,.q42-led,.q42-ready .q42-send:not(:disabled),.q42-ready .q42-crt-send:not(:disabled),.q42-expanded,
+  .q42-terminal-wrap:not(.q42-expanded)::before,.q42-transmit i { animation:none !important; }
+  .q42-glass::after { display:none; }
+  .q42-hero .q42-terminal-wrap .q42-machine,.q42-questions-header .q42-terminal-wrap .q42-crt,.q42-stars { transition:none !important; }
+}

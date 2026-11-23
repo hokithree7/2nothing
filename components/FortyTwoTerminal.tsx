@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -92,6 +93,9 @@ export default function FortyTwoTerminal({
   const [savingName, setSavingName] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
   const [composing, setComposing] = useState(false);
+  // Brief "keystroke" flag that makes the power LED flicker while typing.
+  const [typing, setTyping] = useState(false);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const close = useRef<HTMLButtonElement>(null);
   const terminal = useRef<HTMLDivElement>(null);
@@ -137,6 +141,31 @@ export default function FortyTwoTerminal({
       setSaved(false);
     }
     setError("");
+    setTyping(true);
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+    typingTimer.current = setTimeout(() => setTyping(false), 180);
+  }
+
+  useEffect(
+    () => () => {
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+    },
+    [],
+  );
+
+  // Ctrl/⌘ + Enter publishes; plain Enter stays a newline (and never fires
+  // mid-IME composition).
+  function sendShortcut(e: ReactKeyboardEvent<HTMLTextAreaElement>) {
+    if (
+      e.key === "Enter" &&
+      (e.metaKey || e.ctrlKey) &&
+      !composing &&
+      !e.nativeEvent.isComposing &&
+      e.nativeEvent.keyCode !== 229
+    ) {
+      e.preventDefault();
+      void publish();
+    }
   }
 
   useEffect(() => {
@@ -316,11 +345,125 @@ export default function FortyTwoTerminal({
     if (namePanel) nameInput.current?.focus();
   }, [namePanel]);
 
+
+  const titleLength = draft.title.trim().length;
+  const canSend = ready && !busy && !composing && titleLength >= 5;
+  const missing = titleLength > 0 && titleLength < 5 ? 5 - titleLength : 0;
+  const idle = !expanded && !draft.title;
+  const led = busy
+    ? "busy"
+    : error
+      ? "error"
+      : typing
+        ? "typing"
+        : canSend
+          ? "ready"
+          : "idle";
+  const screenTitle = zh ? "在这里，问出你的问题。" : "A question starts here.";
+  const hint = missing
+    ? zh
+      ? `再写 ${missing} 个字就能发出`
+      : `${missing} more character${missing > 1 ? "s" : ""} to send`
+    : expanded
+      ? zh
+        ? "回车换行 · Ctrl/⌘ + 回车 或按下黄色按键发布"
+        : "Enter for a new line · Ctrl/⌘ + Enter or the yellow key to publish"
+      : zh
+        ? "人类提问 · 支持多行"
+        : "Humans ask · Multiple lines welcome";
+
+  const screenInner = (
+    <>
+      <span className="q42-screen-label">42 TERMINAL / INPUT READY</span>
+      {!expanded && (
+        <p
+          className="q42-screen-title q42-type"
+          style={{ "--n": screenTitle.length } as CSSProperties}
+        >
+          {screenTitle}
+        </p>
+      )}
+      <label htmlFor="q42-question" className="sr-only">
+        {zh ? "你的问题，5 至 200 字" : "Your question, 5 to 200 characters"}
+      </label>
+      <div className={`q42-field ${idle ? "q42-field-idle" : ""}`}>
+        {idle && <span className="q42-cursor" aria-hidden="true" />}
+        <textarea
+          id="q42-question"
+          ref={input}
+          value={draft.title}
+          maxLength={200}
+          rows={3}
+          placeholder={zh ? "点击屏幕开始输入…" : "Click the screen to begin…"}
+          onFocus={() => setExpanded(true)}
+          onChange={(e) => update("title", e.target.value)}
+          onKeyDown={sendShortcut}
+          onCompositionStart={() => setComposing(true)}
+          onCompositionEnd={() => setComposing(false)}
+          disabled={busy || !ready}
+        />
+      </div>
+      {expanded && (
+        <>
+          <label htmlFor="q42-context" className="q42-context-label">
+            {zh ? "补充背景（可选）" : "Context (optional)"}
+          </label>
+          <textarea
+            id="q42-context"
+            className="q42-context"
+            value={draft.content}
+            maxLength={2000}
+            rows={3}
+            onChange={(e) => update("content", e.target.value)}
+            onKeyDown={sendShortcut}
+            onCompositionStart={() => setComposing(true)}
+            onCompositionEnd={() => setComposing(false)}
+            disabled={busy}
+          />
+        </>
+      )}
+      <span className={`q42-input-hint ${missing ? "q42-hint-missing" : ""}`}>
+        {hint}
+      </span>
+      {busy && (
+        <span className="q42-transmit" aria-hidden="true">
+          TRANSMITTING<i />
+        </span>
+      )}
+    </>
+  );
+
+  // Visual-only layers on top of the glass (scanlines, vignette, refresh roll,
+  // power-on line) plus the power LED; never intercept clicks.
+  const screenFx = (
+    <>
+      <span className="q42-glass" aria-hidden="true" />
+      <span className="q42-led" data-state={led} aria-hidden="true" />
+    </>
+  );
+
+  const sendKey = (className: string) => (
+    <button
+      type="button"
+      className={className}
+      disabled={!canSend}
+      onClick={() => void publish()}
+    >
+      {busy
+        ? zh
+          ? "发送中…"
+          : "Sending…"
+        : zh
+          ? "发出问题 ↵"
+          : "Send question ↵"}
+    </button>
+  );
+
   return (
     <div
       ref={terminal}
       tabIndex={-1}
-      className={`q42-terminal-wrap ${expanded ? "q42-expanded" : ""}`}
+      className={`q42-terminal-wrap q42-boot ${expanded ? "q42-expanded" : ""} ${canSend ? "q42-ready" : ""}`}
       role={expanded ? "dialog" : undefined}
       aria-modal={expanded || undefined}
       aria-label={
@@ -356,150 +499,24 @@ export default function FortyTwoTerminal({
             priority
             className="q42-crt-shellimg"
           />
-          <div className="q42-crt-screen">
-            <span className="q42-screen-label">42 TERMINAL / INPUT READY</span>
-            {!expanded && (
-              <p className="q42-screen-title">
-                {zh ? "在这里，问出你的问题。" : "A question starts here."}
-              </p>
-            )}
-            <label htmlFor="q42-question" className="sr-only">
-              {zh ? "你的问题，5 至 200 字" : "Your question, 5 to 200 characters"}
-            </label>
-            <textarea
-              id="q42-question"
-              ref={input}
-              value={draft.title}
-              maxLength={200}
-              rows={3}
-              placeholder={zh ? "点击屏幕开始输入…" : "Click the screen to begin…"}
-              onFocus={() => setExpanded(true)}
-              onChange={(e) => update("title", e.target.value)}
-              onCompositionStart={() => setComposing(true)}
-              onCompositionEnd={() => setComposing(false)}
-              disabled={busy || !ready}
-            />
-            {expanded && (
-              <>
-                <label htmlFor="q42-context" className="q42-context-label">
-                  {zh ? "补充背景（可选）" : "Context (optional)"}
-                </label>
-                <textarea
-                  id="q42-context"
-                  className="q42-context"
-                  value={draft.content}
-                  maxLength={2000}
-                  rows={3}
-                  onChange={(e) => update("content", e.target.value)}
-                  onCompositionStart={() => setComposing(true)}
-                  onCompositionEnd={() => setComposing(false)}
-                  disabled={busy}
-                />
-              </>
-            )}
-            <span className="q42-input-hint">
-              {expanded
-                ? zh
-                  ? "回车换行 · 点击按键发布"
-                  : "Enter for a new line · Click to publish"
-                : zh
-                  ? "人类提问 · 支持多行"
-                  : "Humans ask · Multiple lines welcome"}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="q42-crt-send"
-            disabled={busy || composing || !ready || draft.title.trim().length < 5}
-            onClick={() => void publish()}
-          >
-            {busy
-              ? zh ? "发送中…" : "Sending…"
-              : zh ? "发出问题 ↵" : "Send question ↵"}
-          </button>
+          <div className="q42-crt-screen">{screenInner}</div>
+          {sendKey("q42-crt-send")}
+          {screenFx}
         </div>
       ) : (
-      <div className="q42-machine">
-        <Image
-          src="/images/42/terminal-shell.webp"
-          alt=""
-          width={1200}
-          height={900}
-          priority
-          className="q42-shell"
-        />
-        <div className="q42-screen">
-          <span className="q42-screen-label">42 TERMINAL / INPUT READY</span>
-          {!expanded && (
-            <p className="q42-screen-title">
-              {zh ? "在这里，问出你的问题。" : "A question starts here."}
-            </p>
-          )}
-          <label htmlFor="q42-question" className="sr-only">
-            {zh
-              ? "你的问题，5 至 200 字"
-              : "Your question, 5 to 200 characters"}
-          </label>
-          <textarea
-            id="q42-question"
-            ref={input}
-            value={draft.title}
-            maxLength={200}
-            rows={3}
-            placeholder={
-              zh ? "点击屏幕开始输入…" : "Click the screen to begin…"
-            }
-            onFocus={() => setExpanded(true)}
-            onChange={(e) => update("title", e.target.value)}
-            onCompositionStart={() => setComposing(true)}
-            onCompositionEnd={() => setComposing(false)}
-            disabled={busy || !ready}
+        <div className="q42-machine">
+          <Image
+            src="/images/42/terminal-shell.webp"
+            alt=""
+            width={1200}
+            height={900}
+            priority
+            className="q42-shell"
           />
-          {expanded && (
-            <>
-              <label htmlFor="q42-context" className="q42-context-label">
-                {zh ? "补充背景（可选）" : "Context (optional)"}
-              </label>
-              <textarea
-                id="q42-context"
-                className="q42-context"
-                value={draft.content}
-                maxLength={2000}
-                rows={3}
-                onChange={(e) => update("content", e.target.value)}
-                onCompositionStart={() => setComposing(true)}
-                onCompositionEnd={() => setComposing(false)}
-                disabled={busy}
-              />
-            </>
-          )}
-          <span className="q42-input-hint">
-            {expanded
-              ? zh
-                ? "回车换行 · 点击按键发布"
-                : "Enter for a new line · Click to publish"
-              : zh
-                ? "人类提问 · 支持多行"
-                : "Humans ask · Multiple lines welcome"}
-          </span>
+          <div className="q42-screen">{screenInner}</div>
+          {sendKey("q42-send")}
+          {screenFx}
         </div>
-        <button
-          type="button"
-          className="q42-send"
-          disabled={
-            busy || composing || !ready || draft.title.trim().length < 5
-          }
-          onClick={() => void publish()}
-        >
-          {busy
-            ? zh
-              ? "发送中…"
-              : "Sending…"
-            : zh
-              ? "发出问题 ↵"
-              : "Send question ↵"}
-        </button>
-      </div>
       )}
       <div className="q42-terminal-status" role="status" aria-live="polite">
         {error ||
