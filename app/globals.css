@@ -1063,6 +1063,7 @@ body:has(.q42-questions-page) .site-nav .hamburger-btn { background:transparent;
 }
 
 /* ---------- 13. Reduced motion: keep the look, drop the movement ---------- */
+.q42-login { position:fixed;z-index:230;inset:12px max(12px,calc((100vw - 680px)/2)); }
 @media (prefers-reduced-motion: reduce) {
   .q42-glass,.q42-glass::before,.q42-glass::after,.q42-type,.q42-boot .q42-screen-label,.q42-boot .q42-field,.q42-boot .q42-input-hint,
   .q42-cursor,.q42-led,.q42-ready .q42-send:not(:disabled),.q42-ready .q42-crt-send:not(:disabled),.q42-expanded,

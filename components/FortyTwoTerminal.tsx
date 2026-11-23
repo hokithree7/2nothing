@@ -169,7 +169,7 @@ export default function FortyTwoTerminal({
   }
 
   useEffect(() => {
-    if (!expanded) return;
+    if (!expanded && !login) return;
     const old = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.body.classList.add("q42-composing");
@@ -190,6 +190,11 @@ export default function FortyTwoTerminal({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !event.isComposing) {
         event.preventDefault();
+        if (login) {
+          setLogin(false);
+          terminal.current?.focus();
+          return;
+        }
         if (namePanel) {
           setNamePanel(false);
           input.current?.focus();
@@ -199,7 +204,9 @@ export default function FortyTwoTerminal({
         terminal.current?.focus();
       }
       if (event.key === "Tab") {
-        const scope = namePanel
+        const scope = login
+          ? terminal.current?.querySelector<HTMLElement>(".q42-login")
+          : namePanel
           ? terminal.current?.querySelector<HTMLElement>(".q42-idpanel")
           : terminal.current;
         const controls = Array.from(
@@ -228,7 +235,11 @@ export default function FortyTwoTerminal({
       view?.removeEventListener("scroll", measure);
       document.removeEventListener("keydown", onKey);
     };
-  }, [expanded, namePanel]);
+  }, [expanded, namePanel, login]);
+
+  useEffect(() => {
+    if (login) terminal.current?.querySelector<HTMLButtonElement>(".q42-login .q42-close")?.focus();
+  }, [login]);
 
   async function publish() {
     if (pending.current || composing || draft.title.trim().length < 5 || !ready)
@@ -538,7 +549,7 @@ export default function FortyTwoTerminal({
         </p>
       )}
       {login && (
-        <div className="q42-login">
+        <div className="q42-login" role="dialog" aria-modal="true" aria-label={zh ? "登录后发出问题" : "Sign in to send"}>
           <button
             className="q42-close"
             onClick={() => setLogin(false)}
